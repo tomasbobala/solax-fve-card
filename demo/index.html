@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SolaX FVE Card – demo</title>
+  <style>
+    :root {
+      --primary-text-color: #e8e8e8;
+      --secondary-text-color: #9a9a9a;
+      --divider-color: #3a3a3a;
+      --card-background-color: #1c1c1e;
+    }
+    body.light {
+      --primary-text-color: #1f2328;
+      --secondary-text-color: #5f6670;
+      --divider-color: #d6d9de;
+      --card-background-color: #ffffff;
+      background: #eef0f3;
+    }
+    body { background: #111214; margin: 0; padding: 24px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+    ha-card { display: block; background: var(--card-background-color); border-radius: 16px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }
+    .slot { width: 480px; }
+    .editor { width: 520px; background: var(--card-background-color); color: var(--primary-text-color); border-radius: 16px; padding: 16px; box-sizing: border-box; }
+    ha-entity-picker { display: block; }
+    ha-entity-picker input { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 6px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <div id="slots"></div>
+  <script src="../dist/solax-fve-card.js"></script>
+  <script>
+    customElements.define("ha-entity-picker", class extends HTMLElement {
+      set value(v) { this._v = v; this.render(); }
+      get value() { return this._v; }
+      connectedCallback() { this.render(); }
+      render() { this.innerHTML = `<input value="${this._v || ""}" placeholder="entity_id">`; }
+    });
+
+    const q = new URLSearchParams(location.search);
+    const lang = q.get("lang") || "en";
+    const views = (q.get("view") || "day").split(",");
+    if (q.get("theme") === "light") document.body.classList.add("light");
+
+    const s = (state, attributes) => ({ state: String(state), attributes: attributes || {} });
+
+    function states(scene) {
+      const day = {
+        "sensor.solax_pv_power_1": s(6240), "sensor.solax_pv_voltage_1": s(521.4), "sensor.solax_pv_current_1": s(11.9),
+        "sensor.solax_pv_power_2": s(2810), "sensor.solax_pv_voltage_2": s(410.2), "sensor.solax_pv_current_2": s(6.8),
+        "sensor.solax_pv_power_total": s(9050), "sensor.solax_today_s_solar_energy": s(41.6),
+        "sensor.solax_run_mode": s("Normal Mode"), "sensor.solax_inverter_temperature": s(41.2),
+        "sensor.solax_inverter_power": s(7420),
+        "sensor.solax_inverter_voltage_l1": s(233.6), "sensor.solax_inverter_voltage_l2": s(228.9), "sensor.solax_inverter_voltage_l3": s(232.9),
+        "sensor.solax_inverter_current_l1": s(10.6), "sensor.solax_inverter_current_l2": s(10.4), "sensor.solax_inverter_current_l3": s(10.7),
+        "sensor.solax_energy_dashboard_solax_grid_power": s(-3180),
+        "sensor.solax_measured_power_l1": s(1080), "sensor.solax_measured_power_l2": s(1040), "sensor.solax_measured_power_l3": s(1060),
+        "sensor.solax_grid_voltage_l1": s(233.6), "sensor.solax_grid_voltage_l2": s(228.9), "sensor.solax_grid_voltage_l3": s(232.9),
+        "sensor.solax_today_s_import_energy": s(2.4), "sensor.solax_today_s_export_energy": s(18.7),
+        "sensor.solax_battery_power_charge": s(1630), "sensor.solax_battery_capacity": s(72, { unit_of_measurement: "%" }),
+        "sensor.solax_battery_voltage_charge": s(398.4), "sensor.solax_battery_current_charge": s(4.1),
+        "sensor.solax_battery_temperature": s(27),
+        "sensor.solax_battery_input_energy_today": s(7.8), "sensor.solax_battery_output_energy_today": s(2.1),
+        "sensor.solax_bms_battery_capacity": s(11520, { unit_of_measurement: "Wh" }),
+        "number.solax_selfuse_discharge_min_soc": s(15, { min: 10, max: 100, step: 1, unit_of_measurement: "%" }),
+        "number.solax_battery_charge_upper_soc": s(100, { min: 10, max: 100, step: 1, unit_of_measurement: "%" }),
+        "sensor.solax_energy_dashboard_solax_home_consumption_power": s(4240),
+        "sensor.solax_energy_dashboard_solax_home_consumption_energy": s(14.3),
+        "sensor.boiler_power": s(2000), "sensor.boiler_energy_today": s(3.2),
+        "sensor.heating_power": s(0),
+        "sensor.air_conditioner_power": s(640), "climate.air_conditioner": s("cool", { hvac_action: "cooling" }),
+        "sensor.solax_wallbox_charge_power_total": s(1100), "sensor.solax_wallbox_run_mode": s("Charging"),
+        "select.solax_wallbox_charge_mode": s("Green", { options: ["Fast", "Eco", "Green"] }),
+        "select.solax_wallbox_control_command": s("Start Charging", { options: ["Start Charging", "Stop Charging"] }),
+        "number.solax_wallbox_charge_current": s(8, { min: 6, max: 16, step: 1, unit_of_measurement: "A" }),
+        "sensor.solax_wallbox_charge_added": s(4.6), "sensor.solax_wallbox_charger_temperature": s(24),
+        "sensor.solax_communication_health": s("Healthy"), "sensor.solax_communication_success_rate": s(99.4),
+        "sensor.car_battery_level": s(64, { unit_of_measurement: "%" }), "sensor.car_range": s(262),
+        "sensor.car_charging_time_remaining": s(185, { unit_of_measurement: "min" }), "sensor.car_target_charge": s(80),
+        "binary_sensor.car_charger_connected": s("on"),
+        "switch.low_tariff": s("on"),
+      };
+      if (scene !== "night") return day;
+      return Object.assign({}, day, {
+        "sensor.solax_pv_power_1": s(0), "sensor.solax_pv_voltage_1": s(0), "sensor.solax_pv_current_1": s(0),
+        "sensor.solax_pv_power_2": s(0), "sensor.solax_pv_voltage_2": s(0), "sensor.solax_pv_current_2": s(0),
+        "sensor.solax_pv_power_total": s(0), "sensor.solax_inverter_power": s(812),
+        "sensor.solax_energy_dashboard_solax_grid_power": s(24),
+        "sensor.solax_battery_power_charge": s(-790), "sensor.solax_battery_capacity": s(58, { unit_of_measurement: "%" }),
+        "sensor.solax_battery_current_charge": s(-2.0),
+        "sensor.solax_energy_dashboard_solax_home_consumption_power": s(836),
+        "sensor.boiler_power": s(0), "sensor.heating_power": s(620), "sensor.air_conditioner_power": s(0),
+        "climate.air_conditioner": s("heat", { hvac_action: "idle" }),
+        "sensor.solax_wallbox_charge_power_total": s(0), "sensor.solax_wallbox_run_mode": s("Available"),
+        "sensor.car_charging_time_remaining": s(0), "binary_sensor.car_charger_connected": s("off"),
+        "switch.low_tariff": s("off"),
+      });
+    }
+
+    function hass(scene) {
+      return { states: states(scene), language: lang, locale: { language: lang }, callService: () => {} };
+    }
+
+    function config() {
+      const cfg = customElements.get("solax-fve-card").getStubConfig(hass("day"));
+      const sk = lang === "sk";
+      Object.assign(cfg.entities, {
+        tariff_low: "switch.low_tariff",
+        inverter_comm_health: "sensor.solax_communication_health",
+        inverter_comm_rate: "sensor.solax_communication_success_rate",
+        car_soc: "sensor.car_battery_level",
+        car_range: "sensor.car_range",
+        car_time_remaining: "sensor.car_charging_time_remaining",
+        car_target_soc: "sensor.car_target_charge",
+        car_plug: "binary_sensor.car_charger_connected",
+      });
+      cfg.pv1_label = sk ? "Juh" : "South";
+      cfg.pv2_label = sk ? "Východ/Západ" : "East/West";
+      cfg.loads = [
+        { id: "boiler", label: sk ? "Bojler" : "Boiler", icon: "🚿", color: "#e0a020", entity: "sensor.boiler_power", today: "sensor.boiler_energy_today" },
+        { id: "car", label: sk ? "Auto" : "Car", icon: "🚗", color: "#8e6ecb", entity: "sensor.solax_wallbox_charge_power_total" },
+        { id: "heat", label: sk ? "Kúrenie" : "Heating", icon: "♨️", color: "#4ba3c7", entity: "sensor.heating_power" },
+        { id: "ac", label: sk ? "Klíma" : "A/C", icon: "🌡️", color: "#3fbfd8", entity: "sensor.air_conditioner_power", icon_entity: "climate.air_conditioner" },
+      ];
+      cfg.links = [
+        { label: sk ? "Energie" : "Energy", icon: "⚡", path: "/energy" },
+        { label: sk ? "História" : "History", icon: "📈", path: "/history" },
+      ];
+      return cfg;
+    }
+
+    const root = document.getElementById("slots");
+    root.style.display = "flex";
+    root.style.gap = "24px";
+    root.style.alignItems = "flex-start";
+    root.style.flexWrap = "wrap";
+
+    views.forEach((view) => {
+      const slot = document.createElement("div");
+      if (view === "editor") {
+        slot.className = "editor";
+        const ed = document.createElement("solax-fve-card-editor");
+        ed.setConfig(config());
+        ed.hass = hass("day");
+        slot.appendChild(ed);
+        slot.querySelectorAll("details").forEach((d, i) => { if (i === 1) d.open = true; });
+      } else {
+        slot.className = "slot";
+        const card = document.createElement("solax-fve-card");
+        card.setConfig(config());
+        card.hass = hass(view === "night" ? "night" : "day");
+        slot.appendChild(card);
+        if (view === "details") card.querySelectorAll("details").forEach((d) => (d.open = true));
+      }
+      root.appendChild(slot);
+    });
+  </script>
+</body>
+</html>

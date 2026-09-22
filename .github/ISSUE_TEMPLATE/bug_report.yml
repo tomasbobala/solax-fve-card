@@ -1,0 +1,46 @@
+name: Bug report / Chyba
+description: Something does not work as expected / Niečo nefunguje, ako má
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Čo sa stalo?
+      description: A clear description and, if possible, a screenshot. / Popis a ak sa dá, obrázok.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect? / Čo ste očakávali?
+  - type: input
+    id: card_version
+    attributes:
+      label: Card version / Verzia karty
+      description: Shown in the browser console (F12) / Zobrazená v konzole prehliadača (F12)
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version / Verzia Home Assistant
+      placeholder: "2026.9.1"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser or app / Prehliadač alebo aplikácia
+      placeholder: "Chrome 140, HA Companion iOS …"
+  - type: textarea
+    id: config
+    attributes:
+      label: Card YAML / YAML karty
+      description: Remove anything private. / Odstráňte súkromné údaje.
+      render: yaml
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors / Chyby v konzole
+      render: text

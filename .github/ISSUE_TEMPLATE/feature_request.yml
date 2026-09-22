@@ -1,0 +1,20 @@
+name: Feature request / Návrh
+description: Suggest an improvement / Navrhnite vylepšenie
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like? / Čo by ste chceli?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it useful? / Prečo je to užitočné?
+  - type: textarea
+    id: entities
+    attributes:
+      label: Entities involved / Súvisiace entity
+      description: Entity IDs and example states, if relevant. / ID entít a príklady stavov, ak treba.
+      render: yaml

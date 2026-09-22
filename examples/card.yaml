@@ -1,0 +1,75 @@
+type: custom:solax-fve-card
+language: auto
+title: Home energy
+title_icon: ⚡
+links:
+  - label: Energy
+    icon: ⚡
+    path: /energy
+  - label: History
+    icon: 📈
+    path: /history
+entities:
+  pv1_power: sensor.solax_pv_power_1
+  pv1_voltage: sensor.solax_pv_voltage_1
+  pv1_current: sensor.solax_pv_current_1
+  pv2_power: sensor.solax_pv_power_2
+  pv2_voltage: sensor.solax_pv_voltage_2
+  pv2_current: sensor.solax_pv_current_2
+  solar_power: sensor.solax_pv_power_total
+  solar_today: sensor.solax_today_s_solar_energy
+  inverter_status: sensor.solax_run_mode
+  inverter_power: sensor.solax_inverter_power
+  inverter_temp: sensor.solax_inverter_temperature
+  grid_power: sensor.solax_measured_power
+  grid_import_today: sensor.solax_today_s_import_energy
+  grid_export_today: sensor.solax_today_s_export_energy
+  tariff_low: switch.low_tariff
+  battery_power: sensor.solax_battery_power_charge
+  battery_soc: sensor.solax_battery_capacity
+  battery_voltage: sensor.solax_battery_voltage_charge
+  battery_current: sensor.solax_battery_current_charge
+  battery_temp: sensor.solax_battery_temperature
+  battery_charge_today: sensor.solax_battery_input_energy_today
+  battery_discharge_today: sensor.solax_battery_output_energy_today
+  battery_capacity: sensor.solax_bms_battery_capacity
+  battery_min_soc: number.solax_selfuse_discharge_min_soc
+  battery_max_soc: number.solax_battery_charge_upper_soc
+  total_power: sensor.solax_house_load
+  wallbox_power: sensor.solax_wallbox_charge_power_total
+  wallbox_status: sensor.solax_wallbox_run_mode
+  wallbox_mode: select.solax_wallbox_charge_mode
+  wallbox_current: number.solax_wallbox_charge_current
+  car_soc: sensor.my_car_battery_level
+  car_range: sensor.my_car_range
+  car_limit: number.my_car_charge_limit
+pv1_label: South
+pv2_label: East/West
+home_mode: total
+loads:
+  - label: Boiler
+    icon: 🚿
+    color: "#e0a020"
+    entity: sensor.boiler_power
+    today: sensor.boiler_energy_today
+  - label: Car
+    icon: 🚗
+    color: "#8e6ecb"
+    entity: sensor.solax_wallbox_charge_power_total
+  - label: Heating
+    icon: ♨️
+    color: "#4ba3c7"
+    entity: sensor.heating_living_room_power
+    extra_entities: sensor.heating_bedroom_power, sensor.heating_bathroom_power
+  - label: A/C
+    icon: 🌡️
+    color: "#3fbfd8"
+    entity: sensor.ac_power
+    icon_entity: climate.living_room
+wallbox_max_power: 11000
+battery_segments: 3
+power_unit: W
+animation_speed: normal
+show:
+  energy_today: false
+  wallbox_session: false

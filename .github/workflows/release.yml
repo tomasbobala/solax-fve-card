@@ -1,0 +1,24 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  asset:
+    name: Attach card to release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CODE=$(grep -oP 'CARD_VERSION = "\K[^"]+' dist/solax-fve-card.js)
+          echo "tag=$TAG code=$CODE"
+          if [ "$TAG" != "$CODE" ]; then echo "::warning::Tag $TAG does not match CARD_VERSION $CODE"; fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/solax-fve-card.js
