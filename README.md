@@ -305,8 +305,6 @@ npx serve .           # then open http://localhost:3000/demo/?lang=en&view=day,n
 
 The whole card is a single file: [`dist/solax-fve-card.js`](dist/solax-fve-card.js). The demo page accepts `lang=en|sk`, `view=day,night,details,editor` and `theme=light`.
 
-Publishing a new version and getting into HACS is described step by step in [docs/PUBLISHING.md](docs/PUBLISHING.md).
-
 ## Contributing
 
 Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). Translations into more languages are especially appreciated: add a block to `I18N` and `STATE_TEXT` in the card file.
