@@ -306,7 +306,6 @@ npx serve .           # potom otvorte http://localhost:3000/demo/?lang=sk&view=d
 
 Celá karta je jeden súbor: [`dist/solax-fve-card.js`](dist/solax-fve-card.js). Demo stránka berie parametre `lang=en|sk`, `view=day,night,details,editor` a `theme=light`.
 
-Ako vydať novú verziu a dostať sa do HACS je popísané krok za krokom v [docs/PUBLISHING.sk.md](docs/PUBLISHING.sk.md).
 
 ## Prispievanie
 
