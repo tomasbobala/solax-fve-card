@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ SolaX FVE Card
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/icon.png" alt="SolaX FVE Card" width="128">
+
+# SolaX FVE Card
 
 **Animovaná karta toku energie pre Home Assistant a meniče SolaX**
 

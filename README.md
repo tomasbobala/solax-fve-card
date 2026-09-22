@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ SolaX FVE Card
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/icon.png" alt="SolaX FVE Card" width="128">
+
+# SolaX FVE Card
 
 **Animated energy‑flow card for Home Assistant and SolaX inverters**
 
@@ -304,6 +306,7 @@ npx serve .           # then open http://localhost:3000/demo/?lang=en&view=day,n
 ```
 
 The whole card is a single file: [`dist/solax-fve-card.js`](dist/solax-fve-card.js). The demo page accepts `lang=en|sk`, `view=day,night,details,editor` and `theme=light`.
+
 
 ## Contributing
 
