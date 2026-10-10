@@ -45,7 +45,7 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 | 🔋 **Battery** | Segmented battery icon, SOC, charge/discharge direction, V/A/°C, daily kWh, runtime estimate, **MIN/MAX SOC markers** and sliders to change them. |
 | 🗼 **Grid** | Import/export with direction colours, daily import/export and an optional low/high‑tariff badge. |
 | 🏠 **Home & loads** | Big home node with total consumption and any number of loads (boiler, car, heating, A/C, …) drawn as line icons that light up when active. A/C icons switch between ❄️ and 🔥 by HVAC mode. |
-| 🚗 **Wallbox & EV** | Charging power bar, status, **GREEN · ECO · FAST · STOP** mode buttons, charging current slider, car SOC with target, range, time remaining and charge limit. |
+| 🚗 **Wallbox & EV** | Charging power bar, status, **GREEN · ECO · FAST · STOP / START** mode buttons, charging current slider, car SOC with target, range, time remaining and charge limit. |
 | ✨ **Animation** | Moving, pulsing arrows along each flow – speed follows the power. |
 | 🌍 **Languages** | English and Slovak, picked automatically from Home Assistant (or forced per card). |
 | 🛠️ **Visual editor** | Everything is configurable in the UI – no YAML needed. Entities of the `solax_modbus` integration are discovered automatically. |
@@ -242,7 +242,7 @@ Set under `show:` (`true` / `false`).
 | `dim_idle_loads` | `true` | Dim loads that draw nothing |
 | `wallbox_panel` | `true` | Wallbox panel |
 | `wallbox_settings` | `true` | Charging current / car limit |
-| `wallbox_stop` | `true` | STOP button next to the modes |
+| `wallbox_stop` | `true` | STOP button next to the modes (turns into START while charging is stopped) |
 | `wallbox_session` | `false` | Energy of the current session |
 | `car` | `true` | Car battery |
 | `diagnostics` | `true` | Communication dot |

@@ -45,7 +45,7 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 | 🔋 **Batéria** | Segmentová ikona, SOC, smer nabíjania/vybíjania, V/A/°C, denné kWh, odhad výdrže, **rysky MIN/MAX SOC** a posuvníky na ich zmenu. |
 | 🗼 **Sieť** | Import/export s farbou podľa smeru, denný nákup/predaj a voliteľný odznak nízkej/vysokej tarify (NT/VT). |
 | 🏠 **Dom a záťaže** | Veľký uzol domu s celkovou spotrebou a ľubovoľný počet záťaží (bojler, auto, kúrenie, klíma …) ako čiarové ikony, ktoré sa rozsvietia, keď berú prúd. Klíma prepína ❄️ / 🔥 podľa režimu. |
-| 🚗 **Wallbox a auto** | Pruh nabíjacieho výkonu, stav, tlačidlá **GREEN · ECO · FAST · STOP**, posuvník prúdu, batéria auta s cieľom, dojazd, zostávajúci čas a limit nabíjania. |
+| 🚗 **Wallbox a auto** | Pruh nabíjacieho výkonu, stav, tlačidlá **GREEN · ECO · FAST · STOP / START**, posuvník prúdu, batéria auta s cieľom, dojazd, zostávajúci čas a limit nabíjania. |
 | ✨ **Animácia** | Putujúce pulzujúce šípky po každom toku – rýchlosť podľa výkonu. |
 | 🌍 **Jazyky** | Angličtina a slovenčina, automaticky podľa Home Assistant (alebo nastavené pre kartu). |
 | 🛠️ **Vizuálny editor** | Všetko sa nastavuje v UI – YAML netreba. Entity integrácie `solax_modbus` sa nájdu automaticky. |
@@ -243,7 +243,7 @@ Pod `show:` (`true` / `false`).
 | `dim_idle_loads` | `true` | Stlmiť záťaže, ktoré nič neberú |
 | `wallbox_panel` | `true` | Panel wallboxu |
 | `wallbox_settings` | `true` | Nabíjací prúd / limit auta |
-| `wallbox_stop` | `true` | Tlačidlo STOP pri režimoch |
+| `wallbox_stop` | `true` | Tlačidlo STOP pri režimoch (po zastavení sa zmení na START) |
 | `wallbox_session` | `false` | Energia aktuálnej relácie |
 | `car` | `true` | Batéria auta |
 | `diagnostics` | `true` | Bodka komunikácie |

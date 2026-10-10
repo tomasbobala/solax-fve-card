@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.1";
+const CARD_VERSION = "1.0.2";
 
 const I18N = {
   en: {
@@ -43,6 +43,7 @@ const I18N = {
     target: "target",
     car_limit: "Car charge limit",
     stop: "STOP",
+    start: "START",
     ph_grid_power: "Grid power",
     ph_grid_voltage: "Grid voltage",
     ph_inv_voltage: "Inverter voltage",
@@ -246,6 +247,7 @@ const I18N = {
     target: "cieľ",
     car_limit: "Limit nabíjania auta",
     stop: "STOP",
+    start: "START",
     ph_grid_power: "Sieť výkon",
     ph_grid_voltage: "Sieť napätie",
     ph_inv_voltage: "Menič napätie",
@@ -521,6 +523,7 @@ const HVAC_ICONS = {
 const WB_MODE_COLORS = { Fast: "#5b8def", Eco: "#4ba3c7", Green: "#4caf7d", Boost: "#e0a020" };
 const WB_MODE_ORDER = ["Green", "Eco", "Fast", "Boost"];
 const WB_STOP_COLOR = "#e0577a";
+const WB_START_COLOR = "#4caf7d";
 const POWER_SCALE = [
   [0, "#4caf7d"],
   [35, "#9ec44a"],
@@ -655,6 +658,8 @@ const WALLBOX_STOP_SUFFIXES = [
   ["button", "stop_charge"],
   ["button", "stop_charging"],
 ];
+
+const WALLBOX_START_BUTTONS = ["start_charge", "start_charging"];
 
 const WALLBOX_PREFIX_RE = /^(.*?_)(charge_mode|charge_power_total|charge_power|run_mode|charge_current)$/;
 
@@ -885,6 +890,48 @@ class SolaxFveCard extends HTMLElement {
     return id;
   }
 
+  _startOption(entityId) {
+    const st = this._hass && this._hass.states[entityId];
+    const options = (st && st.attributes && st.attributes.options) || [];
+    return options.find((o) => /^(start|started|enable|enabled|on|resume)$/i.test(o)) || options.find((o) => /start|resume|enable/i.test(o)) || null;
+  }
+
+  _startButton(stopId) {
+    const m = stopId.match(/^button\.(.*?)(stop_charge|stop_charging)$/);
+    if (!m) return "";
+    return this._firstExisting(WALLBOX_START_BUTTONS.map((s) => `button.${m[1]}${s}`));
+  }
+
+  /** Ci je nabijanie zastavene nasim STOP a treba ponuknut START.
+   *  Select si drzi poslednu zapisanu moznost (napr. "Stop Charging"), switch je "off".
+   *  Ked auto realne nabija (napr. po prepojeni kabla), START sa neponuka. */
+  _isStopped(stopId, charging) {
+    if (!stopId || charging) return false;
+    const st = this._hass && this._hass.states[stopId];
+    if (!st) return false;
+    const domain = stopId.split(".")[0];
+    if (domain === "select" || domain === "input_select") return !!this._startOption(stopId) && st.state === this._stopOption(stopId);
+    if (domain === "switch" || domain === "input_boolean") return st.state === "off";
+    return false;
+  }
+
+  _startCharging(entityId) {
+    if (!entityId || !this._hass) return Promise.resolve();
+    const domain = entityId.split(".")[0];
+    if (domain === "select" || domain === "input_select") {
+      const opt = this._startOption(entityId);
+      return opt ? Promise.resolve(this._hass.callService(domain, "select_option", { entity_id: entityId, option: opt })) : Promise.resolve();
+    }
+    if (domain === "switch" || domain === "input_boolean") {
+      return Promise.resolve(this._hass.callService(domain, "turn_on", { entity_id: entityId }));
+    }
+    if (domain === "button") {
+      const start = this._startButton(entityId);
+      if (start) return Promise.resolve(this._hass.callService("button", "press", { entity_id: start }));
+    }
+    return Promise.resolve();
+  }
+
   _stopOption(entityId) {
     const st = this._hass && this._hass.states[entityId];
     const options = (st && st.attributes && st.attributes.options) || [];
@@ -994,6 +1041,8 @@ class SolaxFveCard extends HTMLElement {
             .forEach((id) => ids.push(id));
       });
     });
+    const stopId = this._hass ? this._stopEntity() : "";
+    if (stopId) ids.push(stopId);
     return ids;
   }
 
@@ -2315,7 +2364,8 @@ class SolaxFveCard extends HTMLElement {
           ib = WB_MODE_ORDER.indexOf(b);
         return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
       });
-      const key = ordered.join("|") + "#" + st.state + "#" + stopId;
+      const stopped = this._isStopped(stopId, charging);
+      const key = ordered.join("|") + "#" + st.state + "#" + stopId + "#" + stopped;
       if (key !== this._wbChipsKey) {
         const chips = wrap.querySelector(".sf-chips");
         let html = ordered
@@ -2326,15 +2376,22 @@ class SolaxFveCard extends HTMLElement {
             return `<button class="sf-chip ${on ? "active" : ""}" style="${style}" data-mode="${escapeHtml(o)}">${escapeHtml(this._tr(o, "wallbox"))}</button>`;
           })
           .join("");
-        if (stopId) {
+        if (stopId && stopped) {
+          html += `<button class="sf-chip sf-chip-start" style="border-color:${WB_START_COLOR}; color:${WB_START_COLOR}; border-width:2px;" data-start="${escapeHtml(stopId)}">▶ ${escapeHtml(t("start"))}</button>`;
+        } else if (stopId) {
           html += `<button class="sf-chip sf-chip-stop" style="border-color:${WB_STOP_COLOR}; color:${WB_STOP_COLOR};" data-stop="${escapeHtml(stopId)}">⏹ ${escapeHtml(t("stop"))}</button>`;
         }
         chips.innerHTML = html;
         chips.querySelectorAll(".sf-chip[data-mode]").forEach((btn) => {
-          btn.onclick = () => this._hass.callService("select", "select_option", { entity_id: modeEntity, option: btn.dataset.mode });
+          btn.onclick = () => {
+            const done = Promise.resolve(this._hass.callService("select", "select_option", { entity_id: modeEntity, option: btn.dataset.mode }));
+            if (stopped) done.then(() => this._startCharging(stopId)).catch(() => {});
+          };
         });
         const stopBtn = chips.querySelector(".sf-chip-stop");
         if (stopBtn) stopBtn.onclick = () => this._stopCharging(stopBtn.dataset.stop);
+        const startBtn = chips.querySelector(".sf-chip-start");
+        if (startBtn) startBtn.onclick = () => this._startCharging(startBtn.dataset.start);
         this._wbChipsKey = key;
       }
     }

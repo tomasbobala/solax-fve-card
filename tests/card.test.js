@@ -124,6 +124,59 @@ test("mode chips are ordered GREEN, ECO, FAST and followed by STOP", () => {
   assert.deepEqual(JSON.parse(JSON.stringify(hass.calls.pop())), { domain: "select", service: "select_option", data: { entity_id: "select.solax_wallbox_control_command", option: "Stop Charging" } });
 });
 
+const plain = (x) => JSON.parse(JSON.stringify(x));
+const stoppedCommand = {
+  "select.solax_wallbox_control_command": s("Stop Charging", { options: ["No Command", "Available", "Unavailable", "Stop Charging", "Start Charging"] }),
+  "sensor.solax_wallbox_run_mode": s("Finishing"),
+};
+
+test("after STOP the chip turns into START, which sends Start Charging", () => {
+  const w = boot();
+  const hass = makeHass("en", stoppedCommand);
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  assert.equal(card.querySelector(".sf-chip-stop"), null);
+  const start = card.querySelector(".sf-chip-start");
+  assert.ok(start);
+  assert.match(start.textContent, /START/);
+  start.onclick();
+  assert.deepEqual(plain(hass.calls.pop()), { domain: "select", service: "select_option", data: { entity_id: "select.solax_wallbox_control_command", option: "Start Charging" } });
+});
+
+test("picking a charge mode while stopped also restarts charging", async () => {
+  const w = boot();
+  const hass = makeHass("en", stoppedCommand);
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  card.querySelector('.sf-chip[data-mode="Green"]').onclick();
+  await new Promise((r) => setTimeout(r, 10));
+  assert.deepEqual(plain(hass.calls), [
+    { domain: "select", service: "select_option", data: { entity_id: "select.solax_wallbox_charge_mode", option: "Green" } },
+    { domain: "select", service: "select_option", data: { entity_id: "select.solax_wallbox_control_command", option: "Start Charging" } },
+  ]);
+});
+
+test("STOP stays when the car charges again even if the command still says Stop", () => {
+  const w = boot();
+  const hass = makeHass("en", Object.assign({}, stoppedCommand, {
+    "sensor.solax_wallbox_charge_power_total": s(7200),
+    "sensor.solax_wallbox_run_mode": s("Charging"),
+  }));
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  assert.ok(card.querySelector(".sf-chip-stop"));
+  assert.equal(card.querySelector(".sf-chip-start"), null);
+});
+
+test("STOP / START chip updates when only the command entity changes", () => {
+  const w = boot();
+  const hass = makeHass("en");
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  assert.ok(card.querySelector(".sf-chip-stop"));
+  const next = Object.assign({}, hass, { states: Object.assign({}, hass.states, stoppedCommand) });
+  delete next.states["sensor.solax_wallbox_run_mode"];
+  next.states["sensor.solax_wallbox_run_mode"] = hass.states["sensor.solax_wallbox_run_mode"];
+  card.hass = next;
+  assert.ok(card.querySelector(".sf-chip-start"));
+});
+
 test("close MIN and MAX SOC share one label", () => {
   const w = boot();
   const hass = makeHass("en", { "number.solax_battery_charge_upper_soc": s(15, { min: 10, max: 100, step: 1 }) });

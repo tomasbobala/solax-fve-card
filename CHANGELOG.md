@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] – 2026-10-10
+
+### Fixed / Opravené
+
+- After **STOP** there was no way to resume charging from the card: SolaX chargers stay stopped after
+  *Stop Charging* until they receive *Start Charging*, and picking a mode does not restart them.
+  The STOP button now turns into **▶ START** while charging is stopped (sends *Start Charging*, or
+  `turn_on` for a switch, or presses the matching start button). Picking GREEN / ECO / FAST while
+  stopped also restarts charging.
+  / Po **STOP** sa nabíjanie z karty nedalo obnoviť: nabíjačka SolaX po *Stop Charging* ostane
+  zastavená, kým nedostane *Start Charging*, a výber režimu ju nespustí. Tlačidlo STOP sa po
+  zastavení zmení na **▶ START** a výber režimu počas zastavenia nabíjanie znova spustí.
+- The card now also re-renders when only the STOP entity changes.
+  / Karta sa prekreslí aj vtedy, keď sa zmení iba entita STOP.
+
 ## [1.0.0] – 2026-09-22
 
 First public release. / Prvé verejné vydanie.
