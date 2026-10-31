@@ -225,3 +225,72 @@ test("editor renders in both languages", () => {
     assert.ok(ed.textContent.includes(word), lang);
   }
 });
+
+const tilesLoads = [
+  { id: "a", label: "Boiler", icon: "🚿", color: "#e0a020", entity: "sensor.boiler_power", today: "sensor.boiler_today" },
+  { id: "b", label: "Car", icon: "🚗", color: "#8e6ecb", entity: "sensor.solax_wallbox_charge_power_total" },
+  { id: "c", label: "Heating", icon: "♨️", color: "#4ba3c7", entity: "sensor.heating_power" },
+  { id: "d", label: "", icon: "⚡", entity: "" },
+];
+function tilesCard(cfgPatch, extra) {
+  const w = boot();
+  const hass = makeHass("en", Object.assign({
+    "sensor.boiler_power": s(1200), "sensor.boiler_today": s(2.5),
+    "sensor.solax_wallbox_charge_power_total": s(1000),
+    "sensor.heating_power": s(0),
+  }, extra || {}));
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  Object.assign(cfg, { loads: tilesLoads, loads_layout: "tiles" }, cfgPatch || {});
+  return render(w, cfg, hass);
+}
+test("tiles layout: loads plus OTHER = home minus measured loads", () => {
+  const card = tilesCard();
+  const boxes = [...card.querySelectorAll(".sf-svg .sf-box")].filter((g) => g.querySelector("rect") && g.querySelector(".sf-t-label") && !g.classList.contains("sf-home"));
+  const labels = boxes.map((g) => g.querySelector(".sf-t-label").textContent);
+  assert.deepEqual(labels.slice(-4), ["Boiler", "Car", "Heating", "Other"]);
+  const other = boxes[boxes.length - 1].querySelector(".sf-t-value").textContent.replace(/ | /g, " ");
+  assert.match(other, /^1[ ,.]?400 W$/); // 3600 - 1200 - 1000 - 0
+});
+
+test("OTHER tile can be switched off and needs at least one load", () => {
+  let card = tilesCard({ show: { loads_other: false } });
+  assert.ok(!card.innerHTML.includes(">Other<"));
+  card = tilesCard({ loads: [] });
+  assert.ok(!card.innerHTML.includes(">Other<"));
+});
+
+test("OTHER never goes below zero", () => {
+  const card = tilesCard({}, { "sensor.boiler_power": s(5000) });
+  const html = card.innerHTML;
+  const m = html.match(/>Other<\/text>\s*<text class="sf-t-value"[^>]*>([^<]*)</);
+  assert.ok(m);
+  assert.match(m[1], /^0 W$/);
+});
+
+test("tiles layout: one coloured arrow per running load, travelling from the house", () => {
+  const card = tilesCard();
+  const arrows = [...card.querySelectorAll(".sf-svg .sf-arrow-move polygon")].map((p) => p.getAttribute("fill"));
+  ["#e0a020", "#8e6ecb", "#9aa0a8"].forEach((c) => assert.ok(arrows.includes(c), c));
+  assert.ok(!arrows.includes("#4ba3c7"), "idle heating has no arrow");
+});
+
+test("rows layout puts at most loads_per_row loads in one row", () => {
+  const card = tilesCard({ loads_layout: "rows", loads_per_row: 2 });
+  const ys = new Set([...card.querySelectorAll(".sf-svg .sf-box:not(.sf-home) circle")].map((c) => c.getAttribute("cy")));
+  assert.ok(ys.size >= 2);
+});
+
+test("editor sections are colour coded and show an expand marker", () => {
+  const w = boot();
+  const ed = w.document.createElement("solax-fve-card-editor");
+  ed.setConfig({ type: "custom:solax-fve-card", loads: tilesLoads });
+  ed.hass = makeHass("sk");
+  const secs = [...ed.querySelectorAll("details.sf-ed-section")];
+  assert.ok(secs.length >= 8);
+  secs.forEach((d) => {
+    assert.ok(d.style.getPropertyValue("--sec"));
+    assert.ok(d.querySelector(".sf-ed-chev"));
+  });
+  assert.ok(ed.textContent.includes("záťaže: 4"));
+  assert.ok(ed.textContent.includes("Rozloženie záťaží"));
+});

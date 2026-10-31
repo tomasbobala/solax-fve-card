@@ -44,9 +44,9 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 | 🔆 **Menič** | Nakreslený menič (alebo vlastná fotka), režim, AC výkon, teplota a bodka stavu Modbus komunikácie. |
 | 🔋 **Batéria** | Segmentová ikona, SOC, smer nabíjania/vybíjania, V/A/°C, denné kWh, odhad výdrže, **rysky MIN/MAX SOC** a posuvníky na ich zmenu. |
 | 🗼 **Sieť** | Import/export s farbou podľa smeru, denný nákup/predaj a voliteľný odznak nízkej/vysokej tarify (NT/VT). |
-| 🏠 **Dom a záťaže** | Veľký uzol domu s celkovou spotrebou a ľubovoľný počet záťaží (bojler, auto, kúrenie, klíma …) ako čiarové ikony, ktoré sa rozsvietia, keď berú prúd. Klíma prepína ❄️ / 🔥 podľa režimu. |
+| 🏠 **Dom a záťaže** | Veľký uzol domu s celkovou spotrebou a ľubovoľný počet záťaží (bojler, auto, kúrenie, klíma …) ako čiarové ikony, ktoré sa rozsvietia, keď berú prúd. Rozloženie **v jednom rade, vo viacerých radoch alebo ako dlaždice**; dlaždica **Ostatné** ukáže nemeranú spotrebu. Klíma prepína ❄️ / 🔥 podľa režimu. |
 | 🚗 **Wallbox a auto** | Pruh nabíjacieho výkonu, stav, tlačidlá **GREEN · ECO · FAST · STOP / START**, posuvník prúdu, batéria auta s cieľom, dojazd, zostávajúci čas a limit nabíjania. |
-| ✨ **Animácia** | Putujúce pulzujúce šípky po každom toku – rýchlosť podľa výkonu. |
+| ✨ **Animácia** | Putujúce pulzujúce šípky po každom toku – rýchlosť podľa výkonu. Pri dlaždiciach má každá záťaž vlastnú farebnú šípku, ktorá ide od domu. |
 | 🌍 **Jazyky** | Angličtina a slovenčina, automaticky podľa Home Assistant (alebo nastavené pre kartu). |
 | 🛠️ **Vizuálny editor** | Všetko sa nastavuje v UI – YAML netreba. Entity integrácie `solax_modbus` sa nájdu automaticky. |
 | 📦 **Bez závislostí** | Jeden čistý JavaScript súbor, žiadny build, žiadne externé požiadavky. |
@@ -165,6 +165,9 @@ Zadávajú sa pod `entities:`. Výkon v kW sa prepočíta automaticky.
 | `pv1_label`, `pv2_label` | text | `String 1`, `String 2` | Názvy stringov; panel ukáže začiatočné písmená (*Východ/Západ* → `V/Z`) |
 | `home_label`, `home_icon` | text | `Dom`, `🏠` | Uzol domu |
 | `home_mode` | text | `total` | `total` = celá spotreba, `remainder` = mínus záťaže pod ním |
+| `loads_layout` | text | `row` | `row` = jeden rad (pôvodné), `rows` = krúžky vo viacerých radoch, `tiles` = dlaždice v mriežke |
+| `loads_per_row` | číslo | `3` | Záťaží v rade pre `rows` a `tiles` |
+| `other_label`, `other_icon`, `other_color` | text | `Ostatné`, `🔌`, `#9aa0a8` | Dlaždica OSTATNÉ (dom mínus merané záťaže) |
 | `inverter_image` | text | – | Vlastný obrázok meniča, napr. `/local/menic.png` |
 | `inverter_power_label` | text | `výstup` | Text pred výkonom meniča, prázdne = bez textu |
 | `wallbox_image` | text | – | Vlastný obrázok wallboxu |
@@ -241,6 +244,7 @@ Pod `show:` (`true` / `false`).
 | `tariff` | `true` | Odznak tarify |
 | `loads` | `true` | Záťaže |
 | `dim_idle_loads` | `true` | Stlmiť záťaže, ktoré nič neberú |
+| `loads_other` | `true` | Dlaždica OSTATNÉ – nemeraná spotreba (dom mínus záťaže), keď je zadaná aspoň jedna záťaž |
 | `wallbox_panel` | `true` | Panel wallboxu |
 | `wallbox_settings` | `true` | Nabíjací prúd / limit auta |
 | `wallbox_stop` | `true` | Tlačidlo STOP pri režimoch (po zastavení sa zmení na START) |
@@ -269,6 +273,10 @@ Kompletný príklad je v [`examples/card.yaml`](examples/card.yaml).
 | Svetlá téma | Angličtina | Vizuálny editor |
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-light.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/editor-en.png" width="280"> |
+
+| Dlaždice záťaží + Ostatné | | |
+|---|---|---|
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | | |
 
 ## Riešenie problémov
 

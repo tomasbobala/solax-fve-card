@@ -67,7 +67,7 @@
         "sensor.solax_energy_dashboard_solax_home_consumption_power": s(4240),
         "sensor.solax_energy_dashboard_solax_home_consumption_energy": s(14.3),
         "sensor.boiler_power": s(2000), "sensor.boiler_energy_today": s(3.2),
-        "sensor.heating_power": s(0),
+        "sensor.heating_power": s(0), "sensor.lights_power": s(85), "sensor.rack_power": s(42),
         "sensor.air_conditioner_power": s(640), "climate.air_conditioner": s("cool", { hvac_action: "cooling" }),
         "sensor.solax_wallbox_charge_power_total": s(1100), "sensor.solax_wallbox_run_mode": s("Charging"),
         "select.solax_wallbox_charge_mode": s("Green", { options: ["Fast", "Eco", "Green"] }),
@@ -122,6 +122,14 @@
         { id: "heat", label: sk ? "Kúrenie" : "Heating", icon: "♨️", color: "#4ba3c7", entity: "sensor.heating_power" },
         { id: "ac", label: sk ? "Klíma" : "A/C", icon: "🌡️", color: "#3fbfd8", entity: "sensor.air_conditioner_power", icon_entity: "climate.air_conditioner" },
       ];
+      if (q.get("layout")) {
+        cfg.loads_layout = q.get("layout");
+        cfg.loads[3].today = "sensor.boiler_energy_today";
+        cfg.loads.push(
+          { id: "light", label: sk ? "Osvetlenie" : "Lights", icon: "💡", color: "#e8d44d", entity: "sensor.lights_power" },
+          { id: "rack", label: "Rack", icon: "🖧", color: "#00bcd4", entity: "sensor.rack_power" },
+        );
+      }
       cfg.links = [
         { label: sk ? "Energie" : "Energy", icon: "⚡", path: "/energy" },
         { label: sk ? "História" : "History", icon: "📈", path: "/history" },

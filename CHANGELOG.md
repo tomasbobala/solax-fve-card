@@ -2,6 +2,39 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] – 2026-10-31
+
+### Added / Pridané
+
+- **Load layouts** `loads_layout`: `row` (original single row, default), `rows` (circles,
+  `loads_per_row` per row) and `tiles` (compact tiles in a grid). With many loads the single row got
+  too small to read.
+  / **Rozloženie záťaží** `loads_layout`: `row` (pôvodný jeden rad), `rows` (krúžky po
+  `loads_per_row` v rade) a `tiles` (dlaždice v mriežke). Pri veľa záťažiach bol jeden rad neprehľadný.
+- Tiles: one shared feed line in the home colour, and every running load has its own arrow in its
+  own colour travelling all the way from the house to the tile. Rows are fed through the gap between
+  tiles, so no line crosses a tile.
+  / Dlaždice: spoločné vedenie vo farbe domu, každá bežiaca záťaž má vlastnú šípku vo svojej farbe,
+  ktorá ide od domu až k nej. Do ďalších radov vedie čiara medzerou medzi dlaždicami.
+- **OTHER tile** – unmeasured consumption = home power minus all measured loads (never below 0).
+  Shown when at least one load is set; daily value when every load has a daily entity.
+  `show.loads_other`, `other_label`, `other_icon`, `other_color`.
+  / **Dlaždica OSTATNÉ** – nemeraná spotreba = dom mínus všetky merané záťaže (nikdy pod 0).
+- Editor: colour-coded sections with an icon badge, a count (e.g. *loads: 6*) and an expand marker
+  that rotates when open; load cards carry the load's colour.
+  / Editor: farebne odlíšené sekcie s ikonou, počtom (napr. *záťaže: 6*) a značkou rozbalenia;
+  karty záťaží majú farbu záťaže.
+
+### Fixed / Opravené
+
+- Long load names in tiles shrink instead of overflowing. / Dlhé názvy v dlaždiciach sa zmenšia.
+- Editor inputs no longer overflow the card. / Polia editora už nepretekajú cez okraj.
+
+### Docs / Dokumentácia
+
+- New screenshot of the tile layout, updated editor screenshot, README features and options.
+  / Nový obrázok dlaždíc, aktualizovaný obrázok editora, popis funkcií a nastavení v README.
+
 ## [1.0.2] – 2026-10-10
 
 ### Fixed / Opravené

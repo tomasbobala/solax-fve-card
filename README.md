@@ -44,9 +44,9 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 | 🔆 **Inverter** | Built‑in drawn inverter (or your own photo), run mode, AC output, temperature and a Modbus communication health dot. |
 | 🔋 **Battery** | Segmented battery icon, SOC, charge/discharge direction, V/A/°C, daily kWh, runtime estimate, **MIN/MAX SOC markers** and sliders to change them. |
 | 🗼 **Grid** | Import/export with direction colours, daily import/export and an optional low/high‑tariff badge. |
-| 🏠 **Home & loads** | Big home node with total consumption and any number of loads (boiler, car, heating, A/C, …) drawn as line icons that light up when active. A/C icons switch between ❄️ and 🔥 by HVAC mode. |
+| 🏠 **Home & loads** | Big home node with total consumption and any number of loads (boiler, car, heating, A/C, …) drawn as line icons that light up when active. Lay them out in **one row, several rows or as tiles**; an **Other** tile shows the unmeasured rest. A/C icons switch between ❄️ and 🔥 by HVAC mode. |
 | 🚗 **Wallbox & EV** | Charging power bar, status, **GREEN · ECO · FAST · STOP / START** mode buttons, charging current slider, car SOC with target, range, time remaining and charge limit. |
-| ✨ **Animation** | Moving, pulsing arrows along each flow – speed follows the power. |
+| ✨ **Animation** | Moving, pulsing arrows along each flow – speed follows the power. With tiles every load gets its own coloured arrow travelling from the house. |
 | 🌍 **Languages** | English and Slovak, picked automatically from Home Assistant (or forced per card). |
 | 🛠️ **Visual editor** | Everything is configurable in the UI – no YAML needed. Entities of the `solax_modbus` integration are discovered automatically. |
 | 📦 **Zero dependencies** | One plain JavaScript file, no build step, no external requests. |
@@ -164,6 +164,9 @@ Set under `entities:`. Power entities in kW are converted automatically.
 | `pv1_label`, `pv2_label` | string | `String 1`, `String 2` | String names; the panel shows their initials (e.g. *East/West* → `E/W`) |
 | `home_label`, `home_icon` | string | `Home`, `🏠` | Home node |
 | `home_mode` | string | `total` | `total` = whole consumption, `remainder` = minus the loads below |
+| `loads_layout` | string | `row` | `row` = one row (original), `rows` = circles in several rows, `tiles` = tiles in a grid |
+| `loads_per_row` | number | `3` | Loads per row for `rows` and `tiles` |
+| `other_label`, `other_icon`, `other_color` | string | `Other`, `🔌`, `#9aa0a8` | The OTHER tile (home minus measured loads) |
 | `inverter_image` | string | – | Your own inverter picture, e.g. `/local/inverter.png` |
 | `inverter_power_label` | string | `output` | Text in front of the inverter power, empty = none |
 | `wallbox_image` | string | – | Your own wallbox picture |
@@ -240,6 +243,7 @@ Set under `show:` (`true` / `false`).
 | `tariff` | `true` | Tariff badge |
 | `loads` | `true` | Loads |
 | `dim_idle_loads` | `true` | Dim loads that draw nothing |
+| `loads_other` | `true` | OTHER tile – unmeasured consumption (home minus loads), when at least one load is set |
 | `wallbox_panel` | `true` | Wallbox panel |
 | `wallbox_settings` | `true` | Charging current / car limit |
 | `wallbox_stop` | `true` | STOP button next to the modes (turns into START while charging is stopped) |
@@ -268,6 +272,10 @@ A complete example is in [`examples/card.yaml`](examples/card.yaml).
 | Light theme | Slovak | Visual editor |
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-light.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-sk.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/editor-en.png" width="280"> |
+
+| Load tiles + Other | | |
+|---|---|---|
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | | |
 
 ## Troubleshooting
 

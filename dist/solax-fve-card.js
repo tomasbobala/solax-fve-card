@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.2";
+const CARD_VERSION = "1.0.3";
 
 const I18N = {
   en: {
@@ -10,6 +10,7 @@ const I18N = {
     phase_details: "Phase details",
     communication: "Communication",
     home: "Home",
+    other: "Other",
     car: "Car",
     solar: "Solar",
     pv_short: "PV",
@@ -91,6 +92,14 @@ const I18N = {
     ed_home_label: '"Home" label',
     ed_home_icon: '"Home" icon',
     ed_add_load: "+ Add load",
+    ed_loads_layout: "Load layout",
+    ed_layout_row: "One row (original)",
+    ed_layout_rows: "Circles, more rows",
+    ed_layout_tiles: "Tiles",
+    ed_loads_per_row: "Loads per row",
+    ed_other_label: "\"Other\" tile label",
+    ed_n_loads: "{n} loads",
+    ed_n_links: "{n} links",
     ed_load_label: "Name (e.g. Boiler)",
     ed_remove_load: "Remove load",
     ed_load_entity: "Entity (power)",
@@ -188,6 +197,7 @@ const I18N = {
     "show.wallbox_stop": "Wallbox – STOP button next to the modes",
     "show.night_compact": "Collapse strings when there is no production",
     "show.dim_idle_loads": "Dim idle loads",
+    "show.loads_other": "Tile OTHER – unmeasured consumption (home minus loads)",
     "show.tariff": "Grid – tariff badge",
     "show.diagnostics": "Communication status dot (inverter, wallbox)",
     "show.phase_details": "Show phase details",
@@ -214,6 +224,7 @@ const I18N = {
     phase_details: "Detaily fáz",
     communication: "Komunikácia",
     home: "Dom",
+    other: "Ostatné",
     car: "Auto",
     solar: "Solar",
     pv_short: "FV",
@@ -295,6 +306,14 @@ const I18N = {
     ed_home_label: "Názov položky „Dom“",
     ed_home_icon: "Ikona položky „Dom“",
     ed_add_load: "+ Pridať záťaž",
+    ed_loads_layout: "Rozloženie záťaží",
+    ed_layout_row: "Jeden rad (pôvodné)",
+    ed_layout_rows: "Krúžky, viac radov",
+    ed_layout_tiles: "Dlaždice",
+    ed_loads_per_row: "Záťaží v rade",
+    ed_other_label: "Názov dlaždice „Ostatné“",
+    ed_n_loads: "záťaže: {n}",
+    ed_n_links: "odkazy: {n}",
     ed_load_label: "Názov (napr. Bojler)",
     ed_remove_load: "Odstrániť záťaž",
     ed_load_entity: "Entita (výkon)",
@@ -392,6 +411,7 @@ const I18N = {
     "show.wallbox_stop": "Wallbox – tlačidlo STOP pri režimoch",
     "show.night_compact": "Zbaliť stringy, keď nič nevyrába",
     "show.dim_idle_loads": "Stlmiť neaktívne záťaže",
+    "show.loads_other": "Dlaždica OSTATNÉ – nemeraná spotreba (dom mínus záťaže)",
     "show.tariff": "Sieť – odznak tarify NT / VT",
     "show.diagnostics": "Bodka stavu komunikácie (menič, wallbox)",
     "show.phase_details": "Zobraziť detaily fáz",
@@ -498,6 +518,7 @@ const DEFAULT_SHOW = {
   translate_sk: true,
   night_compact: true,
   dim_idle_loads: true,
+  loads_other: true,
   wallbox_stop: true,
 };
 
@@ -523,6 +544,11 @@ const HVAC_ICONS = {
 const WB_MODE_COLORS = { Fast: "#5b8def", Eco: "#4ba3c7", Green: "#4caf7d", Boost: "#e0a020" };
 const WB_MODE_ORDER = ["Green", "Eco", "Fast", "Boost"];
 const WB_STOP_COLOR = "#e0577a";
+const TILE_H = 72;
+const TILE_GAP = 18;
+const TILE_DROP = 28;
+const TILE_BUS_GAP = 44;
+const TILE_PITCH = TILE_H + 52;
 const WB_START_COLOR = "#4caf7d";
 const POWER_SCALE = [
   [0, "#4caf7d"],
@@ -1344,6 +1370,22 @@ class SolaxFveCard extends HTMLElement {
     const showSum = this._show("solar_sum");
 
     const items = d.loads.filter((l) => l.label && (l.entity || l.extra_entities));
+    if (items.length && d.total != null && this._show("loads_other")) {
+      const measured = items.reduce((s, l) => s + (l.value > 0 ? l.value : 0), 0);
+      const totalToday = this._n("total_today");
+      const allToday = items.every((l) => l.today != null);
+      const sumToday = items.reduce((s, l) => s + (l.today || 0), 0);
+      items.push({
+        id: "__other",
+        label: cfg.other_label || t("other"),
+        icon: cfg.other_icon || "🔌",
+        color: cfg.other_color || "#9aa0a8",
+        value: Math.max(0, d.total - measured),
+        today: totalToday != null && allToday ? Math.max(0, totalToday - sumToday) : null,
+        entity: this._e("total_power"),
+        is_other: true,
+      });
+    }
     const showHome = !!this._e("total_power");
     const homeItem = showHome
       ? {
@@ -1359,6 +1401,10 @@ class SolaxFveCard extends HTMLElement {
 
     const W = 500;
     const N = Math.max(items.length, 1);
+    const layout = cfg.loads_layout || "row";
+    const perRow = Math.max(1, Number(cfg.loads_per_row) || 3);
+    const rowsN = layout === "row" ? 1 : Math.ceil(items.length / perRow) || 1;
+    const ROW_H = layout === "tiles" ? TILE_PITCH : 132;
 
     const anyPv = [d.solar, d.pv1, d.pv2].some((v) => v != null && v > 3);
     const nightCompact = this._show("night_compact") && !anyPv;
@@ -1377,7 +1423,7 @@ class SolaxFveCard extends HTMLElement {
     const trunkTop = 404 - shift;
     const busY = 608 - shift;
     const loadTop = 624 - shift;
-    const H = loadTop + 112;
+    const H = layout === "row" ? loadTop + 112 : layout === "tiles" ? busY + TILE_BUS_GAP + TILE_DROP + rowsN * TILE_PITCH - (TILE_PITCH - TILE_H) + 14 : loadTop + rowsN * ROW_H - 14;
 
     const pv1x = 92,
       pv2x = 408,
@@ -1506,6 +1552,10 @@ class SolaxFveCard extends HTMLElement {
       branchFromY = homeBottom;
     }
 
+    if (layout === "rows" || layout === "tiles") {
+      this._renderLoadGrid(items, { layout, perRow, ROW_H, W, invPos, branchFromY, busY, loadTop, lines, nodes, speed, animOn });
+      items.length = 0;
+    }
     const slot = W / N;
     const scale = N <= 3 ? 1 : N === 4 ? 0.94 : N === 5 ? 0.86 : 0.76;
     items.forEach((l, i) => {
@@ -1629,6 +1679,36 @@ class SolaxFveCard extends HTMLElement {
       const x = a.x + dx * 0.55,
         y = a.y + dy * 0.55;
       out += `<polygon class="sf-arrow" points="-6,-5 6,0 -6,5" fill="${color}" transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${angle.toFixed(1)})"></polygon>`;
+    }
+    return out;
+  }
+
+  _flowLine(points, active, color, value, speed, animOn) {
+    const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+    let out = `<path class="sf-line ${active ? "active" : ""}" d="${d}"></path>`;
+    if (animOn) {
+      const dur = value != null ? clamp(4.6 - Math.log10(Math.abs(value) + 1) * 1.1, 1.1, 4.6) * speed : 2.6 * speed;
+      out += `<path class="sf-flow ${active ? "on fwd" : ""}" style="stroke:${color}; animation-duration:${dur.toFixed(2)}s;" d="${d}"></path>`;
+    }
+    return out;
+  }
+
+  _arrowAlong(points, color, value, speed, animOn, phase) {
+    const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+    const id = `sfp-${this._uid}-${this._pathSeq++}`;
+    let out = `<path id="${id}" d="${d}" fill="none" stroke="none"></path>`;
+    if (animOn) {
+      const dur = (value != null ? clamp(6.4 - Math.log10(Math.abs(value) + 1) * 1.0, 2.6, 6.4) : 4.6) * speed;
+      out +=
+        `<g class="sf-arrow-move">` +
+        `<polygon points="-7,-5.5 7,0 -7,5.5" fill="${color}" stroke="rgba(0,0,0,.35)" stroke-width="0.8"></polygon>` +
+        `<animateMotion dur="${dur.toFixed(2)}s" begin="-${(phase * dur).toFixed(2)}s" repeatCount="indefinite" rotate="auto" calcMode="linear">` +
+        `<mpath href="#${id}" xlink:href="#${id}"></mpath>` +
+        `</animateMotion></g>`;
+    } else {
+      const a = points[points.length - 2], b = points[points.length - 1];
+      const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+      out += `<polygon class="sf-arrow" points="-6,-5 6,0 -6,5" fill="${color}" transform="translate(${((a.x + b.x) / 2).toFixed(1)},${((a.y + b.y) / 2).toFixed(1)}) rotate(${ang.toFixed(1)})"></polygon>`;
     }
     return out;
   }
@@ -1932,6 +2012,90 @@ class SolaxFveCard extends HTMLElement {
     if (!l) return "";
     if (l.art) return l.art;
     return ICON_ART[this._loadIcon(l)] || ICON_ART[l.icon] || "";
+  }
+
+  _renderLoadGrid(items, o) {
+    const { layout, perRow, ROW_H, W, invPos, branchFromY, busY, loadTop, lines, nodes, speed, animOn } = o;
+    const colW = W / perRow;
+    const gapX = colW;
+    if (layout === "tiles") {
+      const bus0 = busY + TILE_BUS_GAP;
+      const trunkColor = this._color("home");
+      const on = (l) => l.value != null && l.value > 3;
+      const sum = (arr) => arr.reduce((s, l) => s + (l.value || 0), 0);
+      const tiles = items.map((l, i) => {
+        const r = Math.floor(i / perRow), c = i % perRow;
+        const inRow = Math.min(perRow, items.length - r * perRow);
+        const offset = ((perRow - inRow) * colW) / 2;
+        const tx = offset + c * colW + TILE_GAP / 2;
+        const tw = colW - TILE_GAP;
+        const top = bus0 + TILE_DROP + r * TILE_PITCH;
+        return { l, i, r, tx, tw, top, rowBus: top - TILE_DROP, cx: tx + tw / 2, color: l.color || LOAD_PALETTE[i % LOAD_PALETTE.length] };
+      });
+      const rows = Math.max(...tiles.map((t) => t.r)) + 1;
+      const L = (pts, list) => lines.push(this._flowLine(pts, list.some(on), trunkColor, sum(list), speed, animOn));
+      L([{ x: invPos.x, y: branchFromY }, { x: invPos.x, y: bus0 }], items);
+      const arrows = [];
+      for (let r = 0; r < rows; r++) {
+        const row = tiles.filter((t) => t.r === r);
+        const below = tiles.filter((t) => t.r > r);
+        const bus = row[0].rowBus;
+        const tx = r === 0 ? invPos.x : gapX;
+        if (r > 0) L([{ x: gapX, y: tiles.find((t) => t.r === r - 1).rowBus }, { x: gapX, y: bus }], tiles.filter((t) => t.r >= r).map((t) => t.l));
+        const leftSide = row.filter((t) => t.cx < tx - 1).map((t) => t.l).concat(r === 0 && gapX < tx ? below.map((t) => t.l) : []);
+        const rightSide = row.filter((t) => t.cx > tx + 1).map((t) => t.l);
+        const minX = Math.min(...row.map((t) => t.cx), r === 0 && below.length ? gapX : Infinity);
+        const maxX = Math.max(...row.map((t) => t.cx));
+        if (minX < tx - 1) L([{ x: tx, y: bus }, { x: minX, y: bus }], leftSide);
+        if (maxX > tx + 1) L([{ x: tx, y: bus }, { x: maxX, y: bus }], rightSide);
+        row.forEach((t) => {
+          L([{ x: t.cx, y: bus }, { x: t.cx, y: t.top - 2 }], [t.l]);
+          nodes.push(this._loadTile({ x: t.tx, y: t.top, w: t.tw, h: TILE_H }, t.color, t.l));
+          if (!on(t.l)) return;
+          const pts = [{ x: invPos.x, y: branchFromY }, { x: invPos.x, y: bus0 }];
+          if (t.r > 0) pts.push({ x: gapX, y: bus0 }, { x: gapX, y: bus });
+          pts.push({ x: t.cx, y: bus }, { x: t.cx, y: t.top - 2 });
+          arrows.push({ pts, t });
+        });
+      }
+      arrows.forEach((a, k) => lines.push(this._arrowAlong(a.pts, a.t.color, a.t.l.value, speed, animOn, k / Math.max(arrows.length, 1))));
+      return;
+    }
+    items.forEach((l, i) => {
+      const r = Math.floor(i / perRow), c = i % perRow;
+      const inRow = Math.min(perRow, items.length - r * perRow);
+      const offset = (perRow - inRow) * colW / 2;
+      const x = offset + colW * (c + 0.5);
+      const rowBus = busY + r * ROW_H;
+      const top = loadTop + r * ROW_H;
+      const color = l.color || LOAD_PALETTE[i % LOAD_PALETTE.length];
+      const pts = [{ x: invPos.x, y: branchFromY }, { x: invPos.x, y: busY }];
+      if (r > 0) pts.push({ x: gapX, y: busY }, { x: gapX, y: rowBus });
+      pts.push({ x, y: rowBus }, { x, y: top - 2 });
+      lines.push(this._flowPath(pts, l.value != null && l.value > 3, false, color, l.value, speed, animOn));
+      nodes.push(this._loadNode({ x, y: top }, color, l, 1));
+    });
+  }
+
+  _loadTile(b, color, l) {
+    const isOn = l.value != null && l.value > 3;
+    const tone = isOn ? color : IDLE_LOAD_COLOR;
+    const kind = this._loadArtKind(l);
+    const cx = b.x + 30, cy = b.y + b.h / 2;
+    const icon = kind ? this._loadArt(kind, cx, cy, 26, tone, isOn) : `<text class="sf-t-icon" x="${cx}" y="${cy}" style="font-size:22px">${l.icon || "⚡"}</text>`;
+    const avail = b.w - 58 - 8;
+    const labelFs = Math.min(12, avail / Math.max(1, String(l.label || "").length * 0.72));
+    const today = l.today != null ? `<text class="sf-t-detail" x="${b.x + 58}" y="${(b.y + b.h - 11).toFixed(1)}" style="text-anchor:start;font-size:11px">${escapeHtml(fmtEnergy(l.today, 1))} ${t("today")}</text>` : "";
+    return `
+      <g class="sf-box${!isOn && this._show("dim_idle_loads") ? " sf-load-idle" : ""}" data-entity="${l.entity || ""}">
+        <rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="14" fill="${tone}" opacity="${isOn ? 0.14 : 0.06}"></rect>
+        <rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="14" fill="none" stroke="${tone}" stroke-width="1.4" opacity="${isOn ? 0.6 : 0.3}"></rect>
+        <circle cx="${cx}" cy="${cy}" r="20" fill="${tone}" opacity="${isOn ? 0.18 : 0.1}"></circle>
+        ${icon}
+        <text class="sf-t-label" x="${b.x + 58}" y="${(b.y + 20).toFixed(1)}" style="text-anchor:start;font-size:${labelFs.toFixed(1)}px">${escapeHtml(l.label)}</text>
+        <text class="sf-t-value" x="${b.x + 58}" y="${(b.y + 43).toFixed(1)}" style="text-anchor:start;font-size:20px">${escapeHtml(this._fmtP(l.value))}</text>
+        ${today}
+      </g>`;
   }
 
   _loadNode(pos, color, l, scale) {
@@ -2586,6 +2750,7 @@ const SHOW_FIELDS = [
   { key: "wallbox_stop" },
   { key: "night_compact" },
   { key: "dim_idle_loads" },
+  { key: "loads_other" },
   { key: "tariff" },
   { key: "diagnostics" },
   { key: "phase_details" },
@@ -2661,13 +2826,18 @@ class SolaxFveCardEditor extends HTMLElement {
     this._built = true;
   }
 
-  _section(title, iconEmoji, open) {
+  _section(title, iconEmoji, open, color, hint) {
     const details = document.createElement("details");
     details.className = "sf-ed-section";
+    details.style.setProperty("--sec", color || "#7c8796");
     if (open) details.open = true;
     const summary = document.createElement("summary");
     summary.className = "sf-ed-summary";
-    summary.textContent = `${iconEmoji} ${title}`;
+    summary.innerHTML =
+      `<span class="sf-ed-badge">${escapeHtml(iconEmoji)}</span>` +
+      `<span class="sf-ed-title">${escapeHtml(title)}</span>` +
+      (hint ? `<span class="sf-ed-hint">${escapeHtml(hint)}</span>` : "") +
+      `<span class="sf-ed-chev" aria-hidden="true"></span>`;
     details.appendChild(summary);
     const body = document.createElement("div");
     body.className = "sf-ed-body";
@@ -2922,6 +3092,7 @@ class SolaxFveCardEditor extends HTMLElement {
   _loadCard(load, index) {
     const card = document.createElement("div");
     card.className = "sf-ed-load-card";
+    card.style.setProperty("--lc", load.color || LOAD_PALETTE[index % LOAD_PALETTE.length]);
 
     const head = document.createElement("div");
     head.className = "sf-ed-load-head";
@@ -2953,6 +3124,7 @@ class SolaxFveCardEditor extends HTMLElement {
     colorInput.value = load.color || LOAD_PALETTE[index % LOAD_PALETTE.length];
     colorInput.oninput = () => {
       this._config.loads[index].color = colorInput.value;
+      card.style.setProperty("--lc", colorInput.value);
       this._emit();
     };
     head.appendChild(colorInput);
@@ -3027,7 +3199,7 @@ class SolaxFveCardEditor extends HTMLElement {
     this._textRow(wrap, t("ed_title"), "title", t("title"));
     this._textRow(wrap, t("ed_title_icon"), "title_icon", DEFAULT_TITLE_ICON);
 
-    const linksSec = this._section(t("ed_links"), "🔗", false);
+    const linksSec = this._section(t("ed_links"), "🔗", false, "#5b8def", t("ed_n_links").replace("{n}", (Array.isArray(this._config.links) ? this._config.links : defaultLinks()).length));
     const linkInfo = document.createElement("div");
     linkInfo.className = "sf-ed-row";
     linkInfo.innerHTML = `<div class="sf-ed-label" style="flex:1 1 100%; font-size:0.78rem; opacity:.75;">${escapeHtml(t("ed_links_info"))}</div>`;
@@ -3049,19 +3221,19 @@ class SolaxFveCardEditor extends HTMLElement {
     linksSec.body.appendChild(addLink);
     wrap.appendChild(linksSec.details);
 
-    const solarSec = this._section(t("ed_solar"), "☀️", true);
+    const solarSec = this._section(t("ed_solar"), "☀️", true, "#f5a623");
     this._textRow(solarSec.body, t("ed_pv1_label"), "pv1_label", "String 1");
     this._textRow(solarSec.body, t("ed_pv2_label"), "pv2_label", "String 2");
     ENTITY_FIELDS.filter((f) => f.group === "solar").forEach((f) => this._entityFieldRow(solarSec.body, f));
     wrap.appendChild(solarSec.details);
 
-    const invSec = this._section(t("ed_inverter"), "🔆", false);
+    const invSec = this._section(t("ed_inverter"), "🔆", false, "#d9b43a");
     this._textRow(invSec.body, t("ed_inverter_image"), "inverter_image", "", "sf-ed-text--wide");
     this._textRow(invSec.body, t("ed_inverter_power_label"), "inverter_power_label", t("output"));
     ENTITY_FIELDS.filter((f) => f.group === "inverter").forEach((f) => this._entityFieldRow(invSec.body, f));
     wrap.appendChild(invSec.details);
 
-    const battSec = this._section(t("ed_battery"), "🔋", false);
+    const battSec = this._section(t("ed_battery"), "🔋", false, "#4caf7d");
     ENTITY_FIELDS.filter((f) => f.group === "battery").forEach((f) => this._entityFieldRow(battSec.body, f));
     this._signRow(battSec.body, t("ed_invert_battery"), "invert_battery");
     this._numRow(battSec.body, t("ed_battery_capacity"), "battery_capacity_kwh", null, "0.1");
@@ -3069,12 +3241,12 @@ class SolaxFveCardEditor extends HTMLElement {
     this._numRow(battSec.body, t("ed_battery_segments"), "battery_segments", 3, "1");
     wrap.appendChild(battSec.details);
 
-    const gridSec = this._section(t("ed_grid"), "🔌", false);
+    const gridSec = this._section(t("ed_grid"), "🔌", false, "#e0577a");
     ENTITY_FIELDS.filter((f) => f.group === "grid").forEach((f) => this._entityFieldRow(gridSec.body, f));
     this._signRow(gridSec.body, t("ed_invert_grid"), "invert_grid");
     wrap.appendChild(gridSec.details);
 
-    const loadsSec = this._section(t("ed_loads"), "🧩", true);
+    const loadsSec = this._section(t("ed_loads"), "🧩", true, "#4ba3c7", t("ed_n_loads").replace("{n}", (this._config.loads || []).length));
     const info = document.createElement("div");
     info.className = "sf-ed-row";
     info.innerHTML = `<div class="sf-ed-label" style="flex:1 1 100%; font-size:0.78rem; opacity:.75;">${escapeHtml(t("ed_loads_info"))}</div>`;
@@ -3101,6 +3273,13 @@ class SolaxFveCardEditor extends HTMLElement {
 
     this._textRow(loadsSec.body, t("ed_home_label"), "home_label", t("home"));
     this._textRow(loadsSec.body, t("ed_home_icon"), "home_icon", "🏠", "sf-ed-text--icon");
+    this._selectRow(loadsSec.body, t("ed_loads_layout"), "loads_layout", "row", [
+      ["row", t("ed_layout_row")],
+      ["rows", t("ed_layout_rows")],
+      ["tiles", t("ed_layout_tiles")],
+    ]);
+    this._numRow(loadsSec.body, t("ed_loads_per_row"), "loads_per_row", 3, "1");
+    this._textRow(loadsSec.body, t("ed_other_label"), "other_label", t("other"));
 
     const loadsList = document.createElement("div");
     loadsList.className = "sf-ed-loads-list";
@@ -3126,13 +3305,13 @@ class SolaxFveCardEditor extends HTMLElement {
     loadsSec.body.appendChild(addBtn);
     wrap.appendChild(loadsSec.details);
 
-    const wbSec = this._section(t("ed_wallbox"), "🚗", false);
+    const wbSec = this._section(t("ed_wallbox"), "🚗", false, "#8e6ecb");
     this._textRow(wbSec.body, t("ed_wallbox_image"), "wallbox_image", "", "sf-ed-text--wide");
     ENTITY_FIELDS.filter((f) => f.group === "wallbox").forEach((f) => this._entityFieldRow(wbSec.body, f));
     this._numRow(wbSec.body, t("ed_wallbox_max"), "wallbox_max_power", 11000, "500");
     wrap.appendChild(wbSec.details);
 
-    const showSec = this._section(t("ed_display"), "👁️", false);
+    const showSec = this._section(t("ed_display"), "👁️", false, "#7c8796");
     SHOW_FIELDS.forEach((f) => this._toggleRow(showSec.body, f));
 
     const speedRow = document.createElement("div");
@@ -3158,7 +3337,7 @@ class SolaxFveCardEditor extends HTMLElement {
     this._numRow(showSec.body, t("ed_decimals"), "decimals", 2, "1");
     wrap.appendChild(showSec.details);
 
-    const colorSec = this._section(t("ed_colors"), "🎨", false);
+    const colorSec = this._section(t("ed_colors"), "🎨", false, "#c76b9e");
     COLOR_FIELDS.forEach((f) => this._colorRow(colorSec.body, f));
     wrap.appendChild(colorSec.details);
 
@@ -3175,10 +3354,25 @@ class SolaxFveCardEditor extends HTMLElement {
   _editorStyles() {
     return `
       .sf-ed-root { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
-      .sf-ed-section { border-radius: 10px; background: rgba(127,127,127,0.06); }
-      .sf-ed-summary { cursor: pointer; padding: 10px 12px; font-weight: 500; font-size: 0.9rem; list-style: none; user-select: none; }
+      .sf-ed-section { --sec: #7c8796; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--sec) 35%, transparent);
+        border-left: 5px solid var(--sec); background: color-mix(in srgb, var(--sec) 7%, transparent); overflow: hidden; }
+      .sf-ed-section[open] { background: color-mix(in srgb, var(--sec) 10%, transparent); }
+      .sf-ed-summary { cursor: pointer; padding: 10px 12px; font-weight: 600; font-size: 0.92rem; list-style: none; user-select: none;
+        display: flex; align-items: center; gap: 10px; }
       .sf-ed-summary::-webkit-details-marker { display: none; }
-      .sf-ed-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 12px 12px; }
+      .sf-ed-summary:hover { background: color-mix(in srgb, var(--sec) 12%, transparent); }
+      .sf-ed-badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 15px; flex-shrink: 0;
+        background: color-mix(in srgb, var(--sec) 22%, transparent); }
+      .sf-ed-title { flex: 1; }
+      .sf-ed-hint { font-size: 0.78rem; font-weight: 500; opacity: .65; }
+      .sf-ed-chev { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+        background: color-mix(in srgb, var(--sec) 18%, transparent); }
+      .sf-ed-chev::before { content: ""; width: 7px; height: 7px; border-right: 2px solid var(--sec); border-bottom: 2px solid var(--sec);
+        transform: rotate(-45deg); transition: transform .2s ease; margin-left: -2px; }
+      .sf-ed-section[open] > .sf-ed-summary .sf-ed-chev::before { transform: rotate(45deg); margin: -3px 0 0 0; }
+      .sf-ed-section[open] > .sf-ed-summary { border-bottom: 1px solid color-mix(in srgb, var(--sec) 30%, transparent); }
+      .sf-ed-body { display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 14px; }
+      .sf-ed-root > .sf-ed-row { padding: 0 2px; }
       .sf-ed-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
       .sf-ed-row--toggle { padding: 2px 0; }
       .sf-ed-label { font-size: 0.85rem; color: var(--primary-text-color); flex: 1; min-width: 120px; }
@@ -3193,9 +3387,13 @@ class SolaxFveCardEditor extends HTMLElement {
       .sf-ed-switch .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s ease; }
       .sf-ed-switch.on .knob { left: 20px; }
       .sf-ed-loads-list { display: flex; flex-direction: column; gap: 10px; }
-      .sf-ed-load-card { border: 1px solid var(--divider-color); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+      .sf-ed-load-card { --lc: #7c8796; border: 1px solid color-mix(in srgb, var(--lc) 40%, var(--divider-color)); border-left: 4px solid var(--lc);
+        border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: color-mix(in srgb, var(--lc) 6%, var(--card-background-color)); }
+      .sf-ed-link-card { --lc: #5b8def; }
       .sf-ed-load-head { display: flex; gap: 6px; align-items: center; }
       .sf-ed-load-head .sf-ed-text { flex: 1; min-width: 0; }
+      .sf-ed-load-head .sf-ed-text--icon { flex: 0 0 46px; }
+      .sf-ed-text, .sf-ed-select { box-sizing: border-box; max-width: 100%; }
       .sf-ed-icon-btn { border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); border-radius: 6px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0; }
       .sf-ed-add-btn { border: 1px dashed var(--divider-color); background: none; color: var(--primary-text-color); border-radius: 8px; padding: 8px; cursor: pointer; font-size: 0.85rem; }
     `;
