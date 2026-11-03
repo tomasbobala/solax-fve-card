@@ -73,3 +73,23 @@ animation_speed: normal
 show:
   energy_today: false
   wallbox_session: false
+
+# --- Optional (1.0.4+) -------------------------------------------------
+# Several batteries shown as one / Viac batérií zobrazených ako jedna
+# battery_label: A
+# battery_capacity_kwh: 11.5
+# batteries:
+#   - label: B
+#     capacity_kwh: 10
+#     battery_power: sensor.battery_b_power
+#     battery_soc: sensor.battery_b_soc
+#
+# Second wallbox / Druhý wallbox (add the keys under entities:)
+# wallbox_label: Garage
+# wallbox2: true
+# wallbox2_label: Yard
+# entities:
+#   wb2_wallbox_power: sensor.wallbox_2_charge_power_total
+#   wb2_wallbox_status: sensor.wallbox_2_run_mode
+#   wb2_wallbox_mode: select.wallbox_2_charge_mode
+#   wb2_wallbox_current: number.wallbox_2_charge_current

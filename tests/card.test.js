@@ -294,3 +294,95 @@ test("editor sections are colour coded and show an expand marker", () => {
   assert.ok(ed.textContent.includes("záťaže: 4"));
   assert.ok(ed.textContent.includes("Rozloženie záťaží"));
 });
+
+const multiStates = {
+  "sensor.batt2_power": s(1200), "sensor.batt2_soc": s(64), "sensor.batt2_voltage": s(402), "sensor.batt2_current": s(3),
+  "sensor.batt2_temp": s(31), "sensor.batt2_in_today": s(5.1), "sensor.batt2_out_today": s(1.4),
+  "sensor.evc2_charge_power_total": s(3600), "sensor.evc2_run_mode": s("Charging"),
+  "select.evc2_charge_mode": s("Fast", { options: ["Fast", "Eco", "Green"] }),
+  "select.evc2_control_command": s("Start Charging", { options: ["Start Charging", "Stop Charging"] }),
+  "number.evc2_charge_current": s(16, { min: 6, max: 16, step: 1 }),
+};
+function multiCard(patch) {
+  const w = boot();
+  const hass = makeHass("en", multiStates);
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  Object.assign(cfg, patch || {});
+  return { card: render(w, cfg, hass), hass, cfg };
+}
+const battery2 = { label: "B", capacity_kwh: 10, battery_power: "sensor.batt2_power", battery_soc: "sensor.batt2_soc",
+  battery_voltage: "sensor.batt2_voltage", battery_current: "sensor.batt2_current", battery_temp: "sensor.batt2_temp",
+  battery_charge_today: "sensor.batt2_in_today", battery_discharge_today: "sensor.batt2_out_today" };
+
+test("several batteries are combined: power summed, SOC weighted by capacity", () => {
+  const { card } = multiCard({ battery_capacity_kwh: 30, battery_label: "A", batteries: [Object.assign({}, battery2)] });
+  const el = card.querySelector(".sf-batt-graphic");
+  const text = el.textContent.replace(/ | /g, " ");
+  assert.match(text, /64%/); // both 64 % -> weighted 64 %
+  assert.match(text, /×2/);
+  assert.match(text, /A 64% · B 64%/);
+  assert.ok(card.innerHTML.replace(/ | |&nbsp;/g, " ").match(/2[ ,.]?100 W/), "900 + 1200 W");
+});
+
+test("weighted SOC uses each battery's capacity", () => {
+  const w = boot();
+  const hass = makeHass("en", Object.assign({}, multiStates, { "sensor.solax_battery_capacity": s(80, { unit_of_measurement: "%" }), "sensor.batt2_soc": s(40) }));
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  Object.assign(cfg, { battery_capacity_kwh: 30, batteries: [Object.assign({}, battery2)] }); // 80*30 + 40*10 = 2800 / 40 = 70
+  const card = render(w, cfg, hass);
+  assert.equal(card._battAgg("battery_soc"), 70);
+  assert.equal(card._battAgg("battery_temp"), 31);
+  assert.equal(card._battCapacityKwh(), 40);
+});
+
+test("a battery without a power entity is ignored", () => {
+  const { card } = multiCard({ batteries: [{ label: "X" }] });
+  assert.ok(!card.querySelector(".sf-batt-graphic").textContent.includes("×2"));
+});
+
+test("second wallbox stays hidden until it is switched on", () => {
+  const { card } = multiCard({ entities: undefined });
+  const panels = [...card.querySelectorAll(".sf-wallbox-panel")];
+  assert.equal(panels.length, 2);
+  assert.ok(panels[1].classList.contains("hidden"));
+});
+
+test("second wallbox gets its own panel, title, modes and STOP", () => {
+  const w = boot();
+  const hass = makeHass("en", multiStates);
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  cfg.wallbox2 = true;
+  cfg.wallbox2_label = "Yard";
+  Object.assign(cfg.entities, {
+    wb2_wallbox_power: "sensor.evc2_charge_power_total", wb2_wallbox_status: "sensor.evc2_run_mode",
+    wb2_wallbox_mode: "select.evc2_charge_mode", wb2_wallbox_current: "number.evc2_charge_current",
+  });
+  const card = render(w, cfg, hass);
+  const p2 = card.querySelector('.sf-wallbox-panel[data-wb="wb2_"]');
+  assert.ok(!p2.classList.contains("hidden"));
+  assert.equal(p2.querySelector(".sf-wb-title").textContent, "Yard");
+  assert.equal(p2.querySelector(".sf-chip.active").dataset.mode, "Fast");
+  p2.querySelector(".sf-chip-stop").onclick();
+  assert.deepEqual(JSON.parse(JSON.stringify(hass.calls.pop())), { domain: "select", service: "select_option", data: { entity_id: "select.evc2_control_command", option: "Stop Charging" } });
+  p2.querySelector('.sf-chip[data-mode="Eco"]').onclick();
+  assert.equal(hass.calls.pop().data.entity_id, "select.evc2_charge_mode");
+  const p1 = card.querySelector('.sf-wallbox-panel[data-wb=""]');
+  assert.equal(p1.querySelector(".sf-wb-title").textContent, "Wallbox");
+  assert.equal(p1.querySelector(".sf-chip.active").dataset.mode, "Eco");
+});
+
+test("editor shows the Wallbox 2 section only when switched on and lists extra batteries", () => {
+  const w = boot();
+  const mk = (cfg) => {
+    const ed = w.document.createElement("solax-fve-card-editor");
+    ed.setConfig(Object.assign({ type: "custom:solax-fve-card" }, cfg));
+    ed.hass = makeHass("sk");
+    return ed;
+  };
+  const titles = (ed) => [...ed.querySelectorAll(".sf-ed-title")].map((e) => e.textContent);
+  assert.ok(!titles(mk({})).includes("Wallbox 2"));
+  const ed = mk({ wallbox2: true, batteries: [Object.assign({}, battery2)] });
+  assert.ok(titles(ed).includes("Wallbox 2"));
+  assert.ok(ed.textContent.includes("batérie: 2"));
+  assert.ok(ed.textContent.includes("Ďalšie batérie"));
+});

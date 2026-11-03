@@ -70,6 +70,14 @@
         "sensor.heating_power": s(0), "sensor.lights_power": s(85), "sensor.rack_power": s(42),
         "sensor.air_conditioner_power": s(640), "climate.air_conditioner": s("cool", { hvac_action: "cooling" }),
         "sensor.solax_wallbox_charge_power_total": s(1100), "sensor.solax_wallbox_run_mode": s("Charging"),
+        "sensor.evc2_charge_power_total": s(3600), "sensor.evc2_run_mode": s("Charging"),
+        "select.evc2_charge_mode": s("Fast", { options: ["Fast", "Eco", "Green"] }),
+        "select.evc2_control_command": s("Start Charging", { options: ["Start Charging", "Stop Charging"] }),
+        "number.evc2_charge_current": s(16, { min: 6, max: 16, step: 1, unit_of_measurement: "A" }),
+        "sensor.evc2_charger_temperature": s(29),
+        "sensor.batt2_power": s(1200), "sensor.batt2_soc": s(64, { unit_of_measurement: "%" }),
+        "sensor.batt2_voltage": s(402.0), "sensor.batt2_current": s(3.0), "sensor.batt2_temp": s(31),
+        "sensor.batt2_in_today": s(5.1), "sensor.batt2_out_today": s(1.4),
         "select.solax_wallbox_charge_mode": s("Green", { options: ["Fast", "Eco", "Green"] }),
         "select.solax_wallbox_control_command": s("Start Charging", { options: ["Start Charging", "Stop Charging"] }),
         "number.solax_wallbox_charge_current": s(8, { min: 6, max: 16, step: 1, unit_of_measurement: "A" }),
@@ -80,6 +88,7 @@
         "binary_sensor.car_charger_connected": s("on"),
         "switch.low_tariff": s("on"),
       };
+      if (q.get("wb2")) day["sensor.solax_energy_dashboard_solax_home_consumption_power"] = s(8240);
       if (scene !== "night") return day;
       return Object.assign({}, day, {
         "sensor.solax_pv_power_1": s(0), "sensor.solax_pv_voltage_1": s(0), "sensor.solax_pv_current_1": s(0),
@@ -122,6 +131,24 @@
         { id: "heat", label: sk ? "Kúrenie" : "Heating", icon: "♨️", color: "#4ba3c7", entity: "sensor.heating_power" },
         { id: "ac", label: sk ? "Klíma" : "A/C", icon: "🌡️", color: "#3fbfd8", entity: "sensor.air_conditioner_power", icon_entity: "climate.air_conditioner" },
       ];
+      if (q.get("wb2")) {
+        cfg.wallbox2 = true;
+        cfg.wallbox_label = sk ? "Wallbox garáž" : "Wallbox garage";
+        cfg.wallbox2_label = sk ? "Wallbox dvor" : "Wallbox yard";
+        Object.assign(cfg.entities, {
+          wb2_wallbox_power: "sensor.evc2_charge_power_total", wb2_wallbox_status: "sensor.evc2_run_mode",
+          wb2_wallbox_mode: "select.evc2_charge_mode", wb2_wallbox_current: "number.evc2_charge_current",
+          wb2_wallbox_temp: "sensor.evc2_charger_temperature",
+        });
+        cfg.loads.splice(2, 0, { id: "car2", label: sk ? "Auto 2" : "Car 2", icon: "🚙", color: "#b07ce0", entity: "sensor.evc2_charge_power_total" });
+      }
+      if (q.get("batt")) {
+        cfg.battery_label = "A";
+        cfg.battery_capacity_kwh = 11.5;
+        cfg.batteries = [{ label: "B", capacity_kwh: 10, battery_power: "sensor.batt2_power", battery_soc: "sensor.batt2_soc",
+          battery_voltage: "sensor.batt2_voltage", battery_current: "sensor.batt2_current", battery_temp: "sensor.batt2_temp",
+          battery_charge_today: "sensor.batt2_in_today", battery_discharge_today: "sensor.batt2_out_today" }];
+      }
       if (q.get("layout")) {
         cfg.loads_layout = q.get("layout");
         cfg.loads[3].today = "sensor.boiler_energy_today";

@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.4] – 2026-11-03
+
+### Added / Pridané
+
+- **Several batteries shown as one** – `batteries:` list next to battery 1. Power, current and daily energy
+  are added up, SOC is weighted by capacity, voltage is averaged, the highest temperature is shown and the
+  runtime estimate uses the total capacity. The battery icon gets a **×N** badge and the details list every
+  battery's own SOC (e.g. `A 72% · B 64%`). Editor: *Battery → More batteries → + Add battery*.
+  / **Viac batérií zobrazených ako jedna** – zoznam `batteries:` k batérii 1. Výkon, prúd a denná energia sa
+  sčítajú, SOC sa váži kapacitou, napätie sa priemeruje, ukáže sa najvyššia teplota a odhad výdrže počíta
+  so súčtom kapacít. Ikona dostane odznak **×N** a v detailoch je SOC každej batérie. Editor: *Batéria →
+  Ďalšie batérie → + Pridať batériu*.
+- **Second wallbox** – `wallbox2: true` and the same entity keys with the `wb2_` prefix. A second wallbox
+  panel with its own title, charging modes, STOP / START and current slider. Off by default, so a single
+  wallbox looks exactly as before. Editor: *Wallbox → Second wallbox* reveals a *Wallbox 2* section.
+  / **Druhý wallbox** – `wallbox2: true` a rovnaké kľúče entít s predponou `wb2_`. Druhý panel s vlastným
+  názvom, režimami, STOP / START a posuvníkom prúdu. Predvolene vypnutý, s jedným wallboxom sa nič nemení.
+  Editor: *Wallbox → Druhý wallbox* zobrazí sekciu *Wallbox 2*.
+- Panel titles `wallbox_label`, `wallbox2_label`; battery 1 name `battery_label`.
+  / Názvy panelov `wallbox_label`, `wallbox2_label`; názov batérie 1 `battery_label`.
+
+### Docs / Dokumentácia
+
+- README (EN + SK): new sections *Several batteries* / *Viac batérií* and *Second wallbox* / *Druhý wallbox*,
+  new options, new screenshot, example in `examples/card.yaml`.
+
 ## [1.0.3] – 2026-10-31
 
 ### Added / Pridané

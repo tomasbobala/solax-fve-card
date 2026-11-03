@@ -42,10 +42,10 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 |---|---|
 | 🌞 **Solar** | Dva FV stringy s výkonom, napätím, prúdom a podielom, ich súčet a dnešná výroba. V noci sa stringy zbalia do jedného riadku. |
 | 🔆 **Menič** | Nakreslený menič (alebo vlastná fotka), režim, AC výkon, teplota a bodka stavu Modbus komunikácie. |
-| 🔋 **Batéria** | Segmentová ikona, SOC, smer nabíjania/vybíjania, V/A/°C, denné kWh, odhad výdrže, **rysky MIN/MAX SOC** a posuvníky na ich zmenu. |
+| 🔋 **Batéria** | Segmentová ikona, SOC, smer nabíjania/vybíjania, V/A/°C, denné kWh, odhad výdrže, **rysky MIN/MAX SOC** a posuvníky na ich zmenu. **Viac batérií** sa dá spojiť a zobraziť ako jedna. |
 | 🗼 **Sieť** | Import/export s farbou podľa smeru, denný nákup/predaj a voliteľný odznak nízkej/vysokej tarify (NT/VT). |
 | 🏠 **Dom a záťaže** | Veľký uzol domu s celkovou spotrebou a ľubovoľný počet záťaží (bojler, auto, kúrenie, klíma …) ako čiarové ikony, ktoré sa rozsvietia, keď berú prúd. Rozloženie **v jednom rade, vo viacerých radoch alebo ako dlaždice**; dlaždica **Ostatné** ukáže nemeranú spotrebu. Klíma prepína ❄️ / 🔥 podľa režimu. |
-| 🚗 **Wallbox a auto** | Pruh nabíjacieho výkonu, stav, tlačidlá **GREEN · ECO · FAST · STOP / START**, posuvník prúdu, batéria auta s cieľom, dojazd, zostávajúci čas a limit nabíjania. |
+| 🚗 **Wallbox a auto** | Pruh nabíjacieho výkonu, stav, tlačidlá **GREEN · ECO · FAST · STOP / START**, posuvník prúdu, batéria auta s cieľom, dojazd, zostávajúci čas a limit nabíjania. Voliteľný **druhý wallbox** s vlastným panelom. |
 | ✨ **Animácia** | Putujúce pulzujúce šípky po každom toku – rýchlosť podľa výkonu. Pri dlaždiciach má každá záťaž vlastnú farebnú šípku, ktorá ide od domu. |
 | 🌍 **Jazyky** | Angličtina a slovenčina, automaticky podľa Home Assistant (alebo nastavené pre kartu). |
 | 🛠️ **Vizuálny editor** | Všetko sa nastavuje v UI – YAML netreba. Entity integrácie `solax_modbus` sa nájdu automaticky. |
@@ -157,6 +157,7 @@ Zadávajú sa pod `entities:`. Výkon v kW sa prepočíta automaticky.
 | `car_soc`, `car_target_soc`, `car_range`, `car_time_remaining` | Batéria auta z integrácie auta | – |
 | `car_limit` | Limit nabíjania auta (`number`, posuvník) | – |
 | `car_plug`, `car_state` | Pripojená nabíjačka / stav nabíjania | – |
+| `wb2_…` | Každý kľúč wallboxu / auta vyššie s predponou `wb2_` – druhý wallbox | – |
 
 ### Rozloženie a popisy
 
@@ -172,10 +173,15 @@ Zadávajú sa pod `entities:`. Výkon v kW sa prepočíta automaticky.
 | `inverter_power_label` | text | `výstup` | Text pred výkonom meniča, prázdne = bez textu |
 | `wallbox_image` | text | – | Vlastný obrázok wallboxu |
 | `wallbox_max_power` | číslo | `11000` | Plný rozsah pruhu nabíjania (W) |
+| `wallbox_label` | text | `Wallbox` | Názov panelu wallboxu |
+| `wallbox2` | áno/nie | `false` | Druhý wallbox – pozri [Druhý wallbox](#druhý-wallbox) |
+| `wallbox2_label`, `wallbox2_image`, `wallbox2_max_power` | | `Wallbox 2`, –, `11000` | To isté pre druhý wallbox |
 | `invert_battery`, `invert_grid` | text | `auto` | `auto`, `yes`, `no` – otočí znamienko, ak má senzor opačnú konvenciu |
 | `battery_capacity_kwh` | číslo | z BMS | Kapacita pre odhad výdrže |
 | `battery_runtime_target` | číslo | MIN SOC | Cieľové % pre odhad výdrže |
 | `battery_segments` | číslo | `3` | Počet segmentov ikony batérie |
+| `battery_label` | text | `1` | Názov batérie 1, keď je batérií viac |
+| `batteries` | zoznam | – | Ďalšie batérie zobrazené ako jedna – pozri [Viac batérií](#viac-batérií) |
 
 ### Záťaže
 
@@ -206,6 +212,64 @@ loads:
 | `icon_entity` | `climate` entita – ikona podľa `hvac_action` / režimu |
 
 Emoji → kresba: 🏠 🏡 → dom, 🚿 🛁 → bojler, ♨️ → kúrenie, 🔥 → oheň, ❄️ → chladenie, 🌡️ → teplomer, 🚗 🚙 → auto, 🔌 ⚡ → blesk.
+
+### Viac batérií
+
+Batéria 1 používa entity `battery_*` vyššie. Každá ďalšia batéria patrí do `batteries:` a karta ich všetky
+zobrazí ako **jednu batériu**:
+
+| Hodnota | Ako sa spája |
+|---|---|
+| Výkon, prúd, nabité / vybité dnes, kapacita z BMS | sčíta sa |
+| Stav nabitia (SOC) | váži sa kapacitou (väčšia batéria má väčšiu váhu); bez kapacity obyčajný priemer |
+| Napätie | priemer |
+| Teplota | najvyššia |
+| Odhad výdrže | počíta so súčtom všetkých kapacít |
+| MIN / MAX SOC | z batérie 1 (nastavuje ich menič) |
+
+Ikona batérie dostane odznak **×N** a v detailoch je stav každej batérie zvlášť (napr. `A 72% · B 64%`).
+Batéria bez `battery_power` sa ignoruje.
+
+```yaml
+battery_label: A               # názov batérie 1 v riadku s jednotlivými batériami
+battery_capacity_kwh: 11.5     # kapacita batérie 1 (alebo jej BMS senzor battery_capacity vo Wh)
+batteries:
+  - label: B
+    capacity_kwh: 10           # alebo battery_capacity: sensor.… (Wh)
+    battery_power: sensor.battery_b_power          # + nabíja / − vybíja
+    battery_soc: sensor.battery_b_soc
+    battery_voltage: sensor.battery_b_voltage
+    battery_current: sensor.battery_b_current
+    battery_temp: sensor.battery_b_temperature
+    battery_charge_today: sensor.battery_b_charged_today
+    battery_discharge_today: sensor.battery_b_discharged_today
+```
+
+Okrem `battery_power` je všetko voliteľné. V editore: **Batéria → Ďalšie batérie → + Pridať batériu**.
+
+### Druhý wallbox
+
+Predvolene vypnutý – s jedným wallboxom karta vyzerá presne ako doteraz. Zapína sa `wallbox2: true`
+(editor: **Wallbox → Druhý wallbox**) a objaví sa sekcia **Wallbox 2** s rovnakými poľami ako prvý.
+Karta potom ukáže druhý panel wallboxu s vlastným názvom, režimami, STOP / START a posuvníkom prúdu.
+
+Entity druhého wallboxu majú rovnaké kľúče ako prvý, len s predponou `wb2_`:
+
+```yaml
+wallbox_label: Garáž             # názov prvého panelu (predvolene „Wallbox“)
+wallbox2: true
+wallbox2_label: Dvor             # názov druhého panelu (predvolene „Wallbox 2“)
+wallbox2_max_power: 11000
+entities:
+  wb2_wallbox_power: sensor.wallbox_2_charge_power_total
+  wb2_wallbox_status: sensor.wallbox_2_run_mode
+  wb2_wallbox_mode: select.wallbox_2_charge_mode
+  wb2_wallbox_current: number.wallbox_2_charge_current
+  # wb2_wallbox_stop, wb2_car_soc, wb2_car_range, … – voliteľné, ako pri prvom wallboxe
+```
+
+Entitu STOP si karta nájde sama podľa názvov entít druhého wallboxu, rovnako ako pri prvom.
+Ak chceš vidieť druhé auto medzi záťažami (s vlastnou šípkou), pridaj ho ako záťaž s `entity: sensor.wallbox_2_charge_power_total`.
 
 ### Tlačidlá
 
@@ -274,9 +338,9 @@ Kompletný príklad je v [`examples/card.yaml`](examples/card.yaml).
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-light.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/editor-en.png" width="280"> |
 
-| Dlaždice záťaží + Ostatné | | |
+| Dlaždice záťaží + Ostatné | Dve batérie + druhý wallbox | |
 |---|---|---|
-| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | | |
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | |
 
 ## Riešenie problémov
 

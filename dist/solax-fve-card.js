@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.3";
+const CARD_VERSION = "1.0.4";
 
 const I18N = {
   en: {
@@ -108,6 +108,16 @@ const I18N = {
     ed_load_today_extra: "Daily energy – additional entities",
     ed_load_icon_entity: "Mode-dependent icon (climate entity, optional)",
     ed_wallbox: "Wallbox",
+    ed_wallbox2: "Wallbox 2",
+    ed_wallbox2_on: "Second wallbox",
+    ed_wallbox_label: "Panel title",
+    ed_batteries_extra: "More batteries (shown as one)",
+    ed_batteries_info: "Batteries added here are combined with battery 1: power, current and daily energy are added up, SOC is weighted by capacity, voltage is averaged and the highest temperature is shown.",
+    ed_add_battery: "+ Add battery",
+    ed_batt_label: "Name",
+    ed_batt_capacity: "Capacity (kWh)",
+    ed_battery1_label: "Battery 1 name",
+    ed_n_batteries: "{n} batteries",
     ed_wallbox_image: "Custom wallbox image (URL)",
     ed_wallbox_max: "Wallbox max power for the bar (W)",
     ed_display: "Display",
@@ -322,6 +332,16 @@ const I18N = {
     ed_load_today_extra: "Denná spotreba – ďalšie entity na sčítanie",
     ed_load_icon_entity: "Ikona podľa režimu (climate entita, nepovinné)",
     ed_wallbox: "Wallbox",
+    ed_wallbox2: "Wallbox 2",
+    ed_wallbox2_on: "Druhý wallbox",
+    ed_wallbox_label: "Názov panelu",
+    ed_batteries_extra: "Ďalšie batérie (zobrazia sa ako jedna)",
+    ed_batteries_info: "Batérie pridané tu sa spoja s batériou 1: výkon, prúd a denná energia sa sčítajú, SOC sa váži kapacitou, napätie sa priemeruje a ukáže sa najvyššia teplota.",
+    ed_add_battery: "+ Pridať batériu",
+    ed_batt_label: "Názov",
+    ed_batt_capacity: "Kapacita (kWh)",
+    ed_battery1_label: "Názov batérie 1",
+    ed_n_batteries: "batérie: {n}",
     ed_wallbox_image: "Vlastný obrázok wallboxu (URL)",
     ed_wallbox_max: "Max. výkon wallboxu pre pruh (W)",
     ed_display: "Čo zobraziť",
@@ -544,6 +564,18 @@ const HVAC_ICONS = {
 const WB_MODE_COLORS = { Fast: "#5b8def", Eco: "#4ba3c7", Green: "#4caf7d", Boost: "#e0a020" };
 const WB_MODE_ORDER = ["Green", "Eco", "Fast", "Boost"];
 const WB_STOP_COLOR = "#e0577a";
+const WB2_PREFIX = "wb2_";
+const BATT_AGG = {
+  battery_power: "sum",
+  battery_soc: "soc",
+  battery_voltage: "avg",
+  battery_current: "sum",
+  battery_temp: "max",
+  battery_charge_today: "sum",
+  battery_discharge_today: "sum",
+  battery_capacity: "sum",
+};
+const BATT_UNIT_KEYS = ["battery_power", "battery_soc", "battery_voltage", "battery_current", "battery_temp", "battery_charge_today", "battery_discharge_today", "battery_capacity"];
 const TILE_H = 72;
 const TILE_GAP = 18;
 const TILE_DROP = 28;
@@ -888,7 +920,59 @@ class SolaxFveCard extends HTMLElement {
   }
 
   _e(key) {
-    return (this._config.entities || {})[key] || "";
+    const ents = this._config.entities || {};
+    if (this._wbPrefix && WB_KEYS.has(key)) return ents[this._wbPrefix + key] || "";
+    return ents[key] || "";
+  }
+
+  _wallbox2On() {
+    return !!this._config.wallbox2 && !!(this._config.entities || {})[WB2_PREFIX + "wallbox_power"];
+  }
+
+  _extraBatteries() {
+    return (Array.isArray(this._config.batteries) ? this._config.batteries : []).filter((b) => b && b.battery_power);
+  }
+
+  _battUnits() {
+    const ents = this._config.entities || {};
+    const main = { label: this._config.battery_label || "1", capacity_kwh: this._config.battery_capacity_kwh };
+    BATT_UNIT_KEYS.forEach((k) => (main[k] = ents[k] || ""));
+    return [main, ...this._extraBatteries().map((b, i) => Object.assign({ label: b.label || String(i + 2) }, b))];
+  }
+
+  _unitCapacityKwh(u) {
+    if (u.capacity_kwh) return Number(u.capacity_kwh);
+    const wh = num(this._hass, u.battery_capacity);
+    return wh ? wh / 1000 : null;
+  }
+
+  _battAgg(key) {
+    const units = this._battUnits();
+    const read = (u) => (key === "battery_power" ? numPower(this._hass, u[key]) : num(this._hass, u[key]));
+    const vals = units.map(read);
+    const known = vals.filter((v) => v != null);
+    if (!known.length) return null;
+    const mode = BATT_AGG[key];
+    if (mode === "sum") return known.reduce((s, v) => s + v, 0);
+    if (mode === "avg") return known.reduce((s, v) => s + v, 0) / known.length;
+    if (mode === "max") return Math.max(...known);
+    const caps = units.map((u) => this._unitCapacityKwh(u));
+    const pairs = vals.map((v, i) => [v, caps[i]]).filter(([v]) => v != null);
+    if (pairs.every(([, c]) => c > 0)) {
+      const total = pairs.reduce((s, [, c]) => s + c, 0);
+      return pairs.reduce((s, [v, c]) => s + v * c, 0) / total;
+    }
+    return known.reduce((s, v) => s + v, 0) / known.length;
+  }
+
+  _battCapacityKwh() {
+    if (!this._extraBatteries().length) {
+      if (this._config.battery_capacity_kwh) return Number(this._config.battery_capacity_kwh);
+      const bms = num(this._hass, this._e("battery_capacity"));
+      return bms ? bms / 1000 : null;
+    }
+    const caps = this._battUnits().map((u) => this._unitCapacityKwh(u));
+    return caps.every((c) => c > 0) ? caps.reduce((s, c) => s + c, 0) : null;
   }
 
   _firstExisting(ids) {
@@ -908,7 +992,7 @@ class SolaxFveCard extends HTMLElement {
   }
 
   _stopEntity() {
-    const cfg = (this._config.entities || {}).wallbox_stop;
+    const cfg = this._e("wallbox_stop");
     const prefix = this._wallboxPrefix();
     const candidates = prefix ? WALLBOX_STOP_SUFFIXES.map(([d, s]) => `${d}.${prefix}${s}`) : [];
     const id = cfg ? (this._hass && this._hass.states[cfg] ? cfg : "") : this._firstExisting(candidates);
@@ -965,10 +1049,12 @@ class SolaxFveCard extends HTMLElement {
   }
 
   _n(key) {
+    if (BATT_AGG[key] && this._extraBatteries().length) return this._battAgg(key);
     return num(this._hass, this._e(key));
   }
 
   _p(key) {
+    if (BATT_AGG[key] && this._extraBatteries().length) return this._battAgg(key);
     return numPower(this._hass, this._e(key));
   }
 
@@ -1069,6 +1155,16 @@ class SolaxFveCard extends HTMLElement {
     });
     const stopId = this._hass ? this._stopEntity() : "";
     if (stopId) ids.push(stopId);
+    if (this._wallbox2On() && this._hass) {
+      this._wbPrefix = WB2_PREFIX;
+      try {
+        const s2 = this._stopEntity();
+        if (s2) ids.push(s2);
+      } finally {
+        this._wbPrefix = "";
+      }
+    }
+    this._extraBatteries().forEach((b) => BATT_UNIT_KEYS.forEach((k) => b[k] && ids.push(b[k])));
     return ids;
   }
 
@@ -1115,7 +1211,8 @@ class SolaxFveCard extends HTMLElement {
             <svg class="sf-svg" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
 
-          <div class="sf-wallbox-panel"></div>
+          <div class="sf-wallbox-panel" data-wb=""></div>
+          <div class="sf-wallbox-panel" data-wb="${WB2_PREFIX}"></div>
           <details class="sf-batt-settings sf-fold">
             <summary class="sf-fold-summary">${this._mini("battery", 17)} <span class="sf-fold-title">${t("battery_settings")}</span> <span class="sf-fold-val"></span></summary>
             <div class="sf-fold-body"></div>
@@ -1129,9 +1226,9 @@ class SolaxFveCard extends HTMLElement {
       </ha-card>
     `;
     this._battSettingsBuilt = false;
-    this._wbBuilt = false;
+    this._wbBuilt = {};
     this._phasesBuilt = false;
-    this._wbChipsKey = null;
+    this._wbChipsKey = {};
   }
 
   _styles() {
@@ -1322,7 +1419,8 @@ class SolaxFveCard extends HTMLElement {
 
     this._renderDiagram({ pv1, pv2, solar, battery, soc, grid, loads, remainder, total: totalPower });
     this._renderBatterySettings();
-    this._renderWallboxPanel();
+    this._renderWallboxPanel("");
+    this._renderWallboxPanel(WB2_PREFIX);
     this._renderPhaseDetails();
     this._renderTodayRow();
   }
@@ -2207,6 +2305,15 @@ class SolaxFveCard extends HTMLElement {
     const chToday = this._n("battery_charge_today");
     const disToday = this._n("battery_discharge_today");
     const runtime = this._batteryRuntime(power, soc);
+    const extra = this._extraBatteries();
+    const unitSoc = extra.length
+      ? this._battUnits()
+          .map((u) => {
+            const v = num(this._hass, u.battery_soc);
+            return `${u.label} ${v == null ? "--" : Math.round(v) + "%"}`;
+          })
+          .join(" · ")
+      : "";
 
     let y = by + bh + 32;
     let rows = `<text class="sf-t-value" x="${pos.x}" y="${y}" style="font-size:32px">${escapeHtml(socText)}</text>`;
@@ -2230,6 +2337,14 @@ class SolaxFveCard extends HTMLElement {
       y += 19;
       rows += `<text class="sf-t-detail" x="${pos.x}" y="${y}">${escapeHtml(runtime)}</text>`;
     }
+    if (unitSoc) {
+      y += 19;
+      rows += `<text class="sf-t-detail" x="${pos.x}" y="${y}">${escapeHtml(unitSoc)}</text>`;
+    }
+    const badge = extra.length
+      ? `<g class="sf-batt-count"><rect x="${(bx + bw - 8).toFixed(1)}" y="${(by - 12).toFixed(1)}" width="26" height="18" rx="9" fill="${socColor}"></rect>` +
+        `<text x="${(bx + bw + 5).toFixed(1)}" y="${(by + 1.5).toFixed(1)}" text-anchor="middle" style="font-size:11.5px;font-weight:700" fill="#11161c">×${extra.length + 1}</text></g>`
+      : "";
 
     return `
       <g class="sf-box sf-batt-graphic" data-entity="${this._e("battery_power")}">
@@ -2238,6 +2353,7 @@ class SolaxFveCard extends HTMLElement {
         ${this._battSegments(bx, by, bw, innerH, socClamped, socColor, discharging)}
         ${markers}
         ${arrow}
+        ${badge}
         ${rows}
       </g>`;
   }
@@ -2265,11 +2381,7 @@ class SolaxFveCard extends HTMLElement {
 
   _batteryRuntime(power, soc) {
     if (!this._show("battery_runtime")) return "";
-    let capacity = this._config.battery_capacity_kwh;
-    if (!capacity) {
-      const bms = this._n("battery_capacity");
-      if (bms) capacity = bms / 1000;
-    }
+    const capacity = this._battCapacityKwh();
     if (!capacity || soc == null || power == null) return "";
     let target = this._config.battery_runtime_target;
     if (target == null) target = this._n("battery_min_soc");
@@ -2376,11 +2488,27 @@ class SolaxFveCard extends HTMLElement {
     }
   }
 
-  _renderWallboxPanel() {
-    const wrap = this.querySelector(".sf-wallbox-panel");
+  _renderWallboxPanel(prefix) {
+    const wrap = this.querySelector(`.sf-wallbox-panel[data-wb="${prefix}"]`);
+    if (!wrap) return;
+    if (prefix && !this._wallbox2On()) {
+      wrap.className = "sf-wallbox-panel sf-panel hidden";
+      return;
+    }
+    this._wbPrefix = prefix;
+    try {
+      this._renderWallboxPanelInner(wrap, prefix);
+    } finally {
+      this._wbPrefix = "";
+    }
+  }
+
+  _renderWallboxPanelInner(wrap, prefix) {
     const show = this._show("wallbox_panel") && !!this._e("wallbox_power");
     wrap.className = "sf-wallbox-panel sf-panel" + (show ? "" : " hidden");
     if (!show) return;
+    const wbTitle = (prefix ? this._config.wallbox2_label : this._config.wallbox_label) || (prefix ? "Wallbox 2" : "Wallbox");
+    const sk = (k) => k + (prefix ? "-2" : "");
 
     const power = this._p("wallbox_power");
     const statusRaw = rawState(this._hass, this._e("wallbox_status"));
@@ -2392,7 +2520,7 @@ class SolaxFveCard extends HTMLElement {
     const temp = this._n("wallbox_temp");
     const modeEntity = this._e("wallbox_mode");
     const currentEntity = this._e("wallbox_current");
-    const max = this._config.wallbox_max_power || 11000;
+    const max = (prefix ? this._config.wallbox2_max_power : this._config.wallbox_max_power) || 11000;
     const pct = power == null ? 0 : clamp((power / max) * 100, 0, 100);
     const notCharging = WB_NOT_CHARGING.test(statusRaw || "");
     const charging = (power != null && power > 50) || (!notCharging && /charg/i.test(statusRaw || ""));
@@ -2400,15 +2528,16 @@ class SolaxFveCard extends HTMLElement {
     const ledColor = charging ? "#4caf7d" : /fault|error/i.test(statusRaw || "") ? "#e0577a" : "#5b8def";
     const pColor = powerColor(pct);
 
-    if (!this._wbBuilt) {
-      const art = this._config.wallbox_image
-        ? `<img class="sf-wb-art" src="${escapeHtml(this._config.wallbox_image)}" alt="wallbox">`
+    if (!this._wbBuilt[prefix]) {
+      const img = prefix ? this._config.wallbox2_image : this._config.wallbox_image;
+      const art = img
+        ? `<img class="sf-wb-art" src="${escapeHtml(img)}" alt="wallbox">`
         : `<svg class="sf-wb-art" viewBox="0 0 66 98">${this._defs()}${this._wallboxArt(66, 98, ledColor, charging, power)}</svg>`;
       wrap.innerHTML = `
         <div class="sf-wb-top">
           ${art}
           <div class="sf-wb-info">
-            <div class="sf-wb-title"><span class="sf-comm-led" hidden></span>Wallbox</div>
+            <div class="sf-wb-title"><span class="sf-comm-led" hidden></span>${escapeHtml(wbTitle)}</div>
             <div class="sf-wb-status">--</div>
             <div class="sf-wb-meta"></div>
           </div>
@@ -2433,8 +2562,8 @@ class SolaxFveCard extends HTMLElement {
           <div class="sf-fold-body"></div>
         </details>`;
 
-      this._wbBuilt = true;
-      this._wbChipsKey = null;
+      this._wbBuilt[prefix] = true;
+      this._wbChipsKey[prefix] = null;
     }
 
     const set = (sel, text) => {
@@ -2530,7 +2659,7 @@ class SolaxFveCard extends HTMLElement {
       });
       const stopped = this._isStopped(stopId, charging);
       const key = ordered.join("|") + "#" + st.state + "#" + stopId + "#" + stopped;
-      if (key !== this._wbChipsKey) {
+      if (key !== this._wbChipsKey[prefix]) {
         const chips = wrap.querySelector(".sf-chips");
         let html = ordered
           .map((o) => {
@@ -2556,7 +2685,7 @@ class SolaxFveCard extends HTMLElement {
         if (stopBtn) stopBtn.onclick = () => this._stopCharging(stopBtn.dataset.stop);
         const startBtn = chips.querySelector(".sf-chip-start");
         if (startBtn) startBtn.onclick = () => this._startCharging(startBtn.dataset.start);
-        this._wbChipsKey = key;
+        this._wbChipsKey[prefix] = key;
       }
     }
     const modesBox = wrap.querySelector(".sf-modes");
@@ -2568,18 +2697,18 @@ class SolaxFveCard extends HTMLElement {
     if (foldEl) foldEl.classList.toggle("hidden", !hasCurrent);
     const carLimitId = this._e("car_limit");
     if (this._show("wallbox_settings") && carLimitId && this._hass.states[carLimitId]) {
-      if (!wrap.querySelector('.sf-set-row[data-key="carlimit"]')) {
-        wrap.querySelector(".sf-wb-fold .sf-fold-body").appendChild(this._sliderRow("carlimit", t("car_limit"), carLimitId, "#4caf7d", " %"));
+      if (!wrap.querySelector(`.sf-set-row[data-key="${sk("carlimit")}"]`)) {
+        wrap.querySelector(".sf-wb-fold .sf-fold-body").appendChild(this._sliderRow(sk("carlimit"), t("car_limit"), carLimitId, "#4caf7d", " %"));
       }
-      this._updateSliderRow("carlimit", carLimitId, " %");
+      this._updateSliderRow(sk("carlimit"), carLimitId, " %");
       if (foldEl) foldEl.classList.remove("hidden");
     }
 
     if (hasCurrent) {
-      if (!wrap.querySelector('.sf-set-row[data-key="wbcurrent"]')) {
-        wrap.querySelector(".sf-wb-fold .sf-fold-body").appendChild(this._sliderRow("wbcurrent", t("charge_current"), currentEntity, wbColor, " A"));
+      if (!wrap.querySelector(`.sf-set-row[data-key="${sk("wbcurrent")}"]`)) {
+        wrap.querySelector(".sf-wb-fold .sf-fold-body").appendChild(this._sliderRow(sk("wbcurrent"), t("charge_current"), currentEntity, wbColor, " A"));
       }
-      this._updateSliderRow("wbcurrent", currentEntity, " A");
+      this._updateSliderRow(sk("wbcurrent"), currentEntity, " A");
       const v = this._n("wallbox_current");
       const lbl = wrap.querySelector(".sf-wb-fold .sf-fold-val");
       const txt = v != null ? Math.round(v) + " A" : "";
@@ -2731,6 +2860,8 @@ const ENTITY_FIELDS = [
   { key: "wallbox_comm_health", domains: ["sensor"], group: "wallbox" },
   { key: "wallbox_comm_rate", domains: ["sensor"], group: "wallbox" },
 ];
+
+const WB_KEYS = new Set(ENTITY_FIELDS.filter((f) => f.group === "wallbox").map((f) => f.key));
 
 const SHOW_FIELDS = [
   { key: "pv_split" },
@@ -2985,6 +3116,94 @@ class SolaxFveCardEditor extends HTMLElement {
     body.appendChild(row);
   }
 
+  _boolRow(body, labelText, path, def, rerender) {
+    const row = document.createElement("div");
+    row.className = "sf-ed-row sf-ed-row--toggle";
+    row.innerHTML = `<div class="sf-ed-label">${escapeHtml(labelText)}</div>`;
+    const sw = document.createElement("div");
+    sw.className = "sf-ed-switch" + (this._get(path, def) ? " on" : "");
+    sw.innerHTML = `<div class="knob"></div>`;
+    sw.onclick = () => {
+      const nowOn = !sw.classList.contains("on");
+      sw.classList.toggle("on", nowOn);
+      this._set(path, nowOn);
+      if (rerender) this._rerender();
+    };
+    row.appendChild(sw);
+    body.appendChild(row);
+  }
+
+  _batteriesEditor(body) {
+    this._textRow(body, t("ed_battery1_label"), "battery_label", "1");
+    const head = document.createElement("div");
+    head.className = "sf-ed-subhead";
+    head.textContent = t("ed_batteries_extra");
+    body.appendChild(head);
+    const info = document.createElement("div");
+    info.className = "sf-ed-row";
+    info.innerHTML = `<div class="sf-ed-label" style="flex:1 1 100%; font-size:0.78rem; opacity:.75;">${escapeHtml(t("ed_batteries_info"))}</div>`;
+    body.appendChild(info);
+    if (!Array.isArray(this._config.batteries)) this._config.batteries = [];
+    const list = document.createElement("div");
+    list.className = "sf-ed-loads-list";
+    this._config.batteries.forEach((b, i) => {
+      const card = document.createElement("div");
+      card.className = "sf-ed-load-card";
+      card.style.setProperty("--lc", "#4caf7d");
+      const h = document.createElement("div");
+      h.className = "sf-ed-load-head";
+      const name = document.createElement("input");
+      name.type = "text";
+      name.className = "sf-ed-text";
+      name.placeholder = t("ed_batt_label");
+      name.value = b.label || "";
+      name.oninput = () => {
+        this._config.batteries[i].label = name.value;
+        this._emit();
+      };
+      h.appendChild(name);
+      const cap = document.createElement("input");
+      cap.type = "number";
+      cap.step = "0.1";
+      cap.className = "sf-ed-text sf-ed-text--num";
+      cap.placeholder = "kWh";
+      cap.title = t("ed_batt_capacity");
+      cap.value = b.capacity_kwh || "";
+      cap.oninput = () => {
+        this._config.batteries[i].capacity_kwh = cap.value === "" ? undefined : Number(cap.value);
+        this._emit();
+      };
+      h.appendChild(cap);
+      const rm = document.createElement("button");
+      rm.className = "sf-ed-icon-btn";
+      rm.textContent = "✕";
+      rm.onclick = () => {
+        this._config.batteries.splice(i, 1);
+        this._emit();
+        this._rerender();
+      };
+      h.appendChild(rm);
+      card.appendChild(h);
+      BATT_UNIT_KEYS.forEach((k) => {
+        this._entityPickerRow(card, t("ent." + k), b[k] || "", ["sensor"], (v) => {
+          this._config.batteries[i][k] = v;
+          this._emit();
+        });
+      });
+      list.appendChild(card);
+    });
+    body.appendChild(list);
+    const add = document.createElement("button");
+    add.className = "sf-ed-add-btn";
+    add.textContent = t("ed_add_battery");
+    add.onclick = () => {
+      this._config.batteries.push({ label: String(this._config.batteries.length + 2) });
+      this._emit();
+      this._rerender();
+    };
+    body.appendChild(add);
+  }
+
   _toggleRow(body, field) {
     const row = document.createElement("div");
     row.className = "sf-ed-row sf-ed-row--toggle";
@@ -3233,12 +3452,13 @@ class SolaxFveCardEditor extends HTMLElement {
     ENTITY_FIELDS.filter((f) => f.group === "inverter").forEach((f) => this._entityFieldRow(invSec.body, f));
     wrap.appendChild(invSec.details);
 
-    const battSec = this._section(t("ed_battery"), "🔋", false, "#4caf7d");
+    const battSec = this._section(t("ed_battery"), "🔋", false, "#4caf7d", (this._config.batteries || []).length ? t("ed_n_batteries").replace("{n}", (this._config.batteries || []).length + 1) : "");
     ENTITY_FIELDS.filter((f) => f.group === "battery").forEach((f) => this._entityFieldRow(battSec.body, f));
     this._signRow(battSec.body, t("ed_invert_battery"), "invert_battery");
     this._numRow(battSec.body, t("ed_battery_capacity"), "battery_capacity_kwh", null, "0.1");
     this._numRow(battSec.body, t("ed_runtime_target"), "battery_runtime_target", null, "1");
     this._numRow(battSec.body, t("ed_battery_segments"), "battery_segments", 3, "1");
+    this._batteriesEditor(battSec.body);
     wrap.appendChild(battSec.details);
 
     const gridSec = this._section(t("ed_grid"), "🔌", false, "#e0577a");
@@ -3309,7 +3529,22 @@ class SolaxFveCardEditor extends HTMLElement {
     this._textRow(wbSec.body, t("ed_wallbox_image"), "wallbox_image", "", "sf-ed-text--wide");
     ENTITY_FIELDS.filter((f) => f.group === "wallbox").forEach((f) => this._entityFieldRow(wbSec.body, f));
     this._numRow(wbSec.body, t("ed_wallbox_max"), "wallbox_max_power", 11000, "500");
+    this._textRow(wbSec.body, t("ed_wallbox_label"), "wallbox_label", "Wallbox");
+    this._boolRow(wbSec.body, t("ed_wallbox2_on"), "wallbox2", false, true);
     wrap.appendChild(wbSec.details);
+
+    if (this._config.wallbox2) {
+      const wb2 = this._section(t("ed_wallbox2"), "🚙", true, "#b07ce0");
+      this._textRow(wb2.body, t("ed_wallbox_label"), "wallbox2_label", "Wallbox 2");
+      this._textRow(wb2.body, t("ed_wallbox_image"), "wallbox2_image", "", "sf-ed-text--wide");
+      ENTITY_FIELDS.filter((f) => f.group === "wallbox").forEach((f) => {
+        const key = WB2_PREFIX + f.key;
+        const picker = this._entityPickerRow(wb2.body, t("ent." + f.key), this._get(`entities.${key}`, ""), f.domains, (v) => this._set(`entities.${key}`, v));
+        this._pickers.push({ el: picker, key: `entities.${key}` });
+      });
+      this._numRow(wb2.body, t("ed_wallbox_max"), "wallbox2_max_power", 11000, "500");
+      wrap.appendChild(wb2.details);
+    }
 
     const showSec = this._section(t("ed_display"), "👁️", false, "#7c8796");
     SHOW_FIELDS.forEach((f) => this._toggleRow(showSec.body, f));
@@ -3390,6 +3625,8 @@ class SolaxFveCardEditor extends HTMLElement {
       .sf-ed-load-card { --lc: #7c8796; border: 1px solid color-mix(in srgb, var(--lc) 40%, var(--divider-color)); border-left: 4px solid var(--lc);
         border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: color-mix(in srgb, var(--lc) 6%, var(--card-background-color)); }
       .sf-ed-link-card { --lc: #5b8def; }
+      .sf-ed-subhead { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; opacity: .75;
+        margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--divider-color); }
       .sf-ed-load-head { display: flex; gap: 6px; align-items: center; }
       .sf-ed-load-head .sf-ed-text { flex: 1; min-width: 0; }
       .sf-ed-load-head .sf-ed-text--icon { flex: 0 0 46px; }

@@ -42,10 +42,10 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 |---|---|
 | 🌞 **Solar** | Two PV strings with power, voltage, current and share, their sum and the energy produced today. At night the strings collapse into a single compact row. |
 | 🔆 **Inverter** | Built‑in drawn inverter (or your own photo), run mode, AC output, temperature and a Modbus communication health dot. |
-| 🔋 **Battery** | Segmented battery icon, SOC, charge/discharge direction, V/A/°C, daily kWh, runtime estimate, **MIN/MAX SOC markers** and sliders to change them. |
+| 🔋 **Battery** | Segmented battery icon, SOC, charge/discharge direction, V/A/°C, daily kWh, runtime estimate, **MIN/MAX SOC markers** and sliders to change them. **Several batteries** can be combined and shown as one. |
 | 🗼 **Grid** | Import/export with direction colours, daily import/export and an optional low/high‑tariff badge. |
 | 🏠 **Home & loads** | Big home node with total consumption and any number of loads (boiler, car, heating, A/C, …) drawn as line icons that light up when active. Lay them out in **one row, several rows or as tiles**; an **Other** tile shows the unmeasured rest. A/C icons switch between ❄️ and 🔥 by HVAC mode. |
-| 🚗 **Wallbox & EV** | Charging power bar, status, **GREEN · ECO · FAST · STOP / START** mode buttons, charging current slider, car SOC with target, range, time remaining and charge limit. |
+| 🚗 **Wallbox & EV** | Charging power bar, status, **GREEN · ECO · FAST · STOP / START** mode buttons, charging current slider, car SOC with target, range, time remaining and charge limit. Optional **second wallbox** with its own panel. |
 | ✨ **Animation** | Moving, pulsing arrows along each flow – speed follows the power. With tiles every load gets its own coloured arrow travelling from the house. |
 | 🌍 **Languages** | English and Slovak, picked automatically from Home Assistant (or forced per card). |
 | 🛠️ **Visual editor** | Everything is configurable in the UI – no YAML needed. Entities of the `solax_modbus` integration are discovered automatically. |
@@ -156,6 +156,7 @@ Set under `entities:`. Power entities in kW are converted automatically.
 | `car_soc`, `car_target_soc`, `car_range`, `car_time_remaining` | Car battery from your car integration | – |
 | `car_limit` | Car charge limit `number` (slider) | – |
 | `car_plug`, `car_state` | Charger connected / charging state | – |
+| `wb2_…` | Every wallbox / car key above with the `wb2_` prefix – the second wallbox | – |
 
 ### Layout and labels
 
@@ -171,10 +172,15 @@ Set under `entities:`. Power entities in kW are converted automatically.
 | `inverter_power_label` | string | `output` | Text in front of the inverter power, empty = none |
 | `wallbox_image` | string | – | Your own wallbox picture |
 | `wallbox_max_power` | number | `11000` | Full scale of the charging bar (W) |
+| `wallbox_label` | string | `Wallbox` | Title of the wallbox panel |
+| `wallbox2` | bool | `false` | Second wallbox – see [Second wallbox](#second-wallbox) |
+| `wallbox2_label`, `wallbox2_image`, `wallbox2_max_power` | | `Wallbox 2`, –, `11000` | Same as above for the second wallbox |
 | `invert_battery`, `invert_grid` | string | `auto` | `auto`, `yes`, `no` – flip the sign if your sensor uses the opposite convention |
 | `battery_capacity_kwh` | number | from BMS | Capacity for the runtime estimate |
 | `battery_runtime_target` | number | MIN SOC | Target % for the runtime estimate |
 | `battery_segments` | number | `3` | Segments of the battery icon |
+| `battery_label` | string | `1` | Name of battery 1 when there are more batteries |
+| `batteries` | list | – | More batteries shown as one – see [Several batteries](#several-batteries) |
 
 ### Loads
 
@@ -205,6 +211,64 @@ loads:
 | `icon_entity` | `climate` entity – icon follows `hvac_action` / mode |
 
 Emoji mapped to drawn icons: 🏠 🏡 → home, 🚿 🛁 → boiler, ♨️ → heating, 🔥 → heat, ❄️ → cool, 🌡️ → thermo, 🚗 🚙 → car, 🔌 ⚡ → bolt.
+
+### Several batteries
+
+Battery 1 uses the `battery_*` entities above. Every further battery goes into `batteries:` and the card shows
+them all as **one battery**:
+
+| Value | How it is combined |
+|---|---|
+| Power, current, charged / discharged today, BMS capacity | added up |
+| State of charge (SOC) | weighted by capacity (a bigger battery counts more); plain average when a capacity is missing |
+| Voltage | average |
+| Temperature | the highest one |
+| Runtime estimate | uses the sum of all capacities |
+| MIN / MAX SOC | from battery 1 (they belong to the inverter) |
+
+The battery icon gets a **×N** badge and the details show every battery's own SOC (e.g. `A 72% · B 64%`).
+A battery without `battery_power` is ignored.
+
+```yaml
+battery_label: A               # name of battery 1 in the per-battery line
+battery_capacity_kwh: 11.5     # capacity of battery 1 (or its BMS sensor battery_capacity in Wh)
+batteries:
+  - label: B
+    capacity_kwh: 10           # or battery_capacity: sensor.… (Wh)
+    battery_power: sensor.battery_b_power          # + charge / − discharge
+    battery_soc: sensor.battery_b_soc
+    battery_voltage: sensor.battery_b_voltage
+    battery_current: sensor.battery_b_current
+    battery_temp: sensor.battery_b_temperature
+    battery_charge_today: sensor.battery_b_charged_today
+    battery_discharge_today: sensor.battery_b_discharged_today
+```
+
+Every key except `battery_power` is optional. In the editor: **Battery → More batteries → + Add battery**.
+
+### Second wallbox
+
+Off by default – with one wallbox the card looks exactly as before. Switch it on with `wallbox2: true`
+(editor: **Wallbox → Second wallbox**) and a **Wallbox 2** section appears with the same fields as the first one.
+The card then shows a second wallbox panel with its own title, modes, STOP / START and current slider.
+
+Entities of the second wallbox use the same keys as the first one with a `wb2_` prefix:
+
+```yaml
+wallbox_label: Garage            # title of the first panel (default "Wallbox")
+wallbox2: true
+wallbox2_label: Yard             # title of the second panel (default "Wallbox 2")
+wallbox2_max_power: 11000
+entities:
+  wb2_wallbox_power: sensor.wallbox_2_charge_power_total
+  wb2_wallbox_status: sensor.wallbox_2_run_mode
+  wb2_wallbox_mode: select.wallbox_2_charge_mode
+  wb2_wallbox_current: number.wallbox_2_charge_current
+  # wb2_wallbox_stop, wb2_car_soc, wb2_car_range, … – optional, like the first wallbox
+```
+
+The STOP entity is found automatically from the names of the second wallbox's entities, just like for the first one.
+To see the second car among the loads (and get its own arrow), add it as a load with `entity: sensor.wallbox_2_charge_power_total`.
 
 ### Links
 
@@ -273,9 +337,9 @@ A complete example is in [`examples/card.yaml`](examples/card.yaml).
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-light.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-sk.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/editor-en.png" width="280"> |
 
-| Load tiles + Other | | |
+| Load tiles + Other | Two batteries + second wallbox | |
 |---|---|---|
-| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | | |
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | |
 
 ## Troubleshooting
 
