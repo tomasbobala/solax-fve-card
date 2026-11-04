@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.5] – 2026-11-04
+
+### Fixed / Opravené
+
+- **iPhone: the page no longer jumps up every few seconds when scrolled to the bottom.** The wallbox and
+  car info rows were rebuilt on every update (the "unchanged?" check compared against the browser's own
+  serialization of the SVG icons, which never matched). On iPhone / Safari (WebKit) each rebuild pulled the
+  page up by ~26 px, so with SolaX updates every ~5 s the screen kept moving up. Rows are now rewritten
+  only when their content really changes (also the "today" row).
+  / **iPhone: stránka už každých pár sekúnd neposkočí hore, keď je odscrollovaná úplne dole.** Riadky
+  wallboxu a auta sa prestavali pri každej aktualizácii (kontrola „nezmenilo sa?" porovnávala s tým, ako
+  prehliadač zapíše SVG ikony, a to nikdy nesedelo). Na iPhone / v Safari (WebKit) každé prestavanie posunulo
+  stránku o ~26 px hore, takže pri aktualizáciách SolaX každých ~5 s sa obrazovka stále posúvala. Riadky sa
+  teraz prepíšu len pri skutočnej zmene (aj riadok „dnes").
+- **The page no longer jumps at dawn and dusk.** The night layout (strings collapsed when nothing is
+  produced) now switches only after production stays on one side of the 3 W threshold for 10 minutes.
+  The inverter flips between 0 W and ~60 W every few seconds around sunrise and sunset, so the card grew and
+  shrank by ~90 px again and again (40 times a day measured). The first render still uses the current value.
+  / **Stránka už neskáče ráno a podvečer.** Nočné zobrazenie (zbalené stringy) sa prepne, až keď výroba
+  zostane 10 minút na jednej strane hranice 3 W. Menič pri východe a západe slnka preskakuje medzi 0 W a
+  ~60 W každých pár sekúnd, takže karta sa stále zväčšovala a zmenšovala o ~90 px (namerané 40× za deň).
+  Pri prvom zobrazení platí aktuálna hodnota.
+- **The wallbox panel keeps its height when charging starts or stops.** The power bar stays in place
+  (empty and dimmed) instead of disappearing at 0 W, which changed the panel by ~60 px.
+  / **Panel wallboxu nemení výšku pri začatí a skončení nabíjania.** Pruh výkonu ostáva na mieste
+  (prázdny a stlmený), namiesto toho, aby pri 0 W zmizol a panel sa zmenil o ~60 px.
+
 ## [1.0.4] – 2026-11-03
 
 ### Added / Pridané

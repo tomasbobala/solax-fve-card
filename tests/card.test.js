@@ -386,3 +386,62 @@ test("editor shows the Wallbox 2 section only when switched on and lists extra b
   assert.ok(ed.textContent.includes("batérie: 2"));
   assert.ok(ed.textContent.includes("Ďalšie batérie"));
 });
+
+test("night layout waits before switching, so a flickering inverter does not resize the card", () => {
+  const w = boot();
+  const night = { "sensor.solax_pv_power_1": s(0), "sensor.solax_pv_power_2": s(0), "sensor.solax_pv_power_total": s(0) };
+  const dawn = { "sensor.solax_pv_power_1": s(40), "sensor.solax_pv_power_2": s(20), "sensor.solax_pv_power_total": s(60) };
+  const hass = makeHass("en", night);
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  assert.equal(card.querySelectorAll(".sf-panel-grid").length, 0, "night at first render");
+  const realNow = w.Date.now;
+  let now = realNow.call(w.Date);
+  w.Date.now = () => now;
+  card.hass = makeHass("en", dawn);
+  assert.equal(card.querySelectorAll(".sf-panel-grid").length, 0, "a short burst of production keeps the night layout");
+  now += 5 * 60 * 1000;
+  card.hass = makeHass("en", night);
+  card.hass = makeHass("en", dawn);
+  now += 9 * 60 * 1000;
+  card.hass = makeHass("en", Object.assign({}, dawn, { "sensor.solax_pv_power_total": s(61) }));
+  assert.equal(card.querySelectorAll(".sf-panel-grid").length, 0, "the hold restarts after production dropped again");
+  now += 2 * 60 * 1000;
+  card.hass = makeHass("en", Object.assign({}, dawn, { "sensor.solax_pv_power_total": s(62) }));
+  assert.ok(card.querySelectorAll(".sf-panel-grid").length > 0, "day layout after 10 minutes of production");
+  w.Date.now = realNow;
+});
+
+test("wallbox power bar keeps its place when the car is not charging", () => {
+  const w = boot();
+  const hass = makeHass("en");
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  const bar = card.querySelector(".sf-bar-wrap");
+  assert.ok(bar, "bar exists");
+  assert.ok(!bar.classList.contains("hidden"), "bar is not removed at 0 W");
+  assert.ok(bar.classList.contains("is-idle"));
+  card.hass = makeHass("en", { "sensor.solax_wallbox_charge_power_total": s(7200), "sensor.solax_wallbox_run_mode": s("Charging") });
+  assert.ok(!bar.classList.contains("hidden"));
+  assert.ok(!bar.classList.contains("is-idle"));
+});
+
+test("unchanged wallbox and car rows are not rebuilt on every update", () => {
+  const w = boot();
+  const extra = {
+    "sensor.solax_wallbox_charger_temperature": s(10, { unit_of_measurement: "°C" }),
+    "sensor.car_soc": s(80, { unit_of_measurement: "%" }),
+    "sensor.car_range": s(339, { unit_of_measurement: "km" }),
+    "binary_sensor.car_plug": s("on"),
+    "sensor.solax_today_s_import_energy": s(26.9, { unit_of_measurement: "kWh" }),
+  };
+  const hass = makeHass("en", extra);
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  cfg.entities = Object.assign({}, cfg.entities, { wallbox_temp: "sensor.solax_wallbox_charger_temperature", car_soc: "sensor.car_soc",
+    car_range: "sensor.car_range", car_plug: "binary_sensor.car_plug", grid_import_today: "sensor.solax_today_s_import_energy" });
+  cfg.show = Object.assign({}, cfg.show, { energy_today: true });
+  const card = render(w, cfg, hass);
+  const rows = [".sf-wb-meta", ".sf-car-meta", ".sf-today-row"].map((q) => card.querySelector(q));
+  rows.forEach((el, i) => assert.ok(el && el.firstChild, `row ${i} has content`));
+  const first = rows.map((el) => el.firstChild);
+  card.hass = makeHass("en", Object.assign({}, extra, { "sensor.solax_inverter_power": s(5200) }));
+  rows.forEach((el, i) => assert.strictEqual(el.firstChild, first[i], `row ${i} kept its nodes`));
+});

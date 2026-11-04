@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.4";
+const CARD_VERSION = "1.0.5";
 
 const I18N = {
   en: {
@@ -543,6 +543,10 @@ const DEFAULT_SHOW = {
 };
 
 const SPEED_MULT = { slow: 1.6, normal: 1, fast: 0.55 };
+// Night layout switches only after production stays on one side of the threshold this long.
+// At dawn and dusk the inverter flips between 0 W and ~60 W every few seconds, which made
+// the whole card grow and shrink by ~90 px again and again (the page jumped).
+const NIGHT_HOLD_MS = 10 * 60 * 1000;
 
 function defaultLinks() {
   return [{ label: t("link_energy"), icon: "⚡", path: "/energy" }];
@@ -1255,6 +1259,7 @@ class SolaxFveCard extends HTMLElement {
       .sf-t-today { text-anchor: middle; font-weight: 800; font-size: 30px; font-variant-numeric: tabular-nums; }
       .sf-t-sum { text-anchor: middle; font-weight: 800; font-size: 25px; font-variant-numeric: tabular-nums; }
       .sf-bar-wrap.hidden, .sf-bar-ticks.hidden { display: none; }
+      .sf-bar-wrap.is-idle, .sf-bar-ticks.is-idle { opacity: 0.45; }
       .sf-load-idle { opacity: .42; }
       .sf-load-idle:hover { opacity: .6; }
       .sf-batt-mark { text-anchor: end; font-size: 11px; font-weight: 700; }
@@ -1456,6 +1461,20 @@ class SolaxFveCard extends HTMLElement {
     this.dispatchEvent(new CustomEvent("location-changed", { bubbles: true, composed: true, detail: { replace: false } }));
   }
 
+  /** Debounced night layout: the first value applies at once, a change only after NIGHT_HOLD_MS. */
+  _nightLatch(want) {
+    const now = Date.now();
+    if (this._night == null) { this._night = want; this._nightSince = null; return want; }
+    if (want === this._night) { this._nightSince = null; clearTimeout(this._nightTimer); return this._night; }
+    if (this._nightSince == null) this._nightSince = now;
+    const left = NIGHT_HOLD_MS - (now - this._nightSince);
+    if (left <= 0) { this._night = want; this._nightSince = null; clearTimeout(this._nightTimer); return want; }
+    // production may stay put (no state change), so check again when the hold is over
+    clearTimeout(this._nightTimer);
+    this._nightTimer = setTimeout(() => { if (this._hass && this._built && this.isConnected) this._updateContent(); }, left + 50);
+    return this._night;
+  }
+
   _renderDiagram(d) {
     const cfg = this._config;
     this._pathSeq = 0;
@@ -1505,7 +1524,7 @@ class SolaxFveCard extends HTMLElement {
     const ROW_H = layout === "tiles" ? TILE_PITCH : 132;
 
     const anyPv = [d.solar, d.pv1, d.pv2].some((v) => v != null && v > 3);
-    const nightCompact = this._show("night_compact") && !anyPv;
+    const nightCompact = this._show("night_compact") && this._nightLatch(!anyPv);
     const shift = nightCompact ? 104 : 0;
 
     const panelTop = 12;
@@ -2572,7 +2591,10 @@ class SolaxFveCard extends HTMLElement {
     };
     const setHtml = (sel, html) => {
       const el = wrap.querySelector(sel);
-      if (el && el.innerHTML !== html) el.innerHTML = html;
+      // compare with the last string we wrote, not with el.innerHTML: the browser serializes SVG
+      // differently (<path/> -> <path></path>), so that check never matched and the row was rebuilt
+      // on every update. On iPhone (WebKit) each rebuild pulled the page up when scrolled to the bottom.
+      if (el && el._sfHtml !== html) { el.innerHTML = html; el._sfHtml = html; }
     };
     const metaItem = (kind, text) => `<span class="sf-meta-item">${kind ? this._mini(kind, 14) : ""}${escapeHtml(text)}</span>`;
     set(".sf-wb-status", status || "--");
@@ -2601,11 +2623,13 @@ class SolaxFveCard extends HTMLElement {
       fill.style.width = pct + "%";
       fill.style.backgroundSize = (pct > 0 ? 10000 / pct : 100).toFixed(1) + "% 100%";
     }
-    const noDraw = power == null || power <= 0;
+    // the bar keeps its place when the car is not charging (empty and dimmed), so the panel
+    // does not change height when charging starts or stops; hidden only without a power entity
+    const idle = power == null || power <= 0;
     const barWrap = wrap.querySelector(".sf-bar-wrap");
     const barTicks = wrap.querySelector(".sf-bar-ticks");
-    if (barWrap) barWrap.classList.toggle("hidden", noDraw);
-    if (barTicks) barTicks.classList.toggle("hidden", noDraw);
+    if (barWrap) { barWrap.classList.toggle("hidden", power == null); barWrap.classList.toggle("is-idle", idle); }
+    if (barTicks) { barTicks.classList.toggle("hidden", power == null); barTicks.classList.toggle("is-idle", idle); }
 
     const carWrap = wrap.querySelector(".sf-car");
     const soc = this._n("car_soc");
@@ -2790,12 +2814,13 @@ class SolaxFveCard extends HTMLElement {
       wrap.className = "sf-today-row hidden";
       return;
     }
-    wrap.innerHTML = items
+    const html = items
       .map(
         (it) =>
           `<div class="sf-stat"><div class="sf-stat-label">${it.icon} ${escapeHtml(it.label)}</div><div class="sf-stat-value">${fmtEnergy(this._n(it.key), 1)}</div></div>`,
       )
       .join("");
+    if (wrap._sfHtml !== html) { wrap.innerHTML = html; wrap._sfHtml = html; }
   }
 }
 
