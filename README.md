@@ -40,7 +40,7 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 
 | | |
 |---|---|
-| 🌞 **Solar** | Two PV strings with power, voltage, current and share, their sum and the energy produced today. At night the strings collapse into a single compact row. |
+| 🌞 **Solar** | Two or **three** PV strings with power, voltage, current and share, their sum and the energy produced today. At night the strings collapse into a single compact row. |
 | 🔆 **Inverter** | Built‑in drawn inverter (or your own photo), run mode, AC output, temperature and a Modbus communication health dot. |
 | 🔋 **Battery** | Segmented battery icon, SOC, charge/discharge direction, V/A/°C, daily kWh, runtime estimate, **MIN/MAX SOC markers** and sliders to change them. **Several batteries** can be combined and shown as one. |
 | 🗼 **Grid** | Import/export with direction colours, daily import/export and an optional low/high‑tariff badge. |
@@ -126,6 +126,7 @@ Set under `entities:`. Power entities in kW are converted automatically.
 | `pv1_power`, `pv2_power` | String power | `sensor.solax_pv_power_1`, `_2` |
 | `pv1_voltage`, `pv2_voltage` | String voltage | `sensor.solax_pv_voltage_1`, `_2` |
 | `pv1_current`, `pv2_current` | String current | `sensor.solax_pv_current_1`, `_2` |
+| `pv3_power`, `pv3_voltage`, `pv3_current` | Third string (optional) – see [Third string](#third-string) | `sensor.solax_pv_power_3` … |
 | `solar_power` | Total PV power | `sensor.solax_pv_power_total` |
 | `solar_today` | Produced today (kWh) | `sensor.solax_today_s_solar_energy` |
 | `inverter_status` | Run mode | `sensor.solax_run_mode` |
@@ -162,7 +163,7 @@ Set under `entities:`. Power entities in kW are converted automatically.
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `pv1_label`, `pv2_label` | string | `String 1`, `String 2` | String names; the panel shows their initials (e.g. *East/West* → `E/W`) |
+| `pv1_label`, `pv2_label`, `pv3_label` | string | `String 1`, `String 2`, `String 3` | String names; the panel shows their initials (e.g. *East/West* → `E/W`) |
 | `home_label`, `home_icon` | string | `Home`, `🏠` | Home node |
 | `home_mode` | string | `total` | `total` = whole consumption, `remainder` = minus the loads below |
 | `loads_layout` | string | `row` | `row` = one row (original), `rows` = circles in several rows, `tiles` = tiles in a grid |
@@ -211,6 +212,27 @@ loads:
 | `icon_entity` | `climate` entity – icon follows `hvac_action` / mode |
 
 Emoji mapped to drawn icons: 🏠 🏡 → home, 🚿 🛁 → boiler, ♨️ → heating, 🔥 → heat, ❄️ → cool, 🌡️ → thermo, 🚗 🚙 → car, 🔌 ⚡ → bolt.
+
+### Third string
+
+A third PV string is shown automatically as soon as `pv3_power` is set (the card picks up `sensor.…_pv_power_3`
+on its own when the inverter has one). Without it the solar part stays exactly as before.
+
+- Three panels side by side, each with power, share of the total, voltage and current.
+- The third string is drawn in the middle and feeds straight into the join point.
+- The total power and the energy produced today move into one pill above the join point
+  (e.g. `10 980 W · 41.6 kWh today`), because the space between the panels is taken.
+- At night all three strings collapse into the single compact row as before.
+
+```yaml
+pv1_label: South
+pv2_label: West
+pv3_label: Garage
+entities:
+  pv3_power: sensor.solax_pv_power_3
+  pv3_voltage: sensor.solax_pv_voltage_3     # optional
+  pv3_current: sensor.solax_pv_current_3     # optional
+```
 
 ### Several batteries
 
@@ -337,9 +359,9 @@ A complete example is in [`examples/card.yaml`](examples/card.yaml).
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-light.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-sk.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/editor-en.png" width="280"> |
 
-| Load tiles + Other | Two batteries + second wallbox | |
+| Load tiles + Other | Two batteries + second wallbox | Three strings |
 |---|---|---|
-| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | |
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-3strings-en.png" width="280"> |
 
 ## Troubleshooting
 

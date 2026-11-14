@@ -93,3 +93,10 @@ show:
 #   wb2_wallbox_status: sensor.wallbox_2_run_mode
 #   wb2_wallbox_mode: select.wallbox_2_charge_mode
 #   wb2_wallbox_current: number.wallbox_2_charge_current
+
+# Third PV string (1.0.6+) / Tretí string
+# pv3_label: Garage
+# entities:
+#   pv3_power: sensor.solax_pv_power_3
+#   pv3_voltage: sensor.solax_pv_voltage_3
+#   pv3_current: sensor.solax_pv_current_3

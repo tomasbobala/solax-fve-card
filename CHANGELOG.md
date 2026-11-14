@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.6] – 2026-11-14
+
+### Added / Pridané
+
+- **Third PV string** – set `pv3_power` (plus optional `pv3_voltage`, `pv3_current`, `pv3_label`) and the card
+  shows three panels side by side, each with power, share, voltage and current. The third string feeds into
+  the join point from the middle; the total power and the energy produced today move into one pill above the
+  join point. New cards pick up `sensor.…_pv_power_3` automatically. Without a third string nothing changes.
+  Editor: *Solar / strings → String 3 name* and *String 3 – power / voltage / current*.
+  / **Tretí FV string** – vyplň `pv3_power` (a voliteľne `pv3_voltage`, `pv3_current`, `pv3_label`) a karta
+  ukáže tri panely vedľa seba s výkonom, podielom, napätím a prúdom. Tretí string vedie do spojovacieho bodu
+  zo stredu; súčet výkonu a dnešná výroba sa presunú do jedného štítku nad spojovacím bodom. Nové karty si
+  `sensor.…_pv_power_3` nájdu samé. Bez tretieho stringu sa nič nemení. Editor: *Solar / stringy → Názov
+  String 3* a *String 3 – výkon / napätie / prúd*.
+
+### Docs / Dokumentácia
+
+- README (EN + SK): new section *Third string* / *Tretí string*, new options and entities, new screenshot.
+
 ## [1.0.5] – 2026-11-04
 
 ### Fixed / Opravené

@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.5";
+const CARD_VERSION = "1.0.6";
 
 const I18N = {
   en: {
@@ -70,6 +70,7 @@ const I18N = {
     ed_solar: "Solar / strings",
     ed_pv1_label: "String 1 name",
     ed_pv2_label: "String 2 name",
+    ed_pv3_label: "String 3 name",
     ed_inverter: "Inverter",
     ed_inverter_image: "Custom inverter image (URL, e.g. /local/inverter.png)",
     ed_inverter_power_label: "Label for inverter power (empty = none)",
@@ -136,6 +137,9 @@ const I18N = {
     "ent.pv2_power": "String 2 – power",
     "ent.pv2_voltage": "String 2 – voltage",
     "ent.pv2_current": "String 2 – current",
+    "ent.pv3_power": "String 3 – power (optional)",
+    "ent.pv3_voltage": "String 3 – voltage",
+    "ent.pv3_current": "String 3 – current",
     "ent.solar_power": "Solar – total power (sum of strings)",
     "ent.solar_today": "Produced today",
     "ent.inverter_status": "Inverter – state / run mode",
@@ -294,6 +298,7 @@ const I18N = {
     ed_solar: "Solar / stringy",
     ed_pv1_label: "Názov String 1",
     ed_pv2_label: "Názov String 2",
+    ed_pv3_label: "Názov String 3",
     ed_inverter: "Menič",
     ed_inverter_image: "Vlastný obrázok meniča (URL, napr. /local/menic.png)",
     ed_inverter_power_label: "Popis výkonu pod meničom (prázdne = bez popisu)",
@@ -360,6 +365,9 @@ const I18N = {
     "ent.pv2_power": "String 2 – výkon",
     "ent.pv2_voltage": "String 2 – napätie",
     "ent.pv2_current": "String 2 – prúd",
+    "ent.pv3_power": "String 3 – výkon (voliteľné)",
+    "ent.pv3_voltage": "String 3 – napätie",
+    "ent.pv3_current": "String 3 – prúd",
     "ent.solar_power": "Solar – celkový výkon (súčet stringov)",
     "ent.solar_today": "Vyrobené dnes",
     "ent.inverter_status": "Menič – stav / režim",
@@ -878,6 +886,9 @@ class SolaxFveCard extends HTMLElement {
         pv2_power: f("sensor", ["pv_power_2"]),
         pv2_voltage: f("sensor", ["pv_voltage_2"]),
         pv2_current: f("sensor", ["pv_current_2"]),
+        pv3_power: f("sensor", ["pv_power_3"]),
+        pv3_voltage: f("sensor", ["pv_voltage_3"]),
+        pv3_current: f("sensor", ["pv_current_3"]),
         solar_power: f("sensor", ["pv_power_total", "solar_power"]),
         solar_today: f("sensor", ["today_s_solar_energy"]),
         inverter_status: f("sensor", ["run_mode"], notEv),
@@ -1400,8 +1411,9 @@ class SolaxFveCard extends HTMLElement {
 
     const pv1 = this._p("pv1_power");
     const pv2 = this._p("pv2_power");
+    const pv3 = this._e("pv3_power") ? this._p("pv3_power") : null;
     let solar = this._p("solar_power");
-    if (solar == null && (pv1 != null || pv2 != null)) solar = (pv1 || 0) + (pv2 || 0);
+    if (solar == null && (pv1 != null || pv2 != null || pv3 != null)) solar = (pv1 || 0) + (pv2 || 0) + (pv3 || 0);
     const battery = this._batteryValue();
     const soc = this._n("battery_soc");
     const grid = this._gridValue();
@@ -1422,7 +1434,7 @@ class SolaxFveCard extends HTMLElement {
       remainder = Math.max(0, totalPower - loadsSum);
     }
 
-    this._renderDiagram({ pv1, pv2, solar, battery, soc, grid, loads, remainder, total: totalPower });
+    this._renderDiagram({ pv1, pv2, pv3, solar, battery, soc, grid, loads, remainder, total: totalPower });
     this._renderBatterySettings();
     this._renderWallboxPanel("");
     this._renderWallboxPanel(WB2_PREFIX);
@@ -1484,6 +1496,7 @@ class SolaxFveCard extends HTMLElement {
     const showBattery = this._show("battery") && !!this._e("battery_power");
     const showGrid = this._show("grid") && !!this._e("grid_power");
     const pvSplit = this._show("pv_split") && !!this._e("pv1_power") && !!this._e("pv2_power");
+    const pvTriple = pvSplit && !!this._e("pv3_power");
     const showSum = this._show("solar_sum");
 
     const items = d.loads.filter((l) => l.label && (l.entity || l.extra_entities));
@@ -1542,8 +1555,9 @@ class SolaxFveCard extends HTMLElement {
     const loadTop = 624 - shift;
     const H = layout === "row" ? loadTop + 112 : layout === "tiles" ? busY + TILE_BUS_GAP + TILE_DROP + rowsN * TILE_PITCH - (TILE_PITCH - TILE_H) + 14 : loadTop + rowsN * ROW_H - 14;
 
-    const pv1x = 92,
-      pv2x = 408,
+    const pv1x = pvTriple ? 84 : 92,
+      pv2x = pvTriple ? 416 : 408,
+      pv3x = 250,
       soloX = 250;
     const join = { x: 250, y: joinY };
 
@@ -1560,7 +1574,7 @@ class SolaxFveCard extends HTMLElement {
       nodes.push(this._pvCompactNode({ x: 250, y: panelTop + 16 }, d.solar, todaySolar));
       lines.push(this._flowPath([{ x: soloX, y: panelTop + 30 }, join], false, false, solarColor, null, speed, animOn));
     } else if (pvSplit) {
-      const total = (d.pv1 || 0) + (d.pv2 || 0);
+      const total = (d.pv1 || 0) + (d.pv2 || 0) + (pvTriple ? d.pv3 || 0 : 0);
       const share = (v) => (total > 3 && v != null ? Math.round((v / total) * 100) : 0);
       lines.push(this._flowPath([{ x: pv1x, y: dropTop }, { x: pv1x, y: joinY }, join], act(d.pv1), false, solarColor, d.pv1, speed, animOn));
       lines.push(this._flowPath([{ x: pv2x, y: dropTop }, { x: pv2x, y: joinY }, join], act(d.pv2), false, solarColor, d.pv2, speed, animOn));
@@ -1588,15 +1602,32 @@ class SolaxFveCard extends HTMLElement {
           this._e("pv2_power"),
         ),
       );
+      if (pvTriple) {
+        lines.push(this._flowPath([{ x: pv3x, y: dropTop }, join], act(d.pv3), false, solarColor, d.pv3, speed, animOn));
+        nodes.push(
+          this._pvNode(
+            { x: pv3x, y: panelTop },
+            d.pv3,
+            this._n("pv3_voltage"),
+            this._n("pv3_current"),
+            share(d.pv3),
+            cfg.pv3_label || "String 3",
+            this._pvShort(cfg.pv3_label, "3"),
+            this._e("pv3_power"),
+          ),
+        );
+      }
     } else {
       lines.push(this._flowPath([{ x: soloX, y: dropTop }, join], act(d.solar), false, solarColor, d.solar, speed, animOn));
       nodes.push(this._pvNode({ x: soloX, y: panelTop }, d.solar, null, null, null, t("solar"), t("pv_short"), this._e("solar_power")));
     }
 
     const today = todaySolar;
-    if (today != null && pvSplit && !nightCompact) nodes.push(this._pvTodayNode({ x: 250, y: panelTop }, today));
+    if (today != null && pvSplit && !pvTriple && !nightCompact) nodes.push(this._pvTodayNode({ x: 250, y: panelTop }, today));
 
-    if (showSum && !nightCompact) nodes.push(this._sumNode({ x: 250, y: 158 - shift }, d.solar, pvSplit ? null : today));
+    if (pvTriple && !nightCompact) {
+      if (showSum || today != null) nodes.push(this._sumPill({ x: 250, y: 158 - shift }, showSum ? d.solar : null, today));
+    } else if (showSum && !nightCompact) nodes.push(this._sumNode({ x: 250, y: 158 - shift }, d.solar, pvSplit ? null : today));
     nodes.push(`<circle class="sf-join" cx="${join.x}" cy="${join.y}" r="4.5" fill="${solarColor}" opacity="${act(d.solar) ? 1 : 0.45}"></circle>`);
 
     lines.push(this._flowPath([join, { x: invPos.x, y: invTop }], act(d.solar), false, solarColor, d.solar, speed, animOn));
@@ -1834,19 +1865,34 @@ class SolaxFveCard extends HTMLElement {
     return `<text class="sf-t-line" x="${x}" y="${y - 10}" fill="${color}">${escapeHtml(text)}</text>`;
   }
 
+  _sumPill(pos, solar, today) {
+    const color = this._color("solar");
+    const todayColor = this._color("solar_today");
+    const p = solar != null ? this._fmtP(solar) : "";
+    const tt = today != null ? fmtEnergy(today, 1) + " " + t("today") : "";
+    const w = 34 + p.length * 13.5 + (tt ? 18 + tt.length * 7.6 : 0);
+    return `
+      <g class="sf-box" data-entity="${this._e("solar_power") || this._e("solar_today")}">
+        <rect x="${(pos.x - w / 2).toFixed(1)}" y="${pos.y - 22}" width="${w.toFixed(1)}" height="32" rx="16" fill="var(--ha-card-background, var(--card-background-color, #1c1c1c))" stroke="${color}" stroke-opacity=".55" stroke-width="1.4"></rect>
+        <text class="sf-t-sum" x="${pos.x}" y="${pos.y + 1}" fill="${color}" style="font-size:21px">${escapeHtml(p)}${tt ? `<tspan dx="${p ? 8 : 0}" style="font-size:${p ? 13.5 : 17}px;font-weight:700;fill:${todayColor}">${p ? "· " : ""}${escapeHtml(tt)}</tspan>` : ""}</text>
+      </g>`;
+  }
+
   _pvNode(pos, power, voltage, current, share, label, shortLabel, entityId) {
     const producing = power != null && power > 3;
     const va = [];
     if (voltage != null) va.push(voltage.toFixed(1) + " V");
     if (current != null) va.push(current.toFixed(1) + " A");
     const details = this._show("pv_details");
-    const vaText = details && va.length ? `<text class="sf-t-detail" x="${pos.x}" y="${pos.y + 107}">${escapeHtml(va.join(" · "))}</text>` : "";
+    const narrow = !!this._e("pv3_power") && this._show("pv_split");
+    const fsL = narrow ? ` style="font-size:12px"` : "";
+    const vaText = details && va.length ? `<text class="sf-t-detail" x="${pos.x}" y="${pos.y + 107}"${narrow ? ` style="font-size:12.5px"` : ""}>${escapeHtml(va.join(" · "))}</text>` : "";
     const shareText = details && share != null ? ` · ${share}%` : "";
     return `
       <g class="sf-box" data-entity="${entityId || ""}">
         ${this._panelArt(pos.x, pos.y, 88, 44, shortLabel, producing)}
         <text class="sf-t-value" x="${pos.x}" y="${pos.y + 72}">${escapeHtml(this._fmtP(power))}</text>
-        <text class="sf-t-label" x="${pos.x}" y="${pos.y + 90}">${escapeHtml(label + shareText)}</text>
+        <text class="sf-t-label" x="${pos.x}" y="${pos.y + 90}"${fsL}>${escapeHtml(label + shareText)}</text>
         ${vaText}
       </g>`;
   }
@@ -2831,6 +2877,9 @@ const ENTITY_FIELDS = [
   { key: "pv2_power", domains: ["sensor"], group: "solar" },
   { key: "pv2_voltage", domains: ["sensor"], group: "solar" },
   { key: "pv2_current", domains: ["sensor"], group: "solar" },
+  { key: "pv3_power", domains: ["sensor"], group: "solar" },
+  { key: "pv3_voltage", domains: ["sensor"], group: "solar" },
+  { key: "pv3_current", domains: ["sensor"], group: "solar" },
   { key: "solar_power", domains: ["sensor"], group: "solar" },
   { key: "solar_today", domains: ["sensor"], group: "solar" },
   { key: "inverter_status", domains: ["sensor"], group: "inverter" },
@@ -3468,6 +3517,7 @@ class SolaxFveCardEditor extends HTMLElement {
     const solarSec = this._section(t("ed_solar"), "☀️", true, "#f5a623");
     this._textRow(solarSec.body, t("ed_pv1_label"), "pv1_label", "String 1");
     this._textRow(solarSec.body, t("ed_pv2_label"), "pv2_label", "String 2");
+    this._textRow(solarSec.body, t("ed_pv3_label"), "pv3_label", "String 3");
     ENTITY_FIELDS.filter((f) => f.group === "solar").forEach((f) => this._entityFieldRow(solarSec.body, f));
     wrap.appendChild(solarSec.details);
 

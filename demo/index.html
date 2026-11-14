@@ -48,6 +48,7 @@
       const day = {
         "sensor.solax_pv_power_1": s(6240), "sensor.solax_pv_voltage_1": s(521.4), "sensor.solax_pv_current_1": s(11.9),
         "sensor.solax_pv_power_2": s(2810), "sensor.solax_pv_voltage_2": s(410.2), "sensor.solax_pv_current_2": s(6.8),
+        "sensor.solax_pv_power_3": s(1930), "sensor.solax_pv_voltage_3": s(388.6), "sensor.solax_pv_current_3": s(5.0),
         "sensor.solax_pv_power_total": s(9050), "sensor.solax_today_s_solar_energy": s(41.6),
         "sensor.solax_run_mode": s("Normal Mode"), "sensor.solax_inverter_temperature": s(41.2),
         "sensor.solax_inverter_power": s(7420),
@@ -125,6 +126,13 @@
       });
       cfg.pv1_label = sk ? "Juh" : "South";
       cfg.pv2_label = sk ? "Východ/Západ" : "East/West";
+      if (q.get("pv3")) {
+        cfg.pv1_label = sk ? "Juh" : "South";
+        cfg.pv2_label = sk ? "Západ" : "West";
+        cfg.pv3_label = sk ? "Garáž" : "Garage";
+        Object.assign(cfg.entities, { pv3_power: "sensor.solax_pv_power_3", pv3_voltage: "sensor.solax_pv_voltage_3", pv3_current: "sensor.solax_pv_current_3" });
+        delete cfg.entities.solar_power;
+      }
       cfg.loads = [
         { id: "boiler", label: sk ? "Bojler" : "Boiler", icon: "🚿", color: "#e0a020", entity: "sensor.boiler_power", today: "sensor.boiler_energy_today" },
         { id: "car", label: sk ? "Auto" : "Car", icon: "🚗", color: "#8e6ecb", entity: "sensor.solax_wallbox_charge_power_total" },

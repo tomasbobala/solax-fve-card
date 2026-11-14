@@ -445,3 +445,41 @@ test("unchanged wallbox and car rows are not rebuilt on every update", () => {
   card.hass = makeHass("en", Object.assign({}, extra, { "sensor.solax_inverter_power": s(5200) }));
   rows.forEach((el, i) => assert.strictEqual(el.firstChild, first[i], `row ${i} kept its nodes`));
 });
+
+const pv3States = {
+  "sensor.solax_pv_power_3": s(1500), "sensor.solax_pv_voltage_3": s(380.5), "sensor.solax_pv_current_3": s(3.9),
+};
+
+test("third string: three panels, shares of all three, sum and today in one pill", () => {
+  const w = boot();
+  const hass = makeHass("en", Object.assign({ "sensor.solax_today_s_solar_energy": s(21.4) }, pv3States));
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  assert.equal(cfg.entities.pv3_power, "sensor.solax_pv_power_3");
+  cfg.pv3_label = "Garage";
+  delete cfg.entities.solar_power;
+  const card = render(w, cfg, hass);
+  const html = card.innerHTML.replace(/ | |&nbsp;/g, " ");
+  assert.match(html, /Garage · 20%/i);
+  assert.match(html, /380\.5 V · 3\.9 A/);
+  assert.ok(html.match(/7[ ,.]?500 W/), "sum of three strings");
+  assert.match(html, /· 21\.4 kWh today/);
+  assert.ok(!html.includes("Produced today"), "big 'produced today' is replaced by the pill");
+});
+
+test("without a third string the solar part stays as before", () => {
+  const w = boot();
+  const hass = makeHass("en", { "sensor.solax_today_s_solar_energy": s(21.4) });
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  const html = card.innerHTML;
+  assert.ok(html.toLowerCase().includes("produced today"));
+  assert.ok(!/String 3/.test(html));
+});
+
+test("editor has String 3 fields", () => {
+  const w = boot();
+  const ed = w.document.createElement("solax-fve-card-editor");
+  ed.setConfig({ type: "custom:solax-fve-card" });
+  ed.hass = makeHass("sk");
+  assert.ok(ed.textContent.includes("Názov String 3"));
+  assert.ok(ed.textContent.includes("String 3 – výkon"));
+});

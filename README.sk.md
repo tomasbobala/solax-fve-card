@@ -40,7 +40,7 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 
 | | |
 |---|---|
-| 🌞 **Solar** | Dva FV stringy s výkonom, napätím, prúdom a podielom, ich súčet a dnešná výroba. V noci sa stringy zbalia do jedného riadku. |
+| 🌞 **Solar** | Dva alebo **tri** FV stringy s výkonom, napätím, prúdom a podielom, ich súčet a dnešná výroba. V noci sa stringy zbalia do jedného riadku. |
 | 🔆 **Menič** | Nakreslený menič (alebo vlastná fotka), režim, AC výkon, teplota a bodka stavu Modbus komunikácie. |
 | 🔋 **Batéria** | Segmentová ikona, SOC, smer nabíjania/vybíjania, V/A/°C, denné kWh, odhad výdrže, **rysky MIN/MAX SOC** a posuvníky na ich zmenu. **Viac batérií** sa dá spojiť a zobraziť ako jedna. |
 | 🗼 **Sieť** | Import/export s farbou podľa smeru, denný nákup/predaj a voliteľný odznak nízkej/vysokej tarify (NT/VT). |
@@ -127,6 +127,7 @@ Zadávajú sa pod `entities:`. Výkon v kW sa prepočíta automaticky.
 | `pv1_power`, `pv2_power` | Výkon stringu | `sensor.solax_pv_power_1`, `_2` |
 | `pv1_voltage`, `pv2_voltage` | Napätie stringu | `sensor.solax_pv_voltage_1`, `_2` |
 | `pv1_current`, `pv2_current` | Prúd stringu | `sensor.solax_pv_current_1`, `_2` |
+| `pv3_power`, `pv3_voltage`, `pv3_current` | Tretí string (voliteľné) – pozri [Tretí string](#tretí-string) | `sensor.solax_pv_power_3` … |
 | `solar_power` | Celkový FV výkon | `sensor.solax_pv_power_total` |
 | `solar_today` | Vyrobené dnes (kWh) | `sensor.solax_today_s_solar_energy` |
 | `inverter_status` | Režim meniča | `sensor.solax_run_mode` |
@@ -163,7 +164,7 @@ Zadávajú sa pod `entities:`. Výkon v kW sa prepočíta automaticky.
 
 | Voľba | Typ | Predvolené | Popis |
 |---|---|---|---|
-| `pv1_label`, `pv2_label` | text | `String 1`, `String 2` | Názvy stringov; panel ukáže začiatočné písmená (*Východ/Západ* → `V/Z`) |
+| `pv1_label`, `pv2_label`, `pv3_label` | text | `String 1`, `String 2`, `String 3` | Názvy stringov; panel ukáže začiatočné písmená (*Východ/Západ* → `V/Z`) |
 | `home_label`, `home_icon` | text | `Dom`, `🏠` | Uzol domu |
 | `home_mode` | text | `total` | `total` = celá spotreba, `remainder` = mínus záťaže pod ním |
 | `loads_layout` | text | `row` | `row` = jeden rad (pôvodné), `rows` = krúžky vo viacerých radoch, `tiles` = dlaždice v mriežke |
@@ -212,6 +213,27 @@ loads:
 | `icon_entity` | `climate` entita – ikona podľa `hvac_action` / režimu |
 
 Emoji → kresba: 🏠 🏡 → dom, 🚿 🛁 → bojler, ♨️ → kúrenie, 🔥 → oheň, ❄️ → chladenie, 🌡️ → teplomer, 🚗 🚙 → auto, 🔌 ⚡ → blesk.
+
+### Tretí string
+
+Tretí FV string sa ukáže sám, len čo je vyplnené `pv3_power` (ak ho menič má, karta si `sensor.…_pv_power_3`
+nájde sama). Bez neho ostáva solárna časť presne ako doteraz.
+
+- Tri panely vedľa seba, každý s výkonom, podielom na celku, napätím a prúdom.
+- Tretí string je v strede a jeho čiara ide rovno do spojovacieho bodu.
+- Súčet výkonu a dnešná výroba sa presunú do jedného oválneho štítku nad spojovacím bodom
+  (napr. `10 980 W · 41.6 kWh dnes`), lebo miesto medzi panelmi je obsadené.
+- V noci sa všetky tri stringy zbalia do jedného riadku ako doteraz.
+
+```yaml
+pv1_label: Juh
+pv2_label: Západ
+pv3_label: Garáž
+entities:
+  pv3_power: sensor.solax_pv_power_3
+  pv3_voltage: sensor.solax_pv_voltage_3     # voliteľné
+  pv3_current: sensor.solax_pv_current_3     # voliteľné
+```
 
 ### Viac batérií
 
@@ -338,9 +360,9 @@ Kompletný príklad je v [`examples/card.yaml`](examples/card.yaml).
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-light.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/editor-en.png" width="280"> |
 
-| Dlaždice záťaží + Ostatné | Dve batérie + druhý wallbox | |
+| Dlaždice záťaží + Ostatné | Dve batérie + druhý wallbox | Tri stringy |
 |---|---|---|
-| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | |
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-3strings-en.png" width="280"> |
 
 ## Riešenie problémov
 
