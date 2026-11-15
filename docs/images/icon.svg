@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f2a3a"/>
+      <stop offset="1" stop-color="#0e141d"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f6aa8"/>
+      <stop offset="1" stop-color="#143457"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".35"/>
+      <stop offset=".45" stop-color="#ffffff" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffcf5a" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffcf5a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="372" cy="138" r="104" fill="url(#sunGlow)"/>
+  <g stroke="#f5a623" stroke-width="14" stroke-linecap="round">
+    <line x1="372" y1="46" x2="372" y2="72"/>
+    <line x1="372" y1="204" x2="372" y2="230"/>
+    <line x1="280" y1="138" x2="306" y2="138"/>
+    <line x1="438" y1="138" x2="464" y2="138"/>
+    <line x1="307" y1="73" x2="325" y2="91"/>
+    <line x1="419" y1="185" x2="437" y2="203"/>
+    <line x1="437" y1="73" x2="419" y2="91"/>
+    <line x1="325" y1="185" x2="307" y2="203"/>
+  </g>
+  <circle cx="372" cy="138" r="46" fill="#f5a623"/>
+  <circle cx="372" cy="138" r="46" fill="none" stroke="#ffd27a" stroke-width="4" opacity=".8"/>
+  <g transform="translate(0,6)">
+    <path d="M118 236 L330 236 L382 404 L66 404 Z" fill="url(#panel)" stroke="#9fc4ea" stroke-width="10" stroke-linejoin="round"/>
+    <g stroke="#9fc4ea" stroke-width="6" opacity=".85" stroke-linecap="round">
+      <line x1="171" y1="236" x2="145" y2="404"/>
+      <line x1="224" y1="236" x2="224" y2="404"/>
+      <line x1="277" y1="236" x2="303" y2="404"/>
+      <line x1="100" y1="292" x2="348" y2="292"/>
+      <line x1="83" y1="348" x2="365" y2="348"/>
+    </g>
+    <path d="M118 236 L330 236 L382 404 L66 404 Z" fill="url(#shine)"/>
+    <rect x="212" y="404" width="24" height="40" fill="#8a9bb0"/>
+    <rect x="160" y="440" width="128" height="16" rx="8" fill="#8a9bb0"/>
+  </g>
+  <path transform="translate(22,0)" d="M402 300 L360 374 L392 374 L376 446 L436 352 L402 352 L420 300 Z" fill="#4caf7d" stroke="#0e141d" stroke-width="8" stroke-linejoin="round"/>
+</svg>

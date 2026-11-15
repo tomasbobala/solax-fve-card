@@ -1,6 +1,6 @@
 {
   "name": "solax-fve-card",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "FVE Card – animated energy-flow card for Home Assistant (SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge)",
   "main": "dist/solax-fve-card.js",
   "private": true,

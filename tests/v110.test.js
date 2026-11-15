@@ -339,3 +339,45 @@ test("day chart without websocket shows a message, not an error", () => {
   const card = render(w, stub(w, makeHass()), makeHass());
   assert.match(txt(card.querySelector('[data-sec="chart"]')), /No history/);
 });
+
+test("1.1.1: repeated updates keep the DOM nodes (no page jumps in Safari)", () => {
+  const w = boot();
+  const d0 = new Date();
+  d0.setHours(0, 0, 0, 0);
+  const det = [];
+  for (let m = 0; m < 1440; m += 30) det.push({ period_start: new Date(d0.getTime() + m * 60000).toISOString(), pv_estimate: m > 420 && m < 1080 ? 5 : 0 });
+  const fcStates = {
+    "sensor.solcast_pv_forecast_forecast_today": s(30.5, { unit_of_measurement: "kWh", detailedForecast: det }),
+    "sensor.solcast_pv_forecast_forecast_tomorrow": s(12, { unit_of_measurement: "kWh" }),
+  };
+  const hass1 = makeHass(fcStates);
+  const card = render(w, Object.assign(stub(w, hass1), { collapsed: { diagram: true } }), hass1);
+  const grab = () => [
+    '[data-sec="forecast"] .sf-fold-body > *',
+    '[data-sec="forecast"] .sf-fc-svg path',
+    '[data-sec="phase_load"] .sf-pl-row',
+    ".sf-self .sf-ring",
+    ".sf-diag-summary .sf-ds-chip",
+    '[data-sec="chart"] .sf-ch-empty',
+  ].map((q) => {
+    const el = card.querySelector(q);
+    assert.ok(el, q);
+    return el;
+  });
+  const before = grab();
+  const hass2 = makeHass(
+    Object.assign({}, fcStates, {
+      "sensor.solax_pv_power_total": s(6400),
+      "sensor.solax_today_s_solar_energy": s(21.9),
+      "sensor.solax_measured_power_l1": s(-700),
+      "sensor.solax_today_s_import_energy": s(3.4),
+      "sensor.solax_energy_dashboard_solax_grid_power": s(-1900),
+    }),
+  );
+  card.hass = hass2;
+  const after = grab();
+  before.forEach((el, i) => assert.strictEqual(after[i], el, `node ${i} kept`));
+  assert.match(txt(card.querySelector(".sf-fc-done")), /21\.9/);
+  assert.match(txt(card.querySelector('[data-sec="phase_load"] [data-ph="L1"]')), /3\.0 A/);
+  assert.match(txt(card.querySelector(".sf-diag-summary")), /6[ ,.]?400 W/);
+});

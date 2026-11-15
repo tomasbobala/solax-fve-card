@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.1.1";
 
 const I18N = {
   en: {
@@ -867,6 +867,22 @@ const FORECAST_SUFFIXES = {
   forecast_tomorrow: ["energy_production_tomorrow", "forecast_tomorrow"],
   forecast_power_now: ["power_production_now", "pv_forecast_power_now"],
 };
+
+function setText(el, v) {
+  if (!el) return;
+  const s = v == null ? "" : String(v);
+  if (el.textContent !== s) el.textContent = s;
+}
+
+function setAttr(el, name, v) {
+  if (!el) return;
+  const s = String(v);
+  if (el.getAttribute(name) !== s) el.setAttribute(name, s);
+}
+
+function setStyle(el, prop, v) {
+  if (el && el.style[prop] !== v) el.style[prop] = v;
+}
 
 function stableStringify(v) {
   if (Array.isArray(v)) return "[" + v.map(stableStringify).join(",") + "]";
@@ -1788,16 +1804,30 @@ class SolaxFveCard extends HTMLElement {
     const el = this.querySelector(".sf-diag-summary");
     if (!el || !this._isCollapsed("diagram")) return;
     const chips = [];
-    if (d.solar != null) chips.push(["☀", this._fmtP(d.solar), this._color("solar")]);
+    if (d.solar != null) chips.push(["solar", "☀", this._fmtP(d.solar), this._color("solar")]);
     if (this._e("battery_power") && (d.soc != null || d.battery != null))
-      chips.push(["🔋", [d.soc != null ? Math.round(d.soc) + " %" : "", d.battery != null && Math.abs(d.battery) > 3 ? (d.battery > 0 ? "+" : "−") + this._fmtP(Math.abs(d.battery)) : ""].filter(Boolean).join(" "), d.battery < 0 ? this._color("battery_discharge") : this._color("battery_charge")]);
-    if (d.grid != null) chips.push([d.grid > 0 ? "⬇️" : "⬆️", this._fmtP(Math.abs(d.grid)), d.grid > 0 ? this._color("grid_import") : this._color("grid_export")]);
-    if (d.total != null) chips.push(["🏠", this._fmtP(d.total), this._color("home")]);
-    const html = chips.map(([i, v, c]) => `<span class="sf-ds-chip" style="--c:${c}"><span>${i}</span><b>${escapeHtml(v)}</b></span>`).join("");
-    if (el._sfHtml !== html) {
-      el.innerHTML = html;
-      el._sfHtml = html;
+      chips.push([
+        "batt",
+        "🔋",
+        [d.soc != null ? Math.round(d.soc) + " %" : "", d.battery != null && Math.abs(d.battery) > 3 ? (d.battery > 0 ? "+" : "−") + this._fmtP(Math.abs(d.battery)) : ""].filter(Boolean).join(" "),
+        d.battery < 0 ? this._color("battery_discharge") : this._color("battery_charge"),
+      ]);
+    if (d.grid != null) chips.push(["grid", d.grid > 0 ? "⬇️" : "⬆️", this._fmtP(Math.abs(d.grid)), d.grid > 0 ? this._color("grid_import") : this._color("grid_export")]);
+    if (d.total != null) chips.push(["home", "🏠", this._fmtP(d.total), this._color("home")]);
+    const key = chips.map((c) => c[0]).join(",");
+    if (el._sfKey !== key) {
+      el.innerHTML = chips.map(([k]) => `<span class="sf-ds-chip" data-k="${k}"><span class="sf-ds-i"></span><b></b></span>`).join("");
+      el._sfKey = key;
     }
+    chips.forEach(([k, icon, v, c]) => {
+      const ch = el.querySelector(`[data-k="${k}"]`);
+      setText(ch.querySelector(".sf-ds-i"), icon);
+      setText(ch.querySelector("b"), v);
+      if (ch._sfC !== c) {
+        ch.style.setProperty("--c", c);
+        ch._sfC = c;
+      }
+    });
   }
 
   // ---- 1.1.0: stale data -------------------------------------------------------
@@ -1833,17 +1863,13 @@ class SolaxFveCard extends HTMLElement {
     } catch (e) {
       /* ignore */
     }
-    if (!info) {
-      pill.classList.add("hidden");
-      banner.classList.add("hidden");
-      return;
-    }
-    pill.classList.remove("hidden");
-    pill.textContent = info.unavailable ? "⚠" : `⚠ ${info.minutes} min`;
-    banner.classList.remove("hidden");
-    const title = info.unavailable ? t("stale_unavail") : t("stale_title").replace("{m}", info.minutes);
-    const last = info.last ? " " + t("stale_last").replace("{t}", fmtClock(info.last)) : "";
-    banner.innerHTML = `<span class="sf-stale-ico">⚠</span><div><b>${escapeHtml(title)}</b>${escapeHtml(last)}<br>${escapeHtml(t("stale_hint"))}</div>`;
+    pill.classList.toggle("hidden", !info);
+    banner.classList.toggle("hidden", !info);
+    if (!info) return;
+    setText(pill, info.unavailable ? "⚠" : `⚠ ${info.minutes} min`);
+    setText(banner.querySelector(".sf-st-t"), info.unavailable ? t("stale_unavail") : t("stale_title").replace("{m}", info.minutes));
+    setText(banner.querySelector(".sf-st-l"), info.last ? " " + t("stale_last").replace("{t}", fmtClock(info.last)) : "");
+    setText(banner.querySelector(".sf-st-h"), t("stale_hint"));
   }
 
   // ---- 1.1.0: inverters ----------------------------------------------------------
@@ -1917,22 +1943,31 @@ class SolaxFveCard extends HTMLElement {
   // ---- 1.1.0: phase load ------------------------------------------------------------
   _phaseLoad() {
     if (!this._show("phase_load") || !this._hass) return null;
-    const ps = [1, 2, 3].map((i) => (this._e(`grid_power_l${i}`) ? numPower(this._hass, this._e(`grid_power_l${i}`)) : null));
-    if (ps.filter((v) => v != null).length < 2) return null;
+    const ids = [1, 2, 3].map((i) => this._e(`grid_power_l${i}`));
+    if (ids.filter(Boolean).length < 2) return null;
+    const ps = ids.map((id) => (id ? numPower(this._hass, id) : null));
     const grid = this._gridValue();
     const sum = ps.reduce((s, v) => s + (v || 0), 0);
     const flip = grid != null && sum !== 0 && Math.sign(sum) !== Math.sign(grid);
     const lim = Number(this._config.phase_limit_a) || 25;
     const warn = Number(this._config.phase_warn_pct) || 80;
-    const rows = ps.map((p, i) => {
-      if (p == null) return null;
+    const rows = ids.map((id, i) => {
+      if (!id) return null;
+      const ph = "L" + (i + 1);
+      const p = ps[i];
+      if (p == null) return { ph, a: null, pct: 0, dir: "in" };
       const v = this._n(`grid_voltage_l${i + 1}`) || 230;
       const pp = flip ? -p : p;
       const a = Math.abs(pp) / v;
-      return { ph: "L" + (i + 1), a, pct: (a / lim) * 100, dir: pp >= 0 ? "in" : "out" };
+      return { ph, a, pct: (a / lim) * 100, dir: pp >= 0 ? "in" : "out" };
     });
-    const worst = rows.filter(Boolean).reduce((m, r) => (!m || r.pct > m.pct ? r : m), null);
-    return { rows, lim, warn, worst, alarm: worst && worst.pct >= warn ? worst : null };
+    const worst = rows.filter((r) => r && r.a != null).reduce((m, r) => (!m || r.pct > m.pct ? r : m), null);
+    // hold the warning for 2 min (and down to warn − 10 %) so the line does not blink in and out
+    const now = Date.now();
+    let alarm = worst && worst.pct >= warn ? worst : null;
+    if (alarm) this._plHold = now + 120000;
+    else if (worst && this._plHold && now < this._plHold && worst.pct >= warn - 10) alarm = worst;
+    return { rows, lim, warn, worst, alarm };
   }
 
   _plColor(r, pl) {
@@ -1945,38 +1980,42 @@ class SolaxFveCard extends HTMLElement {
     const val = pl && pl.worst ? (pl.alarm ? `⚠ ${pl.alarm.ph} ${Math.round(pl.alarm.pct)} %` : `${pl.worst.ph} ${pl.worst.a.toFixed(1)} A`) : "";
     const sec = this._secShow("phase_load", !!pl, val);
     if (!sec) return;
-    const brk = sec.querySelector(".sf-fold-src");
-    const bt = t("pl_breaker").replace("{a}", fmtDeg(pl.lim));
-    if (brk && brk.textContent !== bt) brk.textContent = bt;
+    setText(sec.querySelector(".sf-fold-src"), t("pl_breaker").replace("{a}", fmtDeg(pl.lim)));
     if (!sec.open) return;
     const body = sec.querySelector(".sf-fold-body");
-    const html =
-      pl.rows
-        .filter(Boolean)
-        .map((r) => {
-          const col = this._plColor(r, pl);
-          const w = Math.min(100, r.pct);
-          const hot = r.pct >= pl.warn;
-          return `<div class="sf-pl-row"><span class="sf-pl-l">${r.ph}</span><div class="sf-pl-bar"><i style="width:${w.toFixed(1)}%;background:${col}"></i><s style="left:${Math.min(100, pl.warn)}%"></s></div><span class="sf-pl-v"${hot ? ` style="color:${col}"` : ""}>${r.dir === "out" ? "↑" : "↓"} ${r.a.toFixed(1)} A${hot ? " ⚠" : ""}</span></div>`;
-        })
-        .join("") +
-      (pl.alarm ? `<div class="sf-pl-warn">⚠ ${escapeHtml(t("pl_warn").replace("{ph}", pl.alarm.ph).replace("{pct}", Math.round(pl.alarm.pct)))}</div>` : "");
-    if (body._sfHtml !== html) {
-      body.innerHTML = html;
-      body._sfHtml = html;
+    const rows = pl.rows.filter(Boolean);
+    const key = rows.map((r) => r.ph).join(",");
+    if (body._sfKey !== key) {
+      body.innerHTML =
+        rows.map((r) => `<div class="sf-pl-row" data-ph="${r.ph}"><span class="sf-pl-l">${r.ph}</span><div class="sf-pl-bar"><i></i><s></s></div><span class="sf-pl-v"></span></div>`).join("") +
+        `<div class="sf-pl-warn" style="display:none"></div>`;
+      body._sfKey = key;
     }
+    rows.forEach((r) => {
+      const row = body.querySelector(`[data-ph="${r.ph}"]`);
+      const bar = row.querySelector("i");
+      const mark = row.querySelector("s");
+      const v = row.querySelector(".sf-pl-v");
+      const col = this._plColor(r, pl);
+      const hot = r.a != null && r.pct >= pl.warn;
+      setStyle(bar, "width", Math.min(100, r.pct).toFixed(1) + "%");
+      setStyle(bar, "background", col);
+      setStyle(mark, "left", Math.min(100, pl.warn) + "%");
+      setStyle(v, "color", hot ? col : "");
+      setText(v, r.a == null ? "--" : `${r.dir === "out" ? "↑" : "↓"} ${r.a.toFixed(1)} A${hot ? " ⚠" : ""}`);
+    });
+    const warnEl = body.querySelector(".sf-pl-warn");
+    setStyle(warnEl, "display", pl.alarm ? "" : "none");
+    setText(warnEl, pl.alarm ? "⚠ " + t("pl_warn").replace("{ph}", pl.alarm.ph).replace("{pct}", Math.round(pl.alarm.pct)) : "");
   }
 
   // ---- 1.1.0: self-sufficiency + today ---------------------------------------------
-  _ring(frac, color, title, sub) {
-    const r = 26,
-      c = 2 * Math.PI * r;
-    const pct = Math.round(frac * 100);
-    return `<div class="sf-ring"><svg viewBox="0 0 62 62" aria-hidden="true">
-      <circle cx="31" cy="31" r="${r}" fill="none" stroke="rgba(127,127,127,.2)" stroke-width="7"></circle>
-      <circle cx="31" cy="31" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${((c * pct) / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 31 31)"></circle>
-      <text x="31" y="36" text-anchor="middle" class="sf-ring-pct">${pct}%</text></svg>
-      <div><div class="sf-ring-t">${escapeHtml(title)}</div><div class="sf-ring-s">${escapeHtml(sub)}</div></div></div>`;
+  _ringHtml(key) {
+    return `<div class="sf-ring" data-r="${key}"><svg viewBox="0 0 62 62" aria-hidden="true">
+      <circle cx="31" cy="31" r="26" fill="none" stroke="rgba(127,127,127,.2)" stroke-width="7"></circle>
+      <circle class="sf-ring-arc" cx="31" cy="31" r="26" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 163.4" transform="rotate(-90 31 31)"></circle>
+      <text x="31" y="36" text-anchor="middle" class="sf-ring-pct"></text></svg>
+      <div><div class="sf-ring-t"></div><div class="sf-ring-s"></div></div></div>`;
   }
 
   _renderSelf() {
@@ -1988,19 +2027,33 @@ class SolaxFveCard extends HTMLElement {
     const sol = this._n("solar_today");
     const rings = [];
     let autarky = null;
-    if (home > 0 && imp != null) {
-      autarky = clamp(1 - imp / home, 0, 1);
-      rings.push(this._ring(autarky, "#4caf7d", t("ss_autarky"), t("ss_autarky_sub").replace("{v}", fmtEnergy(imp, 1))));
+    if (this._e("total_today") && this._e("grid_import_today")) {
+      autarky = home > 0 && imp != null ? clamp(1 - imp / home, 0, 1) : null;
+      rings.push(["a", autarky, "#4caf7d", t("ss_autarky"), imp != null ? t("ss_autarky_sub").replace("{v}", fmtEnergy(imp, 1)) : ""]);
     }
-    if (sol > 0 && exp != null) rings.push(this._ring(clamp(1 - exp / sol, 0, 1), this._color("solar"), t("ss_selfuse"), t("ss_selfuse_sub").replace("{v}", fmtEnergy(Math.max(0, sol - exp), 1))));
+    if (this._e("solar_today") && this._e("grid_export_today")) {
+      const su = sol > 0 && exp != null ? clamp(1 - exp / sol, 0, 1) : null;
+      rings.push(["s", su, this._color("solar"), t("ss_selfuse"), sol != null && exp != null ? t("ss_selfuse_sub").replace("{v}", fmtEnergy(Math.max(0, sol - exp), 1)) : ""]);
+    }
     const show = this._show("self_sufficiency") && rings.length > 0;
     wrap.classList.toggle("hidden", !show);
-    const html = show ? rings.join("") : "";
-    if (wrap._sfHtml !== html) {
-      wrap.innerHTML = html;
-      wrap._sfHtml = html;
+    if (!show) return null;
+    const key = rings.map((r) => r[0]).join("");
+    if (wrap._sfKey !== key) {
+      wrap.innerHTML = rings.map((r) => this._ringHtml(r[0])).join("");
+      wrap._sfKey = key;
     }
-    return show ? { autarky } : null;
+    const C = 2 * Math.PI * 26;
+    rings.forEach(([k, f, color, title, sub]) => {
+      const el = wrap.querySelector(`[data-r="${k}"]`);
+      const arc = el.querySelector(".sf-ring-arc");
+      setAttr(arc, "stroke-dasharray", f == null ? `0 ${C.toFixed(1)}` : `${(C * f).toFixed(1)} ${C.toFixed(1)}`);
+      setAttr(arc, "stroke", color);
+      setText(el.querySelector(".sf-ring-pct"), f == null ? "–" : Math.round(f * 100) + "%");
+      setText(el.querySelector(".sf-ring-t"), title);
+      setText(el.querySelector(".sf-ring-s"), sub);
+    });
+    return { autarky };
   }
 
   _renderTodaySection() {
@@ -2084,48 +2137,63 @@ class SolaxFveCard extends HTMLElement {
 
   _renderForecast(solarNow) {
     const fcId = this._e("forecast_today");
-    const fc = this._hass ? energyKwh(this._hass, fcId) : null;
-    const show = this._show("forecast") && !!fcId && fc != null;
+    const show = this._show("forecast") && !!fcId && !!(this._hass && this._hass.states[fcId]);
+    const fc = show ? energyKwh(this._hass, fcId) : null;
     const done = this._n("solar_today");
-    const sec = this._secShow("forecast", show, show ? `${done != null ? done.toFixed(1) : "--"} / ~${fc.toFixed(1)} kWh` : "");
+    const f1 = (v) => (v == null ? "--" : v.toFixed(1));
+    const sec = this._secShow("forecast", show, show ? `${f1(done)} / ~${f1(fc)} kWh` : "");
     if (!sec) return;
-    const src = sec.querySelector(".sf-fold-src");
-    const srcTxt = this._fcSource();
-    if (src && src.textContent !== srcTxt) src.textContent = srcTxt;
+    setText(sec.querySelector(".sf-fold-src"), this._fcSource());
     if (!sec.open) return;
     const tom = energyKwh(this._hass, this._e("forecast_tomorrow"));
     let left = energyKwh(this._hass, this._e("forecast_remaining"));
-    if (left == null && done != null) left = Math.max(0, fc - done);
+    if (left == null && done != null && fc != null) left = Math.max(0, fc - done);
     const curve = this._fcCurve();
     const now = Date.now();
     const fcNow = this._e("forecast_power_now") ? this._p("forecast_power_now") : curve ? this._interp(curve, now) : null;
     let peak = null;
     if (curve) curve.forEach(([ms, w]) => ms >= startOfDay(0) && ms < startOfDay(1) && (!peak || w > peak[1]) && (peak = [ms, w]));
-    const day = this._day && this._day["0"];
-    const key = [fc, done, tom, left, Math.round((solarNow || 0) / 100), Math.round((fcNow || 0) / 100), curve ? curve.length : 0, day ? day.at : 0, LANG].join("|");
-    if (key === this._fcKey) return;
-    this._fcKey = key;
-    const tIcon = tom == null ? "" : tom >= fc * 0.8 ? "☀️" : tom >= fc * 0.4 ? "⛅" : "☁️";
+
+    const body = sec.querySelector(".sf-fold-body");
+    if (!body._sfBuilt) {
+      body.innerHTML = `<div class="sf-fc-row"><div class="sf-fc-main"><b class="sf-fc-done"></b> <span class="sf-fc-of"></span></div><div class="sf-fc-tom"><span class="sf-fc-ti"></span> <span class="sf-fc-tl"></span> <b class="sf-fc-tv"></b></div></div><div class="sf-fc-graph"></div><div class="sf-fc-sub"></div>`;
+      body._sfBuilt = true;
+    }
+    setText(body.querySelector(".sf-fc-done"), f1(done));
+    setText(body.querySelector(".sf-fc-of"), t("fc_of").replace("{v}", f1(fc)));
+    const tomEl = body.querySelector(".sf-fc-tom");
+    setStyle(tomEl, "display", tom == null ? "none" : "");
+    if (tom != null) {
+      setText(body.querySelector(".sf-fc-ti"), fc == null ? "" : tom >= fc * 0.8 ? "☀️" : tom >= fc * 0.4 ? "⛅" : "☁️");
+      setText(body.querySelector(".sf-fc-tl"), t("fc_tomorrow"));
+      setText(body.querySelector(".sf-fc-tv"), `~${tom.toFixed(0)} kWh`);
+    }
+    const graph = body.querySelector(".sf-fc-graph");
+    const mode = curve ? "c" : "b";
+    if (graph._sfMode !== mode) {
+      graph.innerHTML =
+        mode === "c"
+          ? `<svg class="sf-fc-svg" viewBox="0 0 440 46" preserveAspectRatio="none" aria-hidden="true"><path class="sf-fc-fc" fill="none" stroke-width="1.6" stroke-dasharray="4 4" opacity=".75" vector-effect="non-scaling-stroke"></path><path class="sf-fc-area" opacity=".22"></path><path class="sf-fc-act" fill="none" stroke-width="2.2" vector-effect="non-scaling-stroke"></path><line class="sf-fc-now" y1="2" y2="46" stroke="currentColor" stroke-width="1" opacity=".45" vector-effect="non-scaling-stroke"></line></svg>`
+          : `<div class="sf-fc-bar"><i></i></div>`;
+      graph._sfMode = mode;
+    }
+    if (curve) this._fcGraph(graph, curve, this._day && this._day["0"]);
+    else setStyle(graph.querySelector("i"), "width", (done != null && fc > 0 ? clamp((done / fc) * 100, 0, 100) : 0).toFixed(1) + "%");
     const sub = [];
     if (left != null) sub.push(t("fc_left").replace("{v}", left.toFixed(1)));
     if (solarNow != null && fcNow != null) sub.push(t("fc_now").replace("{a}", fmtKw(solarNow)).replace("{b}", fmtKw(fcNow).replace(" kW", "")));
     if (peak && peak[1] > 0) sub.push(t("fc_peak").replace("{t}", fmtClock(peak[0])));
-    const graph = curve ? this._fcSvg(curve, day) : `<div class="sf-fc-bar"><i style="width:${done != null && fc > 0 ? clamp((done / fc) * 100, 0, 100).toFixed(1) : 0}%"></i></div>`;
-    const body = sec.querySelector(".sf-fold-body");
-    body.innerHTML = `
-      <div class="sf-fc-row"><div class="sf-fc-main"><b>${done != null ? done.toFixed(1) : "--"}</b> ${escapeHtml(t("fc_of").replace("{v}", fc.toFixed(1)))}</div>${
-        tom != null ? `<div class="sf-fc-tom">${tIcon} ${escapeHtml(t("fc_tomorrow"))} <b>~${tom.toFixed(0)} kWh</b></div>` : ""
-      }</div>
-      ${graph}
-      ${sub.length ? `<div class="sf-fc-sub">${escapeHtml(sub.join(" · "))}</div>` : ""}`;
+    const subEl = body.querySelector(".sf-fc-sub");
+    setText(subEl, sub.join(" · "));
+    setStyle(subEl, "display", sub.length ? "" : "none");
   }
 
-  _fcSvg(curve, day) {
+  _fcGraph(graph, curve, day) {
     const W = 440,
       H = 46;
     const nz = curve.filter(([, w]) => w > 0);
     const s0 = startOfDay(0);
-    let a = nz.length ? nz[0][0] - 3600000 : s0 + 5 * 3600000;
+    const a = nz.length ? nz[0][0] - 3600000 : s0 + 5 * 3600000;
     let b = nz.length ? nz[nz.length - 1][0] + 3600000 : s0 + 21 * 3600000;
     if (b - a < 4 * 3600000) b = a + 4 * 3600000;
     const now = Date.now();
@@ -2134,7 +2202,11 @@ class SolaxFveCard extends HTMLElement {
     if (act) act.forEach((v) => v != null && v > max && (max = v));
     const X = (ms) => (((ms - a) / (b - a)) * W).toFixed(1);
     const Y = (w) => (H - 4 - (w / max) * (H - 8)).toFixed(1);
-    const fcPath = curve.filter(([ms]) => ms >= a && ms <= b).map(([ms, w], i) => `${i ? "L" : "M"}${X(ms)} ${Y(w)}`).join(" ");
+    const sc = this._color("solar");
+    const fcPath = curve
+      .filter(([ms]) => ms >= a && ms <= b)
+      .map(([ms, w], i) => `${i ? "L" : "M"}${X(ms)} ${Y(w)}`)
+      .join(" ");
     let actPath = "",
       area = "";
     if (act) {
@@ -2148,13 +2220,22 @@ class SolaxFveCard extends HTMLElement {
         area = `${actPath} L${X(pts[pts.length - 1][0])} ${H} L${X(pts[0][0])} ${H} Z`;
       }
     }
-    const nowX = now >= a && now <= b ? X(now) : null;
-    const sc = this._color("solar");
-    return `<svg class="sf-fc-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-      <path d="${fcPath}" fill="none" stroke="${sc}" stroke-width="1.6" stroke-dasharray="4 4" opacity=".75" vector-effect="non-scaling-stroke"></path>
-      ${area ? `<path d="${area}" fill="${sc}" opacity=".22"></path><path d="${actPath}" fill="none" stroke="${sc}" stroke-width="2.2" vector-effect="non-scaling-stroke"></path>` : ""}
-      ${nowX ? `<line x1="${nowX}" x2="${nowX}" y1="2" y2="${H}" stroke="currentColor" stroke-width="1" opacity=".45" vector-effect="non-scaling-stroke"></line>` : ""}
-    </svg>`;
+    const fcEl = graph.querySelector(".sf-fc-fc");
+    setAttr(fcEl, "d", fcPath || "M0 0");
+    setAttr(fcEl, "stroke", sc);
+    const ar = graph.querySelector(".sf-fc-area");
+    setAttr(ar, "d", area || "M0 0");
+    setAttr(ar, "fill", sc);
+    const ac = graph.querySelector(".sf-fc-act");
+    setAttr(ac, "d", actPath || "M0 0");
+    setAttr(ac, "stroke", sc);
+    const nl = graph.querySelector(".sf-fc-now");
+    const nx = now >= a && now <= b ? X(now) : null;
+    setStyle(nl, "display", nx ? "" : "none");
+    if (nx) {
+      setAttr(nl, "x1", nx);
+      setAttr(nl, "x2", nx);
+    }
   }
 
   // ---- 1.1.0: day data + chart ---------------------------------------------------------
@@ -2297,40 +2378,6 @@ class SolaxFveCard extends HTMLElement {
     const sec = this._secShow("chart", show, total != null ? "☀ " + fmtEnergy(total, 1) : "");
     if (!sec || !sec.open) return;
     const body = sec.querySelector(".sf-fold-body");
-    if (!body.querySelector(".sf-ch-chips")) {
-      body.innerHTML = `<div class="sf-ch-chips"><button data-day="0"></button><button data-day="-1"></button></div><div class="sf-ch-plot"></div><div class="sf-ch-read"></div><div class="sf-ch-leg"></div>`;
-      body.querySelectorAll(".sf-ch-chips button").forEach((b) => {
-        b.onclick = () => {
-          this._chartDay = Number(b.dataset.day);
-          this._chartKey = null;
-          this._renderChart();
-          this._maybeLoadData();
-        };
-      });
-    }
-    body.querySelectorAll(".sf-ch-chips button").forEach((b) => {
-      const txt = b.dataset.day === "0" ? t("ch_today") : t("ch_yesterday");
-      if (b.textContent !== txt) b.textContent = txt;
-      b.classList.toggle("on", Number(b.dataset.day) === off);
-    });
-    const curve = off === 0 ? this._fcCurve() : null;
-    const key = [off, day ? day.at : 0, day && day.loading ? 1 : 0, curve ? curve.length : 0, LANG].join("|");
-    if (key === this._chartKey) return;
-    this._chartKey = key;
-    const plot = body.querySelector(".sf-ch-plot");
-    const read = body.querySelector(".sf-ch-read");
-    const sc = this._color("solar"),
-      hc = this._color("home"),
-      bc = this._color("battery_charge");
-    const leg = [[sc, t("ch_solar")], curve ? [sc, t("ch_fc"), true] : null, ids.home.length ? [hc, t("ch_home")] : null, ids.soc.length ? [bc, t("ch_soc")] : null].filter(Boolean);
-    body.querySelector(".sf-ch-leg").innerHTML = leg.map(([c, l, dash]) => `<span class="${dash ? "dash" : ""}" style="--c:${c}">${escapeHtml(l)}</span>`).join("");
-    if (!day || !day.series) {
-      plot.innerHTML = `<div class="sf-ch-empty">${escapeHtml(day && day.error ? t("ch_nodata") : this._hass && this._hass.callWS ? t("ch_loading") : t("ch_nodata"))}</div>`;
-      read.textContent = "";
-      this._maybeLoadData();
-      return;
-    }
-    const S = day.series;
     const W = 448,
       H = 222,
       L = 30,
@@ -2339,6 +2386,88 @@ class SolaxFveCard extends HTMLElement {
       B = 24;
     const pw = W - L - R,
       ph = H - T - B;
+    if (!body._sfBuilt) {
+      body.innerHTML = `<div class="sf-ch-chips"><button data-day="0"></button><button data-day="-1"></button></div>
+        <div class="sf-ch-plot"><svg class="sf-ch-svg" viewBox="0 0 ${W} ${H}">
+          <g class="sf-ch-axes"></g>
+          <path class="sf-ch-fc" fill="none" stroke-width="1.5" stroke-dasharray="4 4" opacity=".75" d="M0 0"></path>
+          <path class="sf-ch-area" opacity=".22" d="M0 0"></path>
+          <path class="sf-ch-sol" fill="none" stroke-width="2" d="M0 0"></path>
+          <path class="sf-ch-home" fill="none" stroke-width="2" d="M0 0"></path>
+          <path class="sf-ch-soc" fill="none" stroke-width="2" d="M0 0"></path>
+          <line class="sf-ch-now" y1="${T}" y2="${H - B}"></line>
+          <line class="sf-ch-cursor" y1="${T}" y2="${H - B}" style="display:none"></line>
+          <rect class="sf-ch-hit" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"></rect>
+        </svg><div class="sf-ch-empty"></div></div>
+        <div class="sf-ch-read"></div><div class="sf-ch-leg"></div>`;
+      body._sfBuilt = true;
+      body.querySelectorAll(".sf-ch-chips button").forEach((b) => {
+        b.onclick = () => {
+          this._chartDay = Number(b.dataset.day);
+          this._chartKey = null;
+          this._renderChart();
+          this._maybeLoadData();
+        };
+      });
+      const svg = body.querySelector(".sf-ch-svg");
+      const pick = (ev) => {
+        const c = this._chartData;
+        if (!c) return;
+        const r = svg.getBoundingClientRect();
+        if (!r.width) return;
+        const x = ((ev.clientX - r.left) / r.width) * W;
+        const i = clamp(Math.floor((((x - L) / pw) * c.dayMs) / 300000), 0, Math.max(0, c.n - 1));
+        const ms = c.start + i * 300000;
+        const S = c.S;
+        const parts = [fmtClock(ms)];
+        if (S.solar && S.solar[i] != null) parts.push("☀ " + fmtKw(S.solar[i]));
+        if (S.home && S.home[i] != null) parts.push("🏠 " + fmtKw(S.home[i]));
+        if (S.soc && S.soc[i] != null) parts.push("🔋 " + Math.round(S.soc[i]) + " %");
+        setText(body.querySelector(".sf-ch-read"), parts.join(" · "));
+        const cur = svg.querySelector(".sf-ch-cursor");
+        const cx = (L + ((ms + 150000 - c.start) / c.dayMs) * pw).toFixed(1);
+        setAttr(cur, "x1", cx);
+        setAttr(cur, "x2", cx);
+        setStyle(cur, "display", "");
+        this._chartPicked = true;
+      };
+      svg.addEventListener("pointermove", pick);
+      svg.addEventListener("pointerdown", pick);
+    }
+    body.querySelectorAll(".sf-ch-chips button").forEach((b) => {
+      setText(b, b.dataset.day === "0" ? t("ch_today") : t("ch_yesterday"));
+      b.classList.toggle("on", Number(b.dataset.day) === off);
+    });
+    const curve = off === 0 ? this._fcCurve() : null;
+    const key = [off, day ? day.at : 0, day && day.series ? 1 : 0, curve ? curve.length : 0, LANG, this._color("solar"), this._color("home"), this._color("battery_charge")].join("|");
+    if (key === this._chartKey) return;
+    this._chartKey = key;
+    const sc = this._color("solar"),
+      hc = this._color("home"),
+      bc = this._color("battery_charge");
+    const leg = [[sc, t("ch_solar")], curve ? [sc, t("ch_fc"), true] : null, ids.home.length ? [hc, t("ch_home")] : null, ids.soc.length ? [bc, t("ch_soc")] : null].filter(Boolean);
+    const legEl = body.querySelector(".sf-ch-leg");
+    const legHtml = leg.map(([c, l, dash]) => `<span class="${dash ? "dash" : ""}" style="--c:${c}">${escapeHtml(l)}</span>`).join("");
+    if (legEl._sfHtml !== legHtml) {
+      legEl.innerHTML = legHtml;
+      legEl._sfHtml = legHtml;
+    }
+    const svg = body.querySelector(".sf-ch-svg");
+    const empty = body.querySelector(".sf-ch-empty");
+    const read = body.querySelector(".sf-ch-read");
+    const q = (c) => svg.querySelector(c);
+    if (!day || !day.series) {
+      setStyle(svg, "visibility", "hidden");
+      setStyle(empty, "display", "");
+      setText(empty, day && day.error ? t("ch_nodata") : this._hass && this._hass.callWS ? t("ch_loading") : t("ch_nodata"));
+      setText(read, "");
+      this._chartData = null;
+      this._maybeLoadData();
+      return;
+    }
+    setStyle(svg, "visibility", "");
+    setStyle(empty, "display", "none");
+    const S = day.series;
     const dayMs = startOfDay(off + 1) - day.start;
     const X = (ms) => L + ((ms - day.start) / dayMs) * pw;
     let max = 0;
@@ -2355,62 +2484,55 @@ class SolaxFveCard extends HTMLElement {
           pen = false;
           return;
         }
-        const x = X(day.start + i * 300000 + 150000).toFixed(1);
-        d += `${pen ? "L" : "M"}${x} ${y(v).toFixed(1)} `;
+        d += `${pen ? "L" : "M"}${X(day.start + i * 300000 + 150000).toFixed(1)} ${y(v).toFixed(1)} `;
         pen = true;
       });
-      return d;
+      return d.trim();
     };
-    let grid = "";
+    let axes = "";
     [0, 0.25, 0.5, 0.75, 1].forEach((f) => {
       const y = T + (1 - f) * ph;
-      grid += `<line x1="${L}" x2="${W - R}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" class="sf-ch-grid"></line><text x="${L - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" class="sf-ch-ax">${+(top * f).toFixed(2)}</text>`;
+      axes += `<line x1="${L}" x2="${W - R}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" class="sf-ch-grid"></line><text x="${L - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" class="sf-ch-ax">${+(top * f).toFixed(2)}</text>`;
     });
-    if (S.soc) [0, 50, 100].forEach((p) => (grid += `<text x="${W - R + 6}" y="${(Ys(p) + 4).toFixed(1)}" class="sf-ch-ax" fill="${bc}" style="fill:${bc}">${p}%</text>`));
-    [0, 6, 12, 18, 24].forEach((h) => (grid += `<text x="${X(day.start + h * 3600000).toFixed(1)}" y="${H - 6}" text-anchor="middle" class="sf-ch-ax">${String(h).padStart(2, "0")}:00</text>`));
+    if (S.soc) [0, 50, 100].forEach((p) => (axes += `<text x="${W - R + 6}" y="${(Ys(p) + 4).toFixed(1)}" class="sf-ch-ax" style="fill:${bc}">${p}%</text>`));
+    [0, 6, 12, 18, 24].forEach((h) => (axes += `<text x="${X(day.start + h * 3600000).toFixed(1)}" y="${H - 6}" text-anchor="middle" class="sf-ch-ax">${String(h).padStart(2, "0")}:00</text>`));
+    axes += `<text x="${L - 6}" y="${T - 12}" text-anchor="end" class="sf-ch-ax">kW</text>`;
+    q(".sf-ch-axes").innerHTML = axes;
     const sol = S.solar || [];
-    let area = "";
     const solPath = path(sol, Y);
+    let area = "";
     if (solPath) {
       const firstI = sol.findIndex((v) => v != null);
       let lastI = sol.length - 1;
       while (lastI > 0 && sol[lastI] == null) lastI--;
       if (firstI >= 0 && sol.slice(firstI, lastI + 1).every((v) => v != null))
-        area = `<path d="${solPath} L${X(day.start + lastI * 300000 + 150000).toFixed(1)} ${Y(0).toFixed(1)} L${X(day.start + firstI * 300000 + 150000).toFixed(1)} ${Y(0).toFixed(1)} Z" fill="${sc}" opacity=".22"></path>`;
+        area = `${solPath} L${X(day.start + lastI * 300000 + 150000).toFixed(1)} ${Y(0).toFixed(1)} L${X(day.start + firstI * 300000 + 150000).toFixed(1)} ${Y(0).toFixed(1)} Z`;
     }
-    const fcPath = curve ? curve.filter(([ms]) => ms >= day.start && ms <= day.start + dayMs).map(([ms, w], i) => `${i ? "L" : "M"}${X(ms).toFixed(1)} ${Y(w).toFixed(1)}`).join(" ") : "";
-    const nowX = off === 0 ? X(Date.now()) : null;
-    plot.innerHTML = `<svg class="sf-ch-svg" viewBox="0 0 ${W} ${H}">
-      ${grid}<text x="${L - 6}" y="${T - 12}" text-anchor="end" class="sf-ch-ax">kW</text>
-      ${fcPath ? `<path d="${fcPath}" fill="none" stroke="${sc}" stroke-width="1.5" stroke-dasharray="4 4" opacity=".75"></path>` : ""}
-      ${area}<path d="${solPath}" fill="none" stroke="${sc}" stroke-width="2"></path>
-      <path d="${path(S.home, Y)}" fill="none" stroke="${hc}" stroke-width="2"></path>
-      <path d="${path(S.soc, Ys)}" fill="none" stroke="${bc}" stroke-width="2"></path>
-      ${nowX != null ? `<line x1="${nowX.toFixed(1)}" x2="${nowX.toFixed(1)}" y1="${T}" y2="${H - B}" class="sf-ch-now"></line>` : ""}
-      <line class="sf-ch-cursor" x1="0" x2="0" y1="${T}" y2="${H - B}" style="display:none"></line>
-      <rect class="sf-ch-hit" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"></rect>
-    </svg>`;
-    read.textContent = t("ch_hint");
-    const svg = plot.querySelector("svg");
-    const cursor = svg.querySelector(".sf-ch-cursor");
-    const pick = (ev) => {
-      const r = svg.getBoundingClientRect();
-      if (!r.width) return;
-      const x = ((ev.clientX - r.left) / r.width) * W;
-      const i = clamp(Math.floor((((x - L) / pw) * dayMs) / 300000), 0, Math.max(0, sol.length - 1, (S.home || []).length - 1));
-      const ms = day.start + i * 300000;
-      const parts = [fmtClock(ms)];
-      if (sol[i] != null) parts.push("☀ " + fmtKw(sol[i]));
-      if (S.home && S.home[i] != null) parts.push("🏠 " + fmtKw(S.home[i]));
-      if (S.soc && S.soc[i] != null) parts.push("🔋 " + Math.round(S.soc[i]) + " %");
-      read.textContent = parts.join(" · ");
-      const cx = X(ms + 150000).toFixed(1);
-      cursor.setAttribute("x1", cx);
-      cursor.setAttribute("x2", cx);
-      cursor.style.display = "";
+    const fcPath = curve
+      ? curve
+          .filter(([ms]) => ms >= day.start && ms <= day.start + dayMs)
+          .map(([ms, w], i) => `${i ? "L" : "M"}${X(ms).toFixed(1)} ${Y(w).toFixed(1)}`)
+          .join(" ")
+      : "";
+    const set = (cls, d, attr, color) => {
+      const el = q(cls);
+      setAttr(el, "d", d || "M0 0");
+      setAttr(el, attr, color);
     };
-    svg.addEventListener("pointermove", pick);
-    svg.addEventListener("pointerdown", pick);
+    set(".sf-ch-fc", fcPath, "stroke", sc);
+    set(".sf-ch-area", area, "fill", sc);
+    set(".sf-ch-sol", solPath, "stroke", sc);
+    set(".sf-ch-home", path(S.home, Y), "stroke", hc);
+    set(".sf-ch-soc", path(S.soc, Ys), "stroke", bc);
+    const nowL = q(".sf-ch-now");
+    setStyle(nowL, "display", off === 0 ? "" : "none");
+    if (off === 0) {
+      const nx = X(Date.now()).toFixed(1);
+      setAttr(nowL, "x1", nx);
+      setAttr(nowL, "x2", nx);
+    }
+    this._chartData = { start: day.start, dayMs, S, n: Math.max(sol.length, (S.home || []).length, (S.soc || []).length) };
+    if (!this._chartPicked) setText(read, t("ch_hint"));
   }
 
   _buildSkeleton() {
@@ -2422,7 +2544,7 @@ class SolaxFveCard extends HTMLElement {
             <div class="sf-title"><span class="sf-title-icon"></span><span class="sf-title-text"></span><button class="sf-diag-toggle" type="button"><span></span></button></div>
             <div class="sf-head-right"><span class="sf-stale-pill hidden"></span><div class="sf-links"></div></div>
           </div>
-          <div class="sf-stale-banner hidden"></div>
+          <div class="sf-stale-banner hidden"><span class="sf-stale-ico">⚠</span><div><b class="sf-st-t"></b><span class="sf-st-l"></span><br><span class="sf-st-h"></span></div></div>
 
           <details class="sf-fold sf-sec sf-fc-sec hidden" data-sec="forecast">
             <summary class="sf-fold-summary">☀️ <span class="sf-fold-title">${t("sec_forecast")}</span> <span class="sf-fold-val"></span><span class="sf-fold-src"></span></summary>
@@ -2525,7 +2647,7 @@ class SolaxFveCard extends HTMLElement {
       .sf-panel-letter { text-anchor: middle; dominant-baseline: central; font-size: 17px; font-weight: 800; fill: #ffffff; paint-order: stroke; stroke: #0d2033; stroke-width: 3px; stroke-linejoin: round; }
       .sf-panel.on .sf-panel-grid { opacity: .75; }
       .sf-join { transition: opacity .4s ease; }
-      .sf-svg, .sf-wallbox-panel, .sf-phases-body, .sf-today-row { overflow-anchor: none; }
+      .sf-root, .sf-root * { overflow-anchor: none; }
 
       @keyframes sf-sun-pulse { 0%,100% { opacity: .2; r: 15; } 50% { opacity: .42; r: 18; } }
       .sf-sun-glow { animation: sf-sun-pulse 2.1s ease-in-out infinite; transform-origin: center; }
@@ -2625,8 +2747,8 @@ class SolaxFveCard extends HTMLElement {
       .sf-diag-toggle.collapsed span { transform: rotate(45deg); margin-top: -4px; }
       .sf-sec[open] > .sf-fold-summary .sf-fold-val { display: none; }
       .sf-hidden, .hidden.sf-sec, .sf-diag-summary.hidden, .sf-stale-pill.hidden, .sf-stale-banner.hidden, .sf-self.hidden { display: none !important; }
-      .sf-diag-summary { display: flex; flex-wrap: wrap; gap: 8px; }
-      .sf-ds-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 12px; background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); font-size: .92rem; }
+      .sf-diag-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+      .sf-ds-chip { display: flex; justify-content: center; white-space: nowrap; overflow: hidden; min-width: 0; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 12px; background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); font-size: .92rem; }
       .sf-ds-chip b { color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
       .sf-stale-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 11px; font-size: .84rem; font-weight: 800; background: rgba(229,115,60,.18); border: 1px solid rgba(229,115,60,.55); color: #f0915a; }
       .sf-stale-banner { display: flex; gap: 10px; align-items: flex-start; background: rgba(229,115,60,.12); border: 1px solid rgba(229,115,60,.45); color: #e8865a; border-radius: 12px; padding: 10px 12px; font-size: .86rem; line-height: 1.35; }
@@ -2643,6 +2765,7 @@ class SolaxFveCard extends HTMLElement {
       .sf-fc-tom { font-size: .92rem; color: var(--secondary-text-color); }
       .sf-fc-tom b { color: var(--primary-text-color); }
       .sf-fc-sub { font-size: .8rem; color: var(--secondary-text-color); }
+      .sf-fc-graph { height: 46px; display: flex; flex-direction: column; justify-content: center; }
       .sf-fc-svg { width: 100%; height: 46px; display: block; color: var(--primary-text-color); }
       .sf-fc-bar { position: relative; height: 10px; border-radius: 6px; background: rgba(127,127,127,.18); overflow: hidden; }
       .sf-fc-bar i { position: absolute; inset: 0 auto 0 0; background: var(--sf-solar, #f5a623); border-radius: 6px; }
@@ -2664,13 +2787,14 @@ class SolaxFveCard extends HTMLElement {
       .sf-ch-chips { display: flex; gap: 6px; }
       .sf-ch-chips button { font: inherit; border: 1px solid var(--divider-color); border-radius: 999px; padding: 4px 12px; font-size: .8rem; color: var(--secondary-text-color); background: transparent; cursor: pointer; }
       .sf-ch-chips button.on { background: color-mix(in srgb, var(--sf-solar, #f5a623) 16%, transparent); border-color: var(--sf-solar, #f5a623); color: var(--primary-text-color); font-weight: 700; }
-      .sf-ch-svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+      .sf-ch-plot { position: relative; aspect-ratio: 448 / 222; }
+      .sf-ch-plot > .sf-ch-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
       .sf-ch-grid { stroke: rgba(127,127,127,.18); }
       .sf-ch-ax { font-size: 10px; fill: var(--secondary-text-color); }
       .sf-ch-now { stroke: var(--primary-text-color); opacity: .4; stroke-dasharray: 2 3; }
       .sf-ch-cursor { stroke: var(--primary-text-color); opacity: .55; }
       .sf-ch-read { font-size: .8rem; color: var(--secondary-text-color); min-height: 1.2em; font-variant-numeric: tabular-nums; }
-      .sf-ch-empty { padding: 26px 0; text-align: center; font-size: .86rem; color: var(--secondary-text-color); }
+      .sf-ch-empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-size: .86rem; color: var(--secondary-text-color); }
       .sf-ch-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--secondary-text-color); }
       .sf-ch-leg span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
       .sf-ch-leg span.dash::before { background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 7px); }
@@ -4210,13 +4334,14 @@ class SolaxFveCard extends HTMLElement {
       wrap.className = "sf-today-row hidden";
       return;
     }
-    const html = items
-      .map(
-        (it) =>
-          `<div class="sf-stat"><div class="sf-stat-label">${it.icon} ${escapeHtml(it.label)}</div><div class="sf-stat-value">${fmtEnergy(this._n(it.key), 1)}</div></div>`,
-      )
-      .join("");
-    if (wrap._sfHtml !== html) { wrap.innerHTML = html; wrap._sfHtml = html; }
+    const key = items.map((it) => it.key).join(",") + LANG;
+    if (wrap._sfKey !== key) {
+      wrap.innerHTML = items
+        .map((it) => `<div class="sf-stat" data-k="${it.key}"><div class="sf-stat-label">${it.icon} ${escapeHtml(it.label)}</div><div class="sf-stat-value"></div></div>`)
+        .join("");
+      wrap._sfKey = key;
+    }
+    items.forEach((it) => setText(wrap.querySelector(`[data-k="${it.key}"] .sf-stat-value`), fmtEnergy(this._n(it.key), 1)));
   }
 }
 

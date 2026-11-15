@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] – 2026-11-15
+
+### Fixed / Opravené
+
+- **Safari / macOS / iPhone: the page no longer jumps up while the card updates.** The new 1.1.0 parts
+  (forecast strip, phase load, self-sufficiency rings, collapsed energy-flow row, stale banner, day chart) were
+  rebuilt on every update. In WebKit every rebuild pulls the page up, so a dashboard scrolled down kept
+  moving. All of them – and the daily totals row – now update their texts and shapes in place.
+  / **Safari / macOS / iPhone: stránka už pri aktualizácii karty neposkakuje hore.** Nové časti z 1.1.0
+  (predpoveď, zaťaženie fáz, krúžky sebestačnosti, zbalený riadok toku energie, pruh starých dát, graf dňa) sa
+  pri každej aktualizácii prestavali. Vo WebKite každé prestavanie posunie stránku hore. Teraz sa – aj s
+  riadkom denných súčtov – menia len texty a tvary na mieste.
+- The day chart keeps its height while loading; the phase warning line stays for at least 2 minutes instead of
+  blinking around the threshold; the collapsed energy-flow chips sit in a fixed grid; the forecast and phase
+  sections no longer disappear when a sensor is briefly unavailable.
+  / Graf dňa má rovnakú výšku aj pri načítaní; riadok varovania fázy ostane aspoň 2 minúty a neblikne okolo
+  hranice; čipy zbaleného toku energie sú v pevnej mriežke; predpoveď a fázy nezmiznú pri krátkom výpadku
+  senzora.
+
 ## [1.1.0] – 2026-11-15
 
 **The card is now called FVE Card** (formerly SolaX FVE Card). Only the display name changed – the card type
