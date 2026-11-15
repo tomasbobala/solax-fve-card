@@ -19,7 +19,9 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomasbobala&repository=solax-fve-card&category=plugin)
 
-<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/hero.png" alt="FVE Card – day and night" width="860">
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-animated-en.gif" alt="FVE Card – animated energy flow" width="430">
+
+<sub>Live recording of the card: moving arrows follow the power, every load gets its own coloured arrow from the house.</sub>
 
 </div>
 
@@ -475,6 +477,8 @@ Set under `show:` (`true` / `false`).
 A complete example is in [`examples/card.yaml`](examples/card.yaml).
 
 ## Screenshots
+
+<p align="center"><img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/hero.png" alt="FVE Card – day and night" width="860"></p>
 
 | Day | Night | Details |
 |---|---|---|

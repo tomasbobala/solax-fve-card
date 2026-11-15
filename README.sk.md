@@ -19,7 +19,9 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 
 [![Otvoriť tento repozitár v HACS vo vašom Home Assistant.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomasbobala&repository=solax-fve-card&category=plugin)
 
-<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-sk.png" alt="FVE Card po slovensky" width="430">
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-animated-sk.gif" alt="FVE Card – animovaný tok energie" width="430">
+
+<sub>Živý záznam karty: šípky sa pohybujú podľa výkonu, každá záťaž má vlastnú farebnú šípku od domu.</sub>
 
 </div>
 
@@ -476,6 +478,8 @@ Kľúče pod `colors:`: `solar`, `solar_today`, `hub`, `battery_charge`, `batter
 Kompletný príklad je v [`examples/card.yaml`](examples/card.yaml).
 
 ## Obrázky
+
+<p align="center"><img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/hero.png" alt="FVE Card – deň a noc" width="860"></p>
 
 | Deň | Noc | Detaily |
 |---|---|---|
