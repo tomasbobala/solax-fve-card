@@ -1,6 +1,6 @@
 {
   "name": "solax-fve-card",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Animated energy-flow card for Home Assistant and SolaX inverters",
   "main": "dist/solax-fve-card.js",
   "private": true,

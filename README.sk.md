@@ -220,7 +220,8 @@ Tretí FV string sa ukáže sám, len čo je vyplnené `pv3_power` (ak ho menič
 nájde sama). Bez neho ostáva solárna časť presne ako doteraz.
 
 - Tri panely vedľa seba, každý s výkonom, podielom na celku, napätím a prúdom.
-- Tretí string je v strede a jeho čiara ide rovno do spojovacieho bodu.
+- Stringy sú zľava doprava v poradí 1 · 2 · 3 – String 2 je v strede a jeho čiara ide rovno do spojovacieho bodu.
+- Pri dvoch stringoch nechaj *String 3 – výkon* prázdne a karta ukáže len dva panely. Ak je entita vyplnená, ale v Home Assistante neexistuje, karta ju tiež ignoruje.
 - Súčet výkonu a dnešná výroba sa presunú do jedného oválneho štítku nad spojovacím bodom
   (napr. `10 980 W · 41.6 kWh dnes`), lebo miesto medzi panelmi je obsadené.
 - V noci sa všetky tri stringy zbalia do jedného riadku ako doteraz.
@@ -317,7 +318,7 @@ Pod `show:` (`true` / `false`).
 
 | Kľúč | Predvolené | Popis |
 |---|---|---|
-| `pv_split` | `true` | Dva samostatné stringy |
+| `pv_split` | `true` | Samostatné zobrazenie stringov (2 alebo 3 panely namiesto jedného) |
 | `pv_details` | `true` | Napätie / prúd / podiel % |
 | `solar_sum` | `true` | Súčet stringov (Σ) |
 | `night_compact` | `true` | Zbaliť stringy, keď nič nevyrába |

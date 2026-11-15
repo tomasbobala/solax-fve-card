@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.7] – 2026-11-15
+
+### Fixed / Opravené
+
+- **Three strings are now drawn in order 1 · 2 · 3 from left to right** – strings 2 and 3 were swapped
+  (String 3 sat in the middle). / **Tri stringy sú teraz zľava doprava v poradí 1 · 2 · 3** – stringy 2 a 3
+  boli prehodené (String 3 bol v strede).
+- **Editor option renamed** from *Solar – two separate strings* to *Solar – separate display of strings*,
+  since it now covers 2 or 3 strings. / **Premenovaná voľba v editore** z *Solar – 2 samostatné stringy* na
+  *Solar – samostatné zobrazenie stringov*, lebo platí pre 2 aj 3 stringy.
+- **No empty third panel on two-string inverters** – a String 3 entity that does not exist in Home Assistant
+  is ignored, and new cards only pick up `pv_power_3` when the sensor reports a number (some integrations
+  create an unavailable `pv_power_3` even on 2-MPPT inverters). / **Žiadny prázdny tretí panel pri dvoch
+  stringoch** – entita String 3, ktorá v Home Assistante neexistuje, sa ignoruje a nové karty si `pv_power_3`
+  vezmú len vtedy, keď senzor hlási číslo.
+- Night compact mode now also wakes up when only String 3 produces. / Nočný kompaktný režim sa prebudí aj
+  vtedy, keď vyrába len String 3.
+
 ## [1.0.6] – 2026-11-14
 
 ### Added / Pridané

@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.6";
+const CARD_VERSION = "1.0.7";
 
 const I18N = {
   en: {
@@ -194,7 +194,7 @@ const I18N = {
     "ent.wallbox_comm_health": "Wallbox – communication health",
     "ent.wallbox_comm_rate": "Wallbox – communication success rate (%)",
 
-    "show.pv_split": "Solar – two separate strings",
+    "show.pv_split": "Solar – separate display of strings",
     "show.pv_details": "Solar – voltage / current / share %",
     "show.solar_sum": "Solar – total of strings (Σ)",
     "show.battery": "Show battery",
@@ -422,7 +422,7 @@ const I18N = {
     "ent.wallbox_comm_health": "Wallbox – stav komunikácie",
     "ent.wallbox_comm_rate": "Wallbox – úspešnosť komunikácie (%)",
 
-    "show.pv_split": "Solar – 2 samostatné stringy",
+    "show.pv_split": "Solar – samostatné zobrazenie stringov",
     "show.pv_details": "Solar – napätie / prúd / podiel %",
     "show.solar_sum": "Solar – súčet stringov (Σ)",
     "show.battery": "Zobraziť batériu",
@@ -877,6 +877,12 @@ class SolaxFveCard extends HTMLElement {
     const ev = { include: /wallbox|_evc|_ev_|charger/, prefer: /wallbox|_evc|_ev_/ };
     const wallboxPower = f("sensor", ["charge_power_total", "charge_power"], ev);
     LANG = resolveLang(hass, {});
+    // String 3 len ak senzor hlási číslo – 2-stringové meniče niekedy vytvoria prázdny pv_power_3
+    const live = (id) => {
+      const st = id && hass && hass.states && hass.states[id];
+      return st && !isNaN(parseFloat(st.state)) ? id : "";
+    };
+    const pv3Power = live(f("sensor", ["pv_power_3"]));
     return {
       type: "custom:solax-fve-card",
       entities: {
@@ -886,9 +892,9 @@ class SolaxFveCard extends HTMLElement {
         pv2_power: f("sensor", ["pv_power_2"]),
         pv2_voltage: f("sensor", ["pv_voltage_2"]),
         pv2_current: f("sensor", ["pv_current_2"]),
-        pv3_power: f("sensor", ["pv_power_3"]),
-        pv3_voltage: f("sensor", ["pv_voltage_3"]),
-        pv3_current: f("sensor", ["pv_current_3"]),
+        pv3_power: pv3Power,
+        pv3_voltage: pv3Power ? f("sensor", ["pv_voltage_3"]) : "",
+        pv3_current: pv3Power ? f("sensor", ["pv_current_3"]) : "",
         solar_power: f("sensor", ["pv_power_total", "solar_power"]),
         solar_today: f("sensor", ["today_s_solar_energy"]),
         inverter_status: f("sensor", ["run_mode"], notEv),
@@ -930,6 +936,7 @@ class SolaxFveCard extends HTMLElement {
       },
       pv1_label: "String 1",
       pv2_label: "String 2",
+      ...(pv3Power ? { pv3_label: "String 3" } : {}),
       loads: wallboxPower ? [{ id: uid(), label: t("car"), icon: "🚗", color: "#8e6ecb", entity: wallboxPower, extra_entities: "" }] : [],
     };
   }
@@ -938,6 +945,13 @@ class SolaxFveCard extends HTMLElement {
     const ents = this._config.entities || {};
     if (this._wbPrefix && WB_KEYS.has(key)) return ents[this._wbPrefix + key] || "";
     return ents[key] || "";
+  }
+
+  // String 3 sa kreslí len ak je vyplnený a entita v HA naozaj existuje
+  _pv3On() {
+    const id = this._e("pv3_power");
+    if (!id) return false;
+    return !this._hass || !this._hass.states || !!this._hass.states[id];
   }
 
   _wallbox2On() {
@@ -1496,7 +1510,7 @@ class SolaxFveCard extends HTMLElement {
     const showBattery = this._show("battery") && !!this._e("battery_power");
     const showGrid = this._show("grid") && !!this._e("grid_power");
     const pvSplit = this._show("pv_split") && !!this._e("pv1_power") && !!this._e("pv2_power");
-    const pvTriple = pvSplit && !!this._e("pv3_power");
+    const pvTriple = pvSplit && this._pv3On();
     const showSum = this._show("solar_sum");
 
     const items = d.loads.filter((l) => l.label && (l.entity || l.extra_entities));
@@ -1536,7 +1550,7 @@ class SolaxFveCard extends HTMLElement {
     const rowsN = layout === "row" ? 1 : Math.ceil(items.length / perRow) || 1;
     const ROW_H = layout === "tiles" ? TILE_PITCH : 132;
 
-    const anyPv = [d.solar, d.pv1, d.pv2].some((v) => v != null && v > 3);
+    const anyPv = [d.solar, d.pv1, d.pv2, d.pv3].some((v) => v != null && v > 3);
     const nightCompact = this._show("night_compact") && this._nightLatch(!anyPv);
     const shift = nightCompact ? 104 : 0;
 
@@ -1555,9 +1569,10 @@ class SolaxFveCard extends HTMLElement {
     const loadTop = 624 - shift;
     const H = layout === "row" ? loadTop + 112 : layout === "tiles" ? busY + TILE_BUS_GAP + TILE_DROP + rowsN * TILE_PITCH - (TILE_PITCH - TILE_H) + 14 : loadTop + rowsN * ROW_H - 14;
 
+    // poradie zľava doprava: String 1 · String 2 · String 3 (pri 3 stringoch je String 2 v strede)
     const pv1x = pvTriple ? 84 : 92,
-      pv2x = pvTriple ? 416 : 408,
-      pv3x = 250,
+      pv2x = pvTriple ? 250 : 408,
+      pv3x = 416,
       soloX = 250;
     const join = { x: 250, y: joinY };
 
@@ -1577,7 +1592,8 @@ class SolaxFveCard extends HTMLElement {
       const total = (d.pv1 || 0) + (d.pv2 || 0) + (pvTriple ? d.pv3 || 0 : 0);
       const share = (v) => (total > 3 && v != null ? Math.round((v / total) * 100) : 0);
       lines.push(this._flowPath([{ x: pv1x, y: dropTop }, { x: pv1x, y: joinY }, join], act(d.pv1), false, solarColor, d.pv1, speed, animOn));
-      lines.push(this._flowPath([{ x: pv2x, y: dropTop }, { x: pv2x, y: joinY }, join], act(d.pv2), false, solarColor, d.pv2, speed, animOn));
+      const pv2Path = pvTriple ? [{ x: pv2x, y: dropTop }, join] : [{ x: pv2x, y: dropTop }, { x: pv2x, y: joinY }, join];
+      lines.push(this._flowPath(pv2Path, act(d.pv2), false, solarColor, d.pv2, speed, animOn));
       nodes.push(
         this._pvNode(
           { x: pv1x, y: panelTop },
@@ -1603,7 +1619,7 @@ class SolaxFveCard extends HTMLElement {
         ),
       );
       if (pvTriple) {
-        lines.push(this._flowPath([{ x: pv3x, y: dropTop }, join], act(d.pv3), false, solarColor, d.pv3, speed, animOn));
+        lines.push(this._flowPath([{ x: pv3x, y: dropTop }, { x: pv3x, y: joinY }, join], act(d.pv3), false, solarColor, d.pv3, speed, animOn));
         nodes.push(
           this._pvNode(
             { x: pv3x, y: panelTop },
@@ -1884,7 +1900,7 @@ class SolaxFveCard extends HTMLElement {
     if (voltage != null) va.push(voltage.toFixed(1) + " V");
     if (current != null) va.push(current.toFixed(1) + " A");
     const details = this._show("pv_details");
-    const narrow = !!this._e("pv3_power") && this._show("pv_split");
+    const narrow = this._pv3On() && this._show("pv_split");
     const fsL = narrow ? ` style="font-size:12px"` : "";
     const vaText = details && va.length ? `<text class="sf-t-detail" x="${pos.x}" y="${pos.y + 107}"${narrow ? ` style="font-size:12.5px"` : ""}>${escapeHtml(va.join(" · "))}</text>` : "";
     const shareText = details && share != null ? ` · ${share}%` : "";

@@ -483,3 +483,45 @@ test("editor has String 3 fields", () => {
   assert.ok(ed.textContent.includes("Názov String 3"));
   assert.ok(ed.textContent.includes("String 3 – výkon"));
 });
+
+const pvLabelX = (card) =>
+  [...card.querySelectorAll(".sf-box[data-entity^='sensor.solax_pv_power'] .sf-t-label")].map((el) => ({
+    id: el.parentNode.getAttribute("data-entity"),
+    x: Number(el.getAttribute("x")),
+  }));
+
+test("three strings are drawn left to right in order 1 · 2 · 3", () => {
+  const w = boot();
+  const hass = makeHass("en", Object.assign({}, pv3States));
+  const card = render(w, w.customElements.get("solax-fve-card").getStubConfig(hass), hass);
+  const xs = Object.fromEntries(pvLabelX(card).map((p) => [p.id.slice(-1), p.x]));
+  assert.ok(xs[1] < xs[2] && xs[2] < xs[3], JSON.stringify(xs));
+  assert.equal(xs[2], 250, "string 2 sits in the middle");
+});
+
+test("two strings: no empty third panel when the String 3 entity does not exist", () => {
+  const w = boot();
+  const hass = makeHass("en", {});
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  cfg.entities.pv3_power = "sensor.solax_pv_power_3"; // configured, but not in HA
+  const card = render(w, cfg, hass);
+  assert.equal(pvLabelX(card).length, 2);
+  assert.ok(!/String 3/.test(card.innerHTML));
+});
+
+test("stub config skips an unavailable pv_power_3 sensor", () => {
+  const w = boot();
+  const hass = makeHass("en", { "sensor.solax_pv_power_3": s("unavailable") });
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  assert.equal(cfg.entities.pv3_power, "");
+  assert.equal(cfg.pv3_label, undefined);
+});
+
+test("pv_split option is labelled as separate display of strings", () => {
+  const w = boot();
+  const ed = w.document.createElement("solax-fve-card-editor");
+  ed.setConfig({ type: "custom:solax-fve-card" });
+  ed.hass = makeHass("en");
+  assert.ok(ed.textContent.includes("separate display of strings"));
+  assert.ok(!ed.textContent.includes("two separate strings"));
+});

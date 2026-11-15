@@ -219,7 +219,8 @@ A third PV string is shown automatically as soon as `pv3_power` is set (the card
 on its own when the inverter has one). Without it the solar part stays exactly as before.
 
 - Three panels side by side, each with power, share of the total, voltage and current.
-- The third string is drawn in the middle and feeds straight into the join point.
+- The strings are drawn left to right in order 1 · 2 · 3 – String 2 sits in the middle and feeds straight into the join point.
+- With only two strings, leave *String 3 – power* empty and the card shows just two panels. If the entity is configured but does not exist in Home Assistant, it is ignored as well.
 - The total power and the energy produced today move into one pill above the join point
   (e.g. `10 980 W · 41.6 kWh today`), because the space between the panels is taken.
 - At night all three strings collapse into the single compact row as before.
@@ -316,7 +317,7 @@ Set under `show:` (`true` / `false`).
 
 | Key | Default | Description |
 |---|---|---|
-| `pv_split` | `true` | Two separate strings |
+| `pv_split` | `true` | Separate display of strings (2 or 3 panels instead of one) |
 | `pv_details` | `true` | Voltage / current / share % |
 | `solar_sum` | `true` | Total of the strings (Σ) |
 | `night_compact` | `true` | Collapse the strings when there is no production |
