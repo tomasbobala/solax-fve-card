@@ -1,10 +1,12 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/icon.png" alt="SolaX FVE Card" width="128">
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/icon.png" alt="FVE Card" width="128">
 
-# SolaX FVE Card
+# FVE Card
 
-**Animated energy‑flow card for Home Assistant and SolaX inverters**
+**Animated energy‑flow card for Home Assistant – SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge …**
+
+<sub>formerly *SolaX FVE Card* – the card type stays `custom:solax-fve-card`, nothing to change in your dashboards</sub>
 
 PV strings · inverter · battery with SOC control · grid & tariff · loads · wallbox & EV
 
@@ -17,7 +19,7 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomasbobala&repository=solax-fve-card&category=plugin)
 
-<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/hero.png" alt="SolaX FVE Card – day and night" width="860">
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/hero.png" alt="FVE Card – day and night" width="860">
 
 </div>
 
@@ -49,13 +51,20 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 | ✨ **Animation** | Moving, pulsing arrows along each flow – speed follows the power. With tiles every load gets its own coloured arrow travelling from the house. |
 | 🌍 **Languages** | English and Slovak, picked automatically from Home Assistant (or forced per card). |
 | 🛠️ **Visual editor** | Everything is configurable in the UI – no YAML needed. Entities of the `solax_modbus` integration are discovered automatically. |
+| 🌤️ **Forecast** | Forecast.Solar / Solcast: produced vs. forecast today, tomorrow, remaining, curve with real production. |
+| 📈 **Day profile** | Production, forecast, home consumption and battery SOC for today or yesterday, with **self‑sufficiency** and **self‑consumption** rings. |
+| ⚡ **Phase load** | Current per phase against your main breaker, warning and pylon badge when a phase is close to the limit. |
+| ⚠️ **Stale data** | Badge, banner and greyed‑out diagram when the inverter stops sending data. |
+| 🗂️ **Sections** | Every section can be collapsed; the state is saved into the card config. |
+| 🔌 **Brands & more** | Entity presets for SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge; several inverters; tap actions per node; Smart Heating accumulation badge. |
 | 📦 **Zero dependencies** | One plain JavaScript file, no build step, no external requests. |
 
 ## Requirements
 
 - Home Assistant **2023.9** or newer
 - Recommended: the [SolaX Modbus](https://github.com/wills106/homeassistant-solax-modbus) integration (`solax_modbus`).
-  Any other source works too – you just pick the entities in the editor.
+  Other brands have presets (see [Other inverter brands](#other-inverter-brands)) and any other source works too – you just pick the entities in the editor.
+- Optional: [Forecast.Solar](https://www.home-assistant.io/integrations/forecast_solar/) or [Solcast](https://github.com/BJReplay/ha-solcast-solar) for the forecast, [Smart Heating](https://github.com/tomasbobala/smart_heating) for the accumulation badge.
 
 ## Installation
 
@@ -66,7 +75,7 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
    [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomasbobala&repository=solax-fve-card&category=plugin)
 
    Or manually: **HACS → ⋮ → Custom repositories**, URL `https://github.com/tomasbobala/solax-fve-card`, type **Dashboard**.
-2. Search for **SolaX FVE Card** and click **Download**.
+2. Search for **FVE Card** (formerly *SolaX FVE Card*) and click **Download**.
 3. Reload the browser (on mobile: close and reopen the app).
 
 HACS registers the resource automatically.
@@ -82,7 +91,7 @@ HACS registers the resource automatically.
 
 ## Quick start
 
-1. Open a dashboard → **Edit** → **Add card** → search for **SolaX FVE Card**.
+1. Open a dashboard → **Edit** → **Add card** → search for **FVE Card**.
 2. The card fills in the `solax_modbus` entities it finds. Check the sections in the editor and adjust what is needed.
 3. Add your loads (boiler, heating, A/C …) in the **Loads** section.
 
@@ -116,6 +125,13 @@ All options are optional unless marked otherwise. Everything below can be set in
 | `animation_speed` | string | `normal` | `slow`, `normal`, `fast` |
 | `colors` | map | – | See [Colors](#colors) |
 | `show` | map | – | See [Display switches](#display-switches) |
+| `brand` | string | detected | `solax`, `huawei`, `fronius`, `goodwe`, `deye`, `solaredge`, `generic` – see [Other inverter brands](#other-inverter-brands) |
+| `collapsed` | map | – | Collapsed sections – see [Card sections](#card-sections) |
+| `stale_minutes` | number | `10` | Stale data warning after this many minutes |
+| `phase_limit_a` | number | `25` | Breaker per phase (A) – see [Phase load](#phase-load) |
+| `phase_warn_pct` | number | `80` | Phase warning from this % of the breaker |
+| `tap_actions` | map | – | See [Tap actions](#tap-actions) |
+| `inverters`, `inverter_label` | list, string | – | See [More inverters](#more-inverters) |
 
 ### Entities
 
@@ -210,6 +226,7 @@ loads:
 | `extra_entities` | More power entities to add up, comma separated |
 | `today`, `today_extra` | Daily energy entity / more to add up |
 | `icon_entity` | `climate` entity – icon follows `hvac_action` / mode |
+| `smart_heating` | Smart Heating zone status sensors, comma separated – see [Smart Heating](#smart-heating) |
 
 Emoji mapped to drawn icons: 🏠 🏡 → home, 🚿 🛁 → boiler, ♨️ → heating, 🔥 → heat, ❄️ → cool, 🌡️ → thermo, 🚗 🚙 → car, 🔌 ⚡ → bolt.
 
@@ -293,6 +310,108 @@ entities:
 The STOP entity is found automatically from the names of the second wallbox's entities, just like for the first one.
 To see the second car among the loads (and get its own arrow), add it as a load with `entity: sensor.wallbox_2_charge_power_total`.
 
+### Solar forecast
+
+Install **Forecast.Solar** (built into Home Assistant, free) or **Solcast**. A new card finds the sensors on its own; for an existing card fill them in the editor under *Solar forecast*.
+
+```yaml
+entities:
+  forecast_today: sensor.energy_production_today              # Forecast.Solar
+  forecast_remaining: sensor.energy_production_today_remaining
+  forecast_tomorrow: sensor.energy_production_tomorrow
+  forecast_power_now: sensor.power_production_now             # optional
+```
+
+The strip under the header shows *produced of ~forecast kWh today*, tomorrow's forecast, what is left today, power now vs. forecast and the expected peak. The curve (dashed = forecast, solid = real production) comes from the Solcast `detailedForecast` attribute or – for Forecast.Solar – from the Energy dashboard forecast (add the forecast to your solar panels in **Settings → Dashboards → Energy**). Without a curve a simple progress bar is shown.
+
+### Card sections
+
+Forecast, energy flow, phase load, wallbox, battery settings, phase details, today and day profile can each be collapsed. Tap the section header – or the card title for the energy‑flow diagram (a compact row with the main values stays visible).
+
+The state is saved into the card configuration (`collapsed:`), so it is the same on every device. This needs an **admin** user; for other users it is remembered in that browser only. Default states can be set in the editor under *Card sections*:
+
+```yaml
+collapsed:
+  diagram: false
+  phase_load: true
+  chart: true
+```
+
+Keys: `diagram`, `forecast`, `phase_load`, `wallbox`, `wallbox2`, `battery_settings`, `phase_details`, `today`, `chart`. Battery settings and phase details start collapsed.
+
+### Stale data warning
+
+When none of the power entities (PV, inverter, grid, battery, home) has changed for `stale_minutes` (default **10**), the header shows **⚠ 12 min**, a banner with the time of the last change appears and the diagram is greyed out with the animation stopped. If all of them are unavailable the banner says so. Handy when the Modbus connection drops and the card would otherwise keep showing the last values.
+
+### Self-sufficiency and day profile
+
+The **Today** section shows two rings: *self‑sufficiency* = 1 − grid import / home consumption, *self‑consumption* = 1 − export / production (from the daily energy entities). Below them are the daily totals (`show.energy_today`).
+
+**Day profile** draws production, forecast, home consumption and battery SOC for today or yesterday from the recorder (5‑minute statistics, history as a fallback). Tap or hover the chart to read the values at that time.
+
+### Phase load
+
+With per‑phase grid power (`grid_power_l1` – `l3`) the card shows the current of each phase against your main breaker, with the direction (↓ import, ↑ export). From `phase_warn_pct` (default 80 %) the bar turns orange (red at 100 %), a warning line appears and the pylon gets a **⚠ L2 22.6 A** badge.
+
+```yaml
+phase_limit_a: 25     # breaker per phase
+phase_warn_pct: 80
+```
+
+Current = |power| / phase voltage (`grid_voltage_l1` – `l3`, otherwise 230 V).
+
+### Smart Heating
+
+If you use the [Smart Heating](https://github.com/tomasbobala/smart_heating) integration (0.23 or newer), a load can show when a zone stores PV surplus as heat. Add the zone status sensors to the load:
+
+```yaml
+loads:
+  - label: Heating
+    icon: ♨️
+    entity: sensor.heating_power
+    smart_heating: sensor.smart_heating_obyvacka_stav, sensor.smart_heating_kupelna_stav
+```
+
+While a zone accumulates, the tile gets a ☀ badge and **☀ acc. 23→25°** (target → maximum), or **☀ 2 zones** for several zones. Without the integration leave the field empty.
+
+### Other inverter brands
+
+`brand:` selects the entity preset used by the editor's **🔍 Find entities** button and by a new card (detected automatically): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk via Solarman), `solaredge` (SolarEdge Modbus Multi), `generic`. The button only fills empty fields and also sets the sign options the brand needs (e.g. `invert_grid` for Huawei). The presets are best effort – check the result and adjust single entities if your integration names them differently.
+
+### Tap actions
+
+Every part of the diagram opens *more info* by default. Override it per node – `solar`, `battery`, `inverter`, `grid`, `home`, `loads`:
+
+```yaml
+tap_actions:
+  battery:
+    action: navigate
+    navigation_path: /energy
+  grid:
+    action: url
+    url_path: https://www.solaxcloud.com
+  home:
+    action: perform-action
+    perform_action: script.show_consumption
+  loads:
+    action: none
+```
+
+Actions: `more-info` (optional `entity`), `navigate`, `url`, `perform-action` (`perform_action`, optional `data`, `target`), `toggle` (`entity`), `none`.
+
+### More inverters
+
+```yaml
+inverter_label: House
+inverters:
+  - label: Garage
+    inverter_power: sensor.solax_2_inverter_power
+    solar_power: sensor.solax_2_pv_power_total
+    solar_today: sensor.solax_2_today_s_solar_energy
+```
+
+Power and production of the other inverters are added to the solar part and to the inverter. The inverter gets a **×2** badge and a line with each inverter's power. Strings of the other inverters are not drawn separately.
+
 ### Links
 
 ```yaml
@@ -341,6 +460,11 @@ Set under `show:` (`true` / `false`).
 | `energy_today` | `false` | Bottom row with daily totals |
 | `translate_sk` | `true` | Translate device states into the card language |
 | `animation` | `true` | Animated flows |
+| `forecast` | `true` | Solar forecast strip (when forecast entities are set) |
+| `self_sufficiency` | `true` | Self‑sufficiency / self‑consumption rings |
+| `day_chart` | `true` | Day profile chart |
+| `phase_load` | `true` | Phase load bars (needs per‑phase grid power) |
+| `stale_warning` | `true` | Stale data warning |
 
 ### Colors
 
@@ -363,6 +487,10 @@ A complete example is in [`examples/card.yaml`](examples/card.yaml).
 | Load tiles + Other | Two batteries + second wallbox | Three strings |
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-3strings-en.png" width="280"> |
+
+| Forecast, day profile, 2 inverters, Smart Heating | Collapsed sections | Phase load warning | Stale data |
+|---|---|---|---|
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-v110-en.png" width="210"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-sections-en.png" width="210"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-phase-en.png" width="210"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-stale-en.png" width="210"> |
 
 ## Troubleshooting
 

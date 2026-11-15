@@ -1,10 +1,89 @@
-const CARD_VERSION = "1.0.7";
+const CARD_VERSION = "1.1.0";
 
 const I18N = {
   en: {
     title: "Home energy",
-    card_name: "SolaX FVE Card",
-    card_description: "Animated energy-flow diagram for SolaX: PV strings, inverter, battery with controls, grid, loads and wallbox.",
+    card_name: "FVE Card",
+    card_description: "Animated energy-flow card for solar systems (SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge …): PV strings, inverter, battery, grid, loads, wallbox, forecast and day profile.",
+    sec_forecast: "Solar forecast",
+    fc_of: "of ~{v} kWh today",
+    fc_tomorrow: "Tomorrow",
+    fc_left: "~{v} kWh left",
+    fc_now: "now {a} (forecast {b})",
+    fc_peak: "peak {t}",
+    sec_phase_load: "Phase load",
+    pl_breaker: "breaker 3 × {a} A",
+    pl_warn: "{ph} at {pct} % of the breaker",
+    sec_today: "Today",
+    ss_autarky: "Self-sufficiency",
+    ss_autarky_sub: "from grid only {v}",
+    ss_selfuse: "Self-consumption",
+    ss_selfuse_sub: "{v} at home",
+    sec_chart: "Day profile",
+    ch_today: "Today",
+    ch_yesterday: "Yesterday",
+    ch_solar: "Production",
+    ch_fc: "Forecast",
+    ch_home: "Home",
+    ch_soc: "Battery SOC",
+    ch_loading: "Loading…",
+    ch_nodata: "No history for these entities yet.",
+    ch_hint: "Tap the chart to see values",
+    stale_title: "Inverter data is {m} min old",
+    stale_last: "(last change {t})",
+    stale_hint: "Values may be out of date – check the connection to the inverter.",
+    stale_unavail: "Inverter data is unavailable",
+    sec_wallbox: "Wallbox",
+    diag_toggle: "Energy flow",
+    sh_acc: "acc.",
+    sh_zones: "zones",
+    inv_short: "Inv",
+    ed_brand: "Inverter brand",
+    ed_brand_info: "Fills entities by brand: SolaX, Huawei Solar, Fronius, GoodWe, Deye / Sunsynk (Solarman), SolarEdge (Modbus Multi) or generic names. The button only fills empty fields.",
+    ed_brand_scan: "🔍 Find entities for this brand",
+    ed_brand_found: "Filled fields: {n}",
+    ed_forecast: "Solar forecast",
+    ed_forecast_info: "Works with Forecast.Solar (free, built into Home Assistant) and Solcast. A new card finds the entities by itself. The curve comes from Solcast attributes or from the Energy dashboard forecast.",
+    ed_inverter_label: "Name of inverter 1",
+    ed_inverters_extra: "More inverters",
+    ed_inverters_info: "Power and production of further inverters are added to the solar part and to the inverter. Their strings are not drawn separately.",
+    ed_inv_label: "Name",
+    ed_inv_power: "Inverter power",
+    ed_inv_solar: "PV power (added to solar)",
+    ed_inv_today: "Produced today",
+    ed_add_inverter: "+ Add inverter",
+    ed_phase_limit: "Breaker per phase (A)",
+    ed_phase_warn: "Warn from (% of breaker)",
+    ed_sh: "Smart Heating – zones",
+    ed_sh_info: "Optional. Needs the Smart Heating integration (github.com/tomasbobala/smart_heating, 0.23 or newer). Enter the zone status sensors (sensor.smart_heating_<zone>_stav), comma separated. The tile then shows ☀ when a zone stores PV surplus as heat. Leave empty without this integration.",
+    ed_sh_short: "Optional – needs the Smart Heating integration (github.com/tomasbobala/smart_heating, 0.23+). Shows ☀ on the tile while a zone stores PV surplus as heat.",
+    ed_stale_min: "Warn when data is older than (min)",
+    ed_taps: "Tap actions",
+    ed_taps_info: "Same idea as tap_action in other cards. The field next to the action is the path, URL, action (e.g. script.my_script) or entity to toggle.",
+    tap_solar: "Solar",
+    tap_battery: "Battery",
+    tap_inverter: "Inverter",
+    tap_grid: "Grid",
+    tap_home: "Home",
+    tap_loads: "Loads",
+    act_default: "More info (default)",
+    act_navigate: "Navigate",
+    act_url: "Open URL",
+    act_action: "Perform action",
+    act_toggle: "Toggle",
+    act_none: "Nothing",
+    ed_sections: "Card sections",
+    ed_sections_info: "Tick the sections that should start collapsed. Tapping a section header in the card saves it here too (for an admin user; otherwise it is remembered in that browser only).",
+    ed_collapsed: "collapsed",
+    "show.forecast": "Solar forecast",
+    "show.self_sufficiency": "Self-sufficiency and self-consumption",
+    "show.day_chart": "Day profile (chart)",
+    "show.phase_load": "Phase load",
+    "show.stale_warning": "Stale data warning",
+    "ent.forecast_today": "Forecast today (kWh)",
+    "ent.forecast_remaining": "Forecast remaining today (kWh)",
+    "ent.forecast_tomorrow": "Forecast tomorrow (kWh)",
+    "ent.forecast_power_now": "Forecast power now (optional)",
     link_energy: "Energy",
     battery_settings: "Battery settings",
     phase_details: "Phase details",
@@ -231,8 +310,87 @@ const I18N = {
   },
   sk: {
     title: "Energia domu",
-    card_name: "SolaX FVE Card",
-    card_description: "Animovaný diagram toku energie pre SolaX: stringy, menič, batéria s ovládaním, sieť, záťaže a wallbox.",
+    card_name: "FVE Card",
+    card_description: "Animovaná karta toku energie pre fotovoltiku (SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge …): stringy, menič, batéria, sieť, záťaže, wallbox, predpoveď a priebeh dňa.",
+    sec_forecast: "Predpoveď výroby",
+    fc_of: "z ~{v} kWh dnes",
+    fc_tomorrow: "Zajtra",
+    fc_left: "zostáva ~{v} kWh",
+    fc_now: "teraz {a} (predpoveď {b})",
+    fc_peak: "špička {t}",
+    sec_phase_load: "Zaťaženie fáz",
+    pl_breaker: "istič 3 × {a} A",
+    pl_warn: "{ph} je na {pct} % ističa",
+    sec_today: "Dnes",
+    ss_autarky: "Sebestačnosť",
+    ss_autarky_sub: "zo siete len {v}",
+    ss_selfuse: "Vlastná spotreba",
+    ss_selfuse_sub: "doma {v}",
+    sec_chart: "Priebeh dňa",
+    ch_today: "Dnes",
+    ch_yesterday: "Včera",
+    ch_solar: "Výroba",
+    ch_fc: "Predpoveď",
+    ch_home: "Spotreba domu",
+    ch_soc: "SOC batérie",
+    ch_loading: "Načítavam…",
+    ch_nodata: "Pre tieto entity zatiaľ nie je história.",
+    ch_hint: "Ťukni do grafu pre hodnoty",
+    stale_title: "Údaje z meniča sú {m} min staré",
+    stale_last: "(posledná zmena {t})",
+    stale_hint: "Hodnoty nemusia platiť – skontroluj spojenie s meničom.",
+    stale_unavail: "Údaje z meniča sú nedostupné",
+    sec_wallbox: "Wallbox",
+    diag_toggle: "Tok energie",
+    sh_acc: "akum.",
+    sh_zones: "zóny",
+    inv_short: "M",
+    ed_brand: "Značka meniča",
+    ed_brand_info: "Predvyplní entity podľa značky: SolaX, Huawei Solar, Fronius, GoodWe, Deye / Sunsynk (Solarman), SolarEdge (Modbus Multi) alebo všeobecné názvy. Tlačidlo vyplní len prázdne polia.",
+    ed_brand_scan: "🔍 Vyhľadať entity pre zvolenú značku",
+    ed_brand_found: "Vyplnené polia: {n}",
+    ed_forecast: "Predpoveď výroby",
+    ed_forecast_info: "Funguje s integráciou Forecast.Solar (v Home Assistante zadarmo) aj Solcast. Nová karta si entity nájde sama. Krivka sa berie z atribútov Solcast alebo z predpovede v Energy dashboarde.",
+    ed_inverter_label: "Názov meniča 1",
+    ed_inverters_extra: "Ďalšie meniče",
+    ed_inverters_info: "Výkon a výroba ďalších meničov sa pripočítajú do solárnej časti a k meniču. Ich stringy sa nekreslia zvlášť.",
+    ed_inv_label: "Názov",
+    ed_inv_power: "Výkon meniča",
+    ed_inv_solar: "FV výkon (sčíta sa do solárnej časti)",
+    ed_inv_today: "Vyrobené dnes",
+    ed_add_inverter: "+ Pridať menič",
+    ed_phase_limit: "Istič na fázu (A)",
+    ed_phase_warn: "Upozorniť od (% ističa)",
+    ed_sh: "Smart Heating – zóny",
+    ed_sh_info: "Voliteľné. Vyžaduje integráciu Smart Heating (github.com/tomasbobala/smart_heating, verzia 0.23 alebo novšia). Zadaj senzory stavu zón (sensor.smart_heating_<zóna>_stav) oddelené čiarkou. Dlaždica potom ukáže ☀, keď zóna ukladá prebytok FVE do tepla. Bez tejto integrácie nechaj prázdne.",
+    ed_sh_short: "Voliteľné – vyžaduje integráciu Smart Heating (github.com/tomasbobala/smart_heating, 0.23+). Dlaždica ukáže ☀, keď zóna ukladá prebytok FVE do tepla.",
+    ed_stale_min: "Upozorniť, keď sú údaje staršie ako (min)",
+    ed_taps: "Ťuknutie na prvky",
+    ed_taps_info: "Rovnaké ako tap_action v iných kartách. Pole vedľa akcie je cesta, URL, akcia (napr. script.moj_skript) alebo entita na prepnutie.",
+    tap_solar: "Solár",
+    tap_battery: "Batéria",
+    tap_inverter: "Menič",
+    tap_grid: "Sieť",
+    tap_home: "Dom",
+    tap_loads: "Záťaže",
+    act_default: "Viac info (predvolené)",
+    act_navigate: "Navigovať",
+    act_url: "Otvoriť URL",
+    act_action: "Spustiť akciu",
+    act_toggle: "Prepnúť",
+    act_none: "Nič",
+    ed_sections: "Sekcie karty",
+    ed_sections_info: "Zaškrtni sekcie, ktoré majú byť zbalené. Ťuknutie na hlavičku sekcie priamo v karte sa uloží aj sem (pri admin účte; inak si to pamätá len daný prehliadač).",
+    ed_collapsed: "zbalená",
+    "show.forecast": "Predpoveď výroby",
+    "show.self_sufficiency": "Sebestačnosť a vlastná spotreba",
+    "show.day_chart": "Priebeh dňa (graf)",
+    "show.phase_load": "Zaťaženie fáz",
+    "show.stale_warning": "Upozornenie na staré dáta",
+    "ent.forecast_today": "Predpoveď dnes (kWh)",
+    "ent.forecast_remaining": "Predpoveď – zostáva dnes (kWh)",
+    "ent.forecast_tomorrow": "Predpoveď zajtra (kWh)",
+    "ent.forecast_power_now": "Predpoveď výkonu teraz (voliteľné)",
     link_energy: "Energie",
     battery_settings: "Nastavenie batérie",
     phase_details: "Detaily fáz",
@@ -548,6 +706,11 @@ const DEFAULT_SHOW = {
   dim_idle_loads: true,
   loads_other: true,
   wallbox_stop: true,
+  forecast: true,
+  self_sufficiency: true,
+  day_chart: true,
+  phase_load: true,
+  stale_warning: true,
 };
 
 const SPEED_MULT = { slow: 1.6, normal: 1, fast: 0.55 };
@@ -588,6 +751,224 @@ const BATT_AGG = {
   battery_capacity: "sum",
 };
 const BATT_UNIT_KEYS = ["battery_power", "battery_soc", "battery_voltage", "battery_current", "battery_temp", "battery_charge_today", "battery_discharge_today", "battery_capacity"];
+// ---- 1.1.0 ------------------------------------------------------------------
+const DEFAULT_COLLAPSED = { battery_settings: true, phase_details: true };
+const SECTION_KEYS = ["diagram", "forecast", "phase_load", "wallbox", "wallbox2", "battery_settings", "phase_details", "today", "chart"];
+const INV_KEYS = ["inverter_power", "solar_power", "solar_today"];
+const STALE_KEYS = ["solar_power", "pv1_power", "pv2_power", "pv3_power", "inverter_power", "grid_power", "battery_power", "total_power"];
+const STALE_DEFAULT_MIN = 10;
+const DAY_REFRESH_MS = 5 * 60 * 1000;
+const FC_REFRESH_MS = 30 * 60 * 1000;
+const TAP_NODES = ["solar", "battery", "inverter", "grid", "home", "loads"];
+const TAP_ACTIONS = ["more-info", "navigate", "url", "perform-action", "toggle", "none"];
+const BRANDS = [
+  ["solax", "SolaX (solax_modbus)"],
+  ["huawei", "Huawei Solar"],
+  ["fronius", "Fronius"],
+  ["goodwe", "GoodWe"],
+  ["deye", "Deye / Sunsynk (Solarman)"],
+  ["solaredge", "SolarEdge (Modbus Multi)"],
+  ["generic", "Generic / Iné"],
+];
+// key: [suffixes, opts]  – best effort, the button only fills empty fields
+const BRAND_PRESETS = {
+  huawei: {
+    prefer: /inverter|huawei/,
+    options: { invert_grid: true },
+    entities: {
+      pv1_voltage: [["pv_1_voltage"]], pv1_current: [["pv_1_current"]],
+      pv2_voltage: [["pv_2_voltage"]], pv2_current: [["pv_2_current"]],
+      solar_power: [["input_power"]], solar_today: [["daily_yield"]],
+      inverter_status: [["device_status"]], inverter_temp: [["internal_temperature"]],
+      inverter_power: [["active_power"], { include: /inverter/, exclude: /meter/ }],
+      grid_power: [["power_meter_active_power"]],
+      grid_power_l1: [["phase_a_active_power"]], grid_power_l2: [["phase_b_active_power"]], grid_power_l3: [["phase_c_active_power"]],
+      grid_voltage_l1: [["phase_a_voltage"], { include: /meter/ }], grid_voltage_l2: [["phase_b_voltage"], { include: /meter/ }], grid_voltage_l3: [["phase_c_voltage"], { include: /meter/ }],
+      battery_power: [["charge_discharge_power"]], battery_soc: [["state_of_capacity"]],
+      battery_charge_today: [["day_charge"]], battery_discharge_today: [["day_discharge"]],
+    },
+  },
+  fronius: {
+    prefer: /solarnet|fronius|symo|primo|gen24/,
+    options: { invert_battery: true },
+    entities: {
+      solar_power: [["power_photovoltaics"]], grid_power: [["power_grid"]],
+      total_power: [["power_load_consumed", "power_load"]], battery_power: [["power_battery"]],
+      battery_soc: [["state_of_charge"]], inverter_power: [["ac_power", "power_ac"]],
+      inverter_status: [["inverter_state", "status_message"]],
+      pv1_voltage: [["dc_voltage"]], pv1_current: [["dc_current"]], pv2_voltage: [["dc_voltage_2"]], pv2_current: [["dc_current_2"]],
+      grid_power_l1: [["real_power_phase_1"]], grid_power_l2: [["real_power_phase_2"]], grid_power_l3: [["real_power_phase_3"]],
+      grid_voltage_l1: [["voltage_ac_phase_1"]], grid_voltage_l2: [["voltage_ac_phase_2"]], grid_voltage_l3: [["voltage_ac_phase_3"]],
+    },
+  },
+  goodwe: {
+    prefer: /goodwe/,
+    options: { invert_grid: true, invert_battery: true },
+    entities: {
+      pv1_power: [["ppv1"]], pv1_voltage: [["vpv1"]], pv1_current: [["ipv1"]],
+      pv2_power: [["ppv2"]], pv2_voltage: [["vpv2"]], pv2_current: [["ipv2"]],
+      pv3_power: [["ppv3"]], pv3_voltage: [["vpv3"]], pv3_current: [["ipv3"]],
+      solar_power: [["pv_power"]], solar_today: [["today_s_pv_generation"]],
+      inverter_status: [["work_mode"]], inverter_temp: [["inverter_temperature_air", "inverter_temperature"]],
+      inverter_power: [["total_inverter_power"]], grid_power: [["active_power"], { exclude: /_l[123]$|inverter/ }],
+      grid_power_l1: [["active_power_l1"]], grid_power_l2: [["active_power_l2"]], grid_power_l3: [["active_power_l3"]],
+      grid_voltage_l1: [["on_grid_l1_voltage"]], grid_voltage_l2: [["on_grid_l2_voltage"]], grid_voltage_l3: [["on_grid_l3_voltage"]],
+      grid_import_today: [["today_energy_import"]], grid_export_today: [["today_energy_export"]],
+      battery_power: [["battery_power"]], battery_soc: [["battery_state_of_charge"]], battery_temp: [["battery_temperature"]],
+      battery_charge_today: [["today_battery_charge"]], battery_discharge_today: [["today_battery_discharge"]],
+      total_power: [["house_consumption"]], total_today: [["today_load"]],
+    },
+  },
+  deye: {
+    prefer: /deye|sunsynk|solarman|inverter/,
+    options: { invert_battery: true },
+    entities: {
+      pv1_power: [["pv1_power"]], pv1_voltage: [["pv1_voltage"]], pv1_current: [["pv1_current"]],
+      pv2_power: [["pv2_power"]], pv2_voltage: [["pv2_voltage"]], pv2_current: [["pv2_current"]],
+      pv3_power: [["pv3_power"]], pv3_voltage: [["pv3_voltage"]], pv3_current: [["pv3_current"]],
+      solar_power: [["pv_power", "total_dc_power", "pv_total_power"]], solar_today: [["today_production", "daily_production"]],
+      grid_power: [["total_grid_power", "grid_power"]], total_power: [["total_load_power", "load_power"]],
+      battery_power: [["battery_power"]], battery_soc: [["battery_soc", "battery"]], battery_temp: [["battery_temperature"]],
+      grid_import_today: [["today_energy_import", "daily_energy_bought"]], grid_export_today: [["today_energy_export", "daily_energy_sold"]],
+      battery_charge_today: [["today_battery_charge", "daily_battery_charge"]], battery_discharge_today: [["today_battery_discharge", "daily_battery_discharge"]],
+      total_today: [["today_load_consumption", "daily_load_consumption"]], inverter_temp: [["dc_temperature", "temperature"]],
+      grid_power_l1: [["grid_l1_power"]], grid_power_l2: [["grid_l2_power"]], grid_power_l3: [["grid_l3_power"]],
+      grid_voltage_l1: [["grid_l1_voltage"]], grid_voltage_l2: [["grid_l2_voltage"]], grid_voltage_l3: [["grid_l3_voltage"]],
+    },
+  },
+  solaredge: {
+    prefer: /solaredge/,
+    options: { invert_grid: true },
+    entities: {
+      solar_power: [["dc_power"], { include: /_i1_|inverter/ }], inverter_power: [["ac_power"], { include: /_i1_|inverter/ }],
+      inverter_temp: [["temperature"], { include: /_i1_|inverter/ }], inverter_status: [["status"], { include: /_i1_|inverter/ }],
+      grid_power: [["ac_power"], { include: /_m1_|meter/ }],
+      grid_power_l1: [["ac_power_a"], { include: /_m1_|meter/ }], grid_power_l2: [["ac_power_b"], { include: /_m1_|meter/ }], grid_power_l3: [["ac_power_c"], { include: /_m1_|meter/ }],
+      grid_voltage_l1: [["ac_voltage_an"], { include: /_m1_|meter/ }], grid_voltage_l2: [["ac_voltage_bn"], { include: /_m1_|meter/ }], grid_voltage_l3: [["ac_voltage_cn"], { include: /_m1_|meter/ }],
+      battery_power: [["dc_power"], { include: /_b1_|battery/ }], battery_soc: [["state_of_energy"]], battery_temp: [["temp_average", "temperature"], { include: /_b1_|battery/ }],
+    },
+  },
+  generic: {
+    prefer: /./,
+    options: {},
+    entities: {
+      solar_power: [["pv_power", "solar_power", "pv_power_total", "photovoltaic_power"]],
+      solar_today: [["pv_energy_today", "solar_energy_today", "daily_yield", "today_production"]],
+      grid_power: [["grid_power", "grid_active_power"]], battery_power: [["battery_power"]],
+      battery_soc: [["battery_soc", "battery_state_of_charge", "battery_level"]],
+      total_power: [["load_power", "house_consumption", "home_power", "house_power"]],
+      inverter_power: [["inverter_power", "inverter_active_power"]], inverter_temp: [["inverter_temperature"]],
+    },
+  },
+};
+const FORECAST_SUFFIXES = {
+  forecast_today: ["energy_production_today", "forecast_today"],
+  forecast_remaining: ["energy_production_today_remaining", "forecast_remaining_today"],
+  forecast_tomorrow: ["energy_production_tomorrow", "forecast_tomorrow"],
+  forecast_power_now: ["power_production_now", "pv_forecast_power_now"],
+};
+
+function stableStringify(v) {
+  if (Array.isArray(v)) return "[" + v.map(stableStringify).join(",") + "]";
+  if (v && typeof v === "object") return "{" + Object.keys(v).filter((k) => v[k] !== undefined).sort().map((k) => JSON.stringify(k) + ":" + stableStringify(v[k])).join(",") + "}";
+  return JSON.stringify(v);
+}
+
+function stripCollapsed(cfg) {
+  const out = Object.assign({}, cfg || {});
+  delete out.collapsed;
+  return out;
+}
+
+function hashStr(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+function energyKwh(hass, entityId) {
+  const v = num(hass, entityId);
+  if (v == null) return null;
+  const st = hass.states[entityId];
+  const u = st && st.attributes ? st.attributes.unit_of_measurement : null;
+  if (u === "Wh") return v / 1000;
+  if (u === "MWh") return v * 1000;
+  return v;
+}
+
+function fmtKw(w) {
+  if (w == null) return "--";
+  return (w / 1000).toFixed(1) + " kW";
+}
+
+function fmtClock(ms) {
+  const d = new Date(ms);
+  return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+
+function fmtDeg(v) {
+  if (v == null) return "--";
+  return Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : Number(v).toFixed(1);
+}
+
+function niceMax(v) {
+  if (!(v > 0)) return 1;
+  const steps = [1, 2, 2.5, 5, 10];
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const s of steps) if (s * mag >= v) return s * mag;
+  return 10 * mag;
+}
+
+function startOfDay(offsetDays) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + (offsetDays || 0));
+  return d.getTime();
+}
+
+function stateTime(st) {
+  if (!st) return null;
+  const iso = st.last_updated || st.last_changed;
+  const ms = iso ? Date.parse(iso) : NaN;
+  return isNaN(ms) ? null : ms;
+}
+
+function brandEntities(hass, brand) {
+  const p = BRAND_PRESETS[brand];
+  const out = {};
+  if (!p || !hass) return out;
+  Object.entries(p.entities).forEach(([key, spec]) => {
+    const id = findEntity(hass, "sensor", spec[0], Object.assign({ prefer: p.prefer }, spec[1] || {}));
+    if (id) out[key] = id;
+  });
+  return out;
+}
+
+function forecastEntities(hass) {
+  const out = {};
+  Object.entries(FORECAST_SUFFIXES).forEach(([key, sfx]) => {
+    const id = findEntity(hass, "sensor", sfx, { prefer: /solcast|energy_production|power_production/ });
+    if (id) out[key] = id;
+  });
+  return out;
+}
+
+function detectBrand(hass) {
+  if (!hass || !hass.states) return "solax";
+  const count = (o) => Object.values(o || {}).filter(Boolean).length;
+  let best = "solax",
+    bestN = count(SolaxFveCard._solaxStub(hass).entities) - 2;
+  BRANDS.map(([b]) => b)
+    .filter((b) => b !== "solax")
+    .forEach((b) => {
+      const n = count(brandEntities(hass, b)) - (b === "generic" ? 2 : 0);
+      if (n > bestN) {
+        best = b;
+        bestN = n;
+      }
+    });
+  return best;
+}
 const TILE_H = 72;
 const TILE_GAP = 18;
 const TILE_DROP = 28;
@@ -836,13 +1217,19 @@ class SolaxFveCard extends HTMLElement {
   }
 
   setConfig(config) {
+    this._origConfig = config || {};
     this._config = config || {};
     this._built = false;
+    this._lsCache = undefined;
+    this._chartKey = null;
+    this._fcKey = null;
+    this._staleKey = null;
   }
 
   set hass(hass) {
     const prevHass = this._hass;
     this._hass = hass;
+    this._startTicker();
     const lang = resolveLang(hass, this._config);
     LANG = lang;
     if (lang !== this._lang) {
@@ -858,7 +1245,10 @@ class SolaxFveCard extends HTMLElement {
     }
     if (prevHass) {
       const relevantChanged = this._entityIds().some((id) => id && hass.states[id] !== prevHass.states[id]);
-      if (!relevantChanged) return;
+      if (!relevantChanged) {
+        this._renderStale();
+        return;
+      }
     }
     this._updateContent();
   }
@@ -872,6 +1262,21 @@ class SolaxFveCard extends HTMLElement {
   }
 
   static getStubConfig(hass) {
+    const brand = detectBrand(hass);
+    let cfg;
+    if (brand === "solax") cfg = SolaxFveCard._solaxStub(hass);
+    else {
+      LANG = resolveLang(hass, {});
+      cfg = Object.assign({ type: "custom:solax-fve-card", entities: brandEntities(hass, brand), loads: [] }, BRAND_PRESETS[brand].options);
+      if (cfg.entities.pv1_power || cfg.entities.pv1_voltage) Object.assign(cfg, { pv1_label: "String 1", pv2_label: "String 2" });
+      if (cfg.entities.pv3_power) cfg.pv3_label = "String 3";
+    }
+    cfg.brand = brand;
+    Object.assign(cfg.entities, forecastEntities(hass));
+    return cfg;
+  }
+
+  static _solaxStub(hass) {
     const f = (domain, suffixes, opts) => findEntity(hass, domain, suffixes, opts);
     const notEv = { exclude: /wallbox|_evc|_ev_|charger/ };
     const ev = { include: /wallbox|_evc|_ev_|charger/, prefer: /wallbox|_evc|_ev_/ };
@@ -1079,11 +1484,13 @@ class SolaxFveCard extends HTMLElement {
 
   _n(key) {
     if (BATT_AGG[key] && this._extraBatteries().length) return this._battAgg(key);
+    if (INV_KEYS.includes(key) && !this._wbPrefix && this._extraInverters().length) return this._invAgg(key, false);
     return num(this._hass, this._e(key));
   }
 
   _p(key) {
     if (BATT_AGG[key] && this._extraBatteries().length) return this._battAgg(key);
+    if (INV_KEYS.includes(key) && !this._wbPrefix && this._extraInverters().length) return this._invAgg(key, true);
     return numPower(this._hass, this._e(key));
   }
 
@@ -1194,6 +1601,8 @@ class SolaxFveCard extends HTMLElement {
       }
     }
     this._extraBatteries().forEach((b) => BATT_UNIT_KEYS.forEach((k) => b[k] && ids.push(b[k])));
+    this._extraInverters().forEach((u) => INV_KEYS.forEach((k) => u[k] && ids.push(u[k])));
+    this._loads().forEach((l) => this._shIds(l).forEach((id) => ids.push(id)));
     return ids;
   }
 
@@ -1226,34 +1635,840 @@ class SolaxFveCard extends HTMLElement {
     }
   }
 
+  // ---- 1.1.0: lifecycle, sections ----------------------------------------------
+  connectedCallback() {
+    this._startTicker();
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._ticker);
+    this._ticker = null;
+  }
+
+  _startTicker() {
+    if (this._ticker || !this._hass || !this._hass.connection || !this.isConnected) return;
+    this._ticker = setInterval(() => {
+      if (!this.isConnected || !this._built) return;
+      this._renderStale();
+      this._maybeLoadData();
+    }, 30000);
+  }
+
+  _lsKey() {
+    return "fve-card-collapsed:" + hashStr(stableStringify(stripCollapsed(this._origConfig || this._config)));
+  }
+
+  _localCollapsed() {
+    if (this._lsCache !== undefined) return this._lsCache;
+    let v = null;
+    try {
+      const raw = window.localStorage && window.localStorage.getItem(this._lsKey());
+      v = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      v = null;
+    }
+    this._lsCache = v;
+    return v;
+  }
+
+  _isCollapsed(key) {
+    const loc = this._localCollapsed();
+    if (loc && loc[key] !== undefined) return !!loc[key];
+    const c = this._config.collapsed || {};
+    return c[key] !== undefined ? !!c[key] : !!DEFAULT_COLLAPSED[key];
+  }
+
+  _bindSections() {
+    this.querySelectorAll("details[data-sec]").forEach((d) => {
+      const key = d.dataset.sec;
+      d.open = !this._isCollapsed(key);
+      d.addEventListener("toggle", () => {
+        const want = !d.open;
+        if (this._isCollapsed(key) === want) return;
+        this._setCollapsed(key, want);
+        if (!want) {
+          this._chartKey = null;
+          this._fcKey = null;
+          if (this._hass) this._updateContent();
+        }
+      });
+    });
+    const btn = this.querySelector(".sf-title");
+    if (btn)
+      btn.onclick = () => {
+        this._setCollapsed("diagram", !this._isCollapsed("diagram"));
+        this._applyDiagramFold();
+      };
+    this._applyDiagramFold();
+  }
+
+  _applyDiagramFold() {
+    const folded = this._isCollapsed("diagram");
+    const wrap = this.querySelector(".sf-diagram-wrap");
+    const sum = this.querySelector(".sf-diag-summary");
+    const btn = this.querySelector(".sf-diag-toggle");
+    if (wrap) wrap.classList.toggle("sf-hidden", folded);
+    if (sum) sum.classList.toggle("hidden", !folded);
+    if (btn) {
+      btn.classList.toggle("collapsed", folded);
+      btn.title = t("diag_toggle");
+    }
+  }
+
+  _setCollapsed(key, val) {
+    const collapsed = Object.assign({}, this._config.collapsed || {}, { [key]: val });
+    this._config = Object.assign({}, this._config, { collapsed });
+    if (this._lsCache) this._lsCache = Object.assign({}, this._lsCache, { [key]: val });
+    clearTimeout(this._persistTimer);
+    this._persistTimer = setTimeout(() => this._persistSections(), 1200);
+  }
+
+  _saveLocal(collapsed) {
+    try {
+      window.localStorage.setItem(this._lsKey(), JSON.stringify(collapsed));
+      this._lsCache = collapsed;
+    } catch (e) {
+      /* private mode – keep it for this page only */
+    }
+  }
+
+  /** Writes `collapsed` into the dashboard config (admin), otherwise remembers it in this browser. */
+  async _persistSections() {
+    const hass = this._hass;
+    const collapsed = Object.assign({}, this._config.collapsed || {});
+    const local = () => this._saveLocal(collapsed);
+    if (this.preview || this.editMode || !hass || !hass.callWS || !(hass.user && hass.user.is_admin) || !this._origConfig) return local();
+    try {
+      const seg = (window.location.pathname.split("/")[1] || "lovelace").trim();
+      const urlPath = seg === "lovelace" ? null : seg;
+      const conf = await hass.callWS({ type: "lovelace/config", url_path: urlPath });
+      const target = stableStringify(stripCollapsed(this._origConfig));
+      let hits = 0;
+      const walk = (node) => {
+        if (Array.isArray(node)) return node.map(walk);
+        if (node && typeof node === "object") {
+          if (node.type === this._origConfig.type && stableStringify(stripCollapsed(node)) === target) {
+            hits++;
+            return Object.assign({}, node, { collapsed });
+          }
+          const out = {};
+          Object.keys(node).forEach((k) => (out[k] = walk(node[k])));
+          return out;
+        }
+        return node;
+      };
+      const next = walk(conf);
+      if (!hits) return local();
+      await hass.callWS({ type: "lovelace/config/save", url_path: urlPath, config: next });
+      try {
+        window.localStorage.removeItem(this._lsKey());
+      } catch (e) {
+        /* ignore */
+      }
+      this._lsCache = null;
+    } catch (e) {
+      local();
+    }
+  }
+
+  _sec(key) {
+    return this.querySelector(`details[data-sec="${key}"]`);
+  }
+
+  _secShow(key, show, val) {
+    const d = this._sec(key);
+    if (!d) return null;
+    d.classList.toggle("hidden", !show);
+    const v = d.querySelector(":scope > summary .sf-fold-val");
+    if (v && val !== undefined && v.textContent !== (val || "")) v.textContent = val || "";
+    return show ? d : null;
+  }
+
+  _renderDiagSummary(d) {
+    const el = this.querySelector(".sf-diag-summary");
+    if (!el || !this._isCollapsed("diagram")) return;
+    const chips = [];
+    if (d.solar != null) chips.push(["☀", this._fmtP(d.solar), this._color("solar")]);
+    if (this._e("battery_power") && (d.soc != null || d.battery != null))
+      chips.push(["🔋", [d.soc != null ? Math.round(d.soc) + " %" : "", d.battery != null && Math.abs(d.battery) > 3 ? (d.battery > 0 ? "+" : "−") + this._fmtP(Math.abs(d.battery)) : ""].filter(Boolean).join(" "), d.battery < 0 ? this._color("battery_discharge") : this._color("battery_charge")]);
+    if (d.grid != null) chips.push([d.grid > 0 ? "⬇️" : "⬆️", this._fmtP(Math.abs(d.grid)), d.grid > 0 ? this._color("grid_import") : this._color("grid_export")]);
+    if (d.total != null) chips.push(["🏠", this._fmtP(d.total), this._color("home")]);
+    const html = chips.map(([i, v, c]) => `<span class="sf-ds-chip" style="--c:${c}"><span>${i}</span><b>${escapeHtml(v)}</b></span>`).join("");
+    if (el._sfHtml !== html) {
+      el.innerHTML = html;
+      el._sfHtml = html;
+    }
+  }
+
+  // ---- 1.1.0: stale data -------------------------------------------------------
+  _staleInfo() {
+    if (!this._show("stale_warning") || !this._hass) return null;
+    const sts = STALE_KEYS.map((k) => this._e(k))
+      .filter(Boolean)
+      .map((id) => this._hass.states[id])
+      .filter(Boolean);
+    if (!sts.length) return null;
+    if (sts.every((st) => st.state === "unavailable" || st.state === "unknown")) return { unavailable: true };
+    const times = sts.map(stateTime).filter((v) => v != null);
+    if (!times.length) return null;
+    const newest = Math.max(...times);
+    const age = Date.now() - newest;
+    const lim = (Number(this._config.stale_minutes) || STALE_DEFAULT_MIN) * 60000;
+    return age >= lim ? { minutes: Math.floor(age / 60000), last: newest } : null;
+  }
+
+  _renderStale() {
+    const root = this.querySelector(".sf-root");
+    if (!root) return;
+    const info = this._staleInfo();
+    const key = info ? JSON.stringify(info) + LANG : "";
+    if (key === this._staleKey) return;
+    this._staleKey = key;
+    const pill = this.querySelector(".sf-stale-pill");
+    const banner = this.querySelector(".sf-stale-banner");
+    root.classList.toggle("sf-stale", !!info);
+    const svg = this.querySelector(".sf-svg");
+    try {
+      if (svg && svg.pauseAnimations) info ? svg.pauseAnimations() : svg.unpauseAnimations();
+    } catch (e) {
+      /* ignore */
+    }
+    if (!info) {
+      pill.classList.add("hidden");
+      banner.classList.add("hidden");
+      return;
+    }
+    pill.classList.remove("hidden");
+    pill.textContent = info.unavailable ? "⚠" : `⚠ ${info.minutes} min`;
+    banner.classList.remove("hidden");
+    const title = info.unavailable ? t("stale_unavail") : t("stale_title").replace("{m}", info.minutes);
+    const last = info.last ? " " + t("stale_last").replace("{t}", fmtClock(info.last)) : "";
+    banner.innerHTML = `<span class="sf-stale-ico">⚠</span><div><b>${escapeHtml(title)}</b>${escapeHtml(last)}<br>${escapeHtml(t("stale_hint"))}</div>`;
+  }
+
+  // ---- 1.1.0: inverters ----------------------------------------------------------
+  _extraInverters() {
+    return (Array.isArray(this._config.inverters) ? this._config.inverters : []).filter((u) => u && (u.inverter_power || u.solar_power));
+  }
+
+  _invAgg(key, power) {
+    const hass = this._hass;
+    const read = (id) => (!id ? null : power ? numPower(hass, id) : num(hass, id));
+    let main = read(this._e(key));
+    if (main == null && key === "solar_power") {
+      const parts = ["pv1_power", "pv2_power", "pv3_power"].map((k) => read(this._e(k))).filter((v) => v != null);
+      if (parts.length) main = parts.reduce((s, v) => s + v, 0);
+    }
+    const vals = [main, ...this._extraInverters().map((u) => read(u[key]))].filter((v) => v != null);
+    return vals.length ? vals.reduce((s, v) => s + v, 0) : null;
+  }
+
+  // ---- 1.1.0: tap actions ----------------------------------------------------------
+  _tap(node, entityId) {
+    const a = node && (this._config.tap_actions || {})[node];
+    const action = a && a.action;
+    if (!action || action === "more-info") return this._openMoreInfo((a && a.entity) || entityId);
+    if (action === "none") return;
+    if (action === "navigate") return this._navigate(a.navigation_path);
+    if (action === "url") {
+      if (a.url_path) window.open(a.url_path, "_blank", "noopener");
+      return;
+    }
+    if (!this._hass) return;
+    if (action === "toggle") {
+      const id = a.entity || entityId;
+      if (id) this._hass.callService("homeassistant", "toggle", { entity_id: id });
+      return;
+    }
+    if (action === "perform-action" || action === "call-service") {
+      const svc = a.perform_action || a.service;
+      if (!svc || svc.indexOf(".") < 0) return;
+      const [d, s] = svc.split(".");
+      this._hass.callService(d, s, a.data || a.service_data || {}, a.target);
+    }
+  }
+
+  // ---- 1.1.0: Smart Heating ----------------------------------------------------------
+  _shIds(l) {
+    return String(l.smart_heating || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+
+  _shAcc(l) {
+    if (!this._hass) return [];
+    return this._shIds(l)
+      .map((id) => this._hass.states[id])
+      .filter((st) => st && st.attributes && st.attributes.fve_akumulacia_ciel != null)
+      .map((st) => ({ ciel: Number(st.attributes.fve_akumulacia_ciel), max: st.attributes.fve_akumulacia_max != null ? Number(st.attributes.fve_akumulacia_max) : null }));
+  }
+
+  _shText(acc) {
+    if (acc.length > 1) return `☀ ${acc.length} ${t("sh_zones")}`;
+    const a = acc[0];
+    return `☀ ${t("sh_acc")} ${fmtDeg(a.ciel)}${a.max != null ? "→" + fmtDeg(a.max) : ""}°`;
+  }
+
+  _shBadge(x, y) {
+    return `<g class="sf-sh-badge" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><circle r="9.5" fill="#f5a623"></circle><text y="4" text-anchor="middle" style="font-size:11px">☀</text></g>`;
+  }
+
+  // ---- 1.1.0: phase load ------------------------------------------------------------
+  _phaseLoad() {
+    if (!this._show("phase_load") || !this._hass) return null;
+    const ps = [1, 2, 3].map((i) => (this._e(`grid_power_l${i}`) ? numPower(this._hass, this._e(`grid_power_l${i}`)) : null));
+    if (ps.filter((v) => v != null).length < 2) return null;
+    const grid = this._gridValue();
+    const sum = ps.reduce((s, v) => s + (v || 0), 0);
+    const flip = grid != null && sum !== 0 && Math.sign(sum) !== Math.sign(grid);
+    const lim = Number(this._config.phase_limit_a) || 25;
+    const warn = Number(this._config.phase_warn_pct) || 80;
+    const rows = ps.map((p, i) => {
+      if (p == null) return null;
+      const v = this._n(`grid_voltage_l${i + 1}`) || 230;
+      const pp = flip ? -p : p;
+      const a = Math.abs(pp) / v;
+      return { ph: "L" + (i + 1), a, pct: (a / lim) * 100, dir: pp >= 0 ? "in" : "out" };
+    });
+    const worst = rows.filter(Boolean).reduce((m, r) => (!m || r.pct > m.pct ? r : m), null);
+    return { rows, lim, warn, worst, alarm: worst && worst.pct >= warn ? worst : null };
+  }
+
+  _plColor(r, pl) {
+    if (r.pct >= 100) return "#e5533c";
+    if (r.pct >= pl.warn) return "#f0a030";
+    return r.dir === "out" ? this._color("grid_export") : "#5b9bd5";
+  }
+
+  _renderPhaseLoad(pl) {
+    const val = pl && pl.worst ? (pl.alarm ? `⚠ ${pl.alarm.ph} ${Math.round(pl.alarm.pct)} %` : `${pl.worst.ph} ${pl.worst.a.toFixed(1)} A`) : "";
+    const sec = this._secShow("phase_load", !!pl, val);
+    if (!sec) return;
+    const brk = sec.querySelector(".sf-fold-src");
+    const bt = t("pl_breaker").replace("{a}", fmtDeg(pl.lim));
+    if (brk && brk.textContent !== bt) brk.textContent = bt;
+    if (!sec.open) return;
+    const body = sec.querySelector(".sf-fold-body");
+    const html =
+      pl.rows
+        .filter(Boolean)
+        .map((r) => {
+          const col = this._plColor(r, pl);
+          const w = Math.min(100, r.pct);
+          const hot = r.pct >= pl.warn;
+          return `<div class="sf-pl-row"><span class="sf-pl-l">${r.ph}</span><div class="sf-pl-bar"><i style="width:${w.toFixed(1)}%;background:${col}"></i><s style="left:${Math.min(100, pl.warn)}%"></s></div><span class="sf-pl-v"${hot ? ` style="color:${col}"` : ""}>${r.dir === "out" ? "↑" : "↓"} ${r.a.toFixed(1)} A${hot ? " ⚠" : ""}</span></div>`;
+        })
+        .join("") +
+      (pl.alarm ? `<div class="sf-pl-warn">⚠ ${escapeHtml(t("pl_warn").replace("{ph}", pl.alarm.ph).replace("{pct}", Math.round(pl.alarm.pct)))}</div>` : "");
+    if (body._sfHtml !== html) {
+      body.innerHTML = html;
+      body._sfHtml = html;
+    }
+  }
+
+  // ---- 1.1.0: self-sufficiency + today ---------------------------------------------
+  _ring(frac, color, title, sub) {
+    const r = 26,
+      c = 2 * Math.PI * r;
+    const pct = Math.round(frac * 100);
+    return `<div class="sf-ring"><svg viewBox="0 0 62 62" aria-hidden="true">
+      <circle cx="31" cy="31" r="${r}" fill="none" stroke="rgba(127,127,127,.2)" stroke-width="7"></circle>
+      <circle cx="31" cy="31" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${((c * pct) / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 31 31)"></circle>
+      <text x="31" y="36" text-anchor="middle" class="sf-ring-pct">${pct}%</text></svg>
+      <div><div class="sf-ring-t">${escapeHtml(title)}</div><div class="sf-ring-s">${escapeHtml(sub)}</div></div></div>`;
+  }
+
+  _renderSelf() {
+    const wrap = this.querySelector(".sf-self");
+    if (!wrap) return null;
+    const imp = this._n("grid_import_today");
+    const exp = this._n("grid_export_today");
+    const home = this._n("total_today");
+    const sol = this._n("solar_today");
+    const rings = [];
+    let autarky = null;
+    if (home > 0 && imp != null) {
+      autarky = clamp(1 - imp / home, 0, 1);
+      rings.push(this._ring(autarky, "#4caf7d", t("ss_autarky"), t("ss_autarky_sub").replace("{v}", fmtEnergy(imp, 1))));
+    }
+    if (sol > 0 && exp != null) rings.push(this._ring(clamp(1 - exp / sol, 0, 1), this._color("solar"), t("ss_selfuse"), t("ss_selfuse_sub").replace("{v}", fmtEnergy(Math.max(0, sol - exp), 1))));
+    const show = this._show("self_sufficiency") && rings.length > 0;
+    wrap.classList.toggle("hidden", !show);
+    const html = show ? rings.join("") : "";
+    if (wrap._sfHtml !== html) {
+      wrap.innerHTML = html;
+      wrap._sfHtml = html;
+    }
+    return show ? { autarky } : null;
+  }
+
+  _renderTodaySection() {
+    const self = this._renderSelf();
+    this._renderTodayRow();
+    const row = this.querySelector(".sf-today-row");
+    const rowOn = row && !row.classList.contains("hidden");
+    const parts = [];
+    const sol = this._n("solar_today");
+    if (sol != null) parts.push("☀ " + fmtEnergy(sol, 1));
+    if (self && self.autarky != null) parts.push(Math.round(self.autarky * 100) + " %");
+    this._secShow("today", !!self || rowOn, parts.join(" · "));
+  }
+
+  // ---- 1.1.0: forecast ---------------------------------------------------------------
+  _fcSource() {
+    const id = this._e("forecast_today");
+    if (/solcast/i.test(id)) return "Solcast";
+    if (/energy_production/i.test(id)) return "Forecast.Solar";
+    return "";
+  }
+
+  /** Forecast curve for today as [[ms, W], ...] or null. */
+  _fcCurve() {
+    if (!this._hass) return null;
+    const st = this._hass.states[this._e("forecast_today")];
+    const a = st && st.attributes;
+    const det = a && (a.detailedForecast || a.detailedHourly);
+    if (Array.isArray(det) && det.length > 1) {
+      const pts = det.map((p) => [Date.parse(p.period_start), Number(p.pv_estimate) * 1000]).filter(([ms, w]) => !isNaN(ms) && !isNaN(w));
+      if (pts.length > 1) {
+        const half = (pts[1][0] - pts[0][0]) / 2;
+        return pts.map(([ms, w]) => [ms + half, w]);
+      }
+    }
+    return this._fcWs && this._fcWs.points && this._fcWs.points.length ? this._fcWs.points : null;
+  }
+
+  async _loadForecastWs() {
+    const hass = this._hass;
+    if (!hass || !hass.callWS) return;
+    if (this._fcWs && (this._fcWs.loading || Date.now() - this._fcWs.at < FC_REFRESH_MS)) return;
+    this._fcWs = Object.assign({}, this._fcWs, { loading: true, at: Date.now() });
+    let points = null;
+    try {
+      const res = await hass.callWS({ type: "energy/solar_forecast" });
+      const sum = {};
+      Object.values(res || {}).forEach((f) => {
+        Object.entries((f && f.wh_hours) || {}).forEach(([iso, wh]) => {
+          const ms = Date.parse(iso);
+          if (!isNaN(ms)) sum[ms] = (sum[ms] || 0) + Number(wh || 0);
+        });
+      });
+      const s0 = startOfDay(0),
+        s1 = startOfDay(1);
+      points = Object.keys(sum)
+        .map(Number)
+        .filter((ms) => ms >= s0 - 3600000 && ms < s1)
+        .sort((a, b) => a - b)
+        .map((ms) => [ms + 1800000, sum[ms]]);
+    } catch (e) {
+      points = null;
+    }
+    this._fcWs = { points, at: Date.now() };
+    this._fcKey = null;
+    if (this.isConnected && this._built && this._hass) this._updateContent();
+  }
+
+  _interp(points, ms) {
+    if (!points || !points.length) return null;
+    if (ms <= points[0][0] || ms >= points[points.length - 1][0]) return 0;
+    for (let i = 1; i < points.length; i++) {
+      if (points[i][0] >= ms) {
+        const [a, va] = points[i - 1],
+          [b, vb] = points[i];
+        return va + ((vb - va) * (ms - a)) / (b - a);
+      }
+    }
+    return null;
+  }
+
+  _renderForecast(solarNow) {
+    const fcId = this._e("forecast_today");
+    const fc = this._hass ? energyKwh(this._hass, fcId) : null;
+    const show = this._show("forecast") && !!fcId && fc != null;
+    const done = this._n("solar_today");
+    const sec = this._secShow("forecast", show, show ? `${done != null ? done.toFixed(1) : "--"} / ~${fc.toFixed(1)} kWh` : "");
+    if (!sec) return;
+    const src = sec.querySelector(".sf-fold-src");
+    const srcTxt = this._fcSource();
+    if (src && src.textContent !== srcTxt) src.textContent = srcTxt;
+    if (!sec.open) return;
+    const tom = energyKwh(this._hass, this._e("forecast_tomorrow"));
+    let left = energyKwh(this._hass, this._e("forecast_remaining"));
+    if (left == null && done != null) left = Math.max(0, fc - done);
+    const curve = this._fcCurve();
+    const now = Date.now();
+    const fcNow = this._e("forecast_power_now") ? this._p("forecast_power_now") : curve ? this._interp(curve, now) : null;
+    let peak = null;
+    if (curve) curve.forEach(([ms, w]) => ms >= startOfDay(0) && ms < startOfDay(1) && (!peak || w > peak[1]) && (peak = [ms, w]));
+    const day = this._day && this._day["0"];
+    const key = [fc, done, tom, left, Math.round((solarNow || 0) / 100), Math.round((fcNow || 0) / 100), curve ? curve.length : 0, day ? day.at : 0, LANG].join("|");
+    if (key === this._fcKey) return;
+    this._fcKey = key;
+    const tIcon = tom == null ? "" : tom >= fc * 0.8 ? "☀️" : tom >= fc * 0.4 ? "⛅" : "☁️";
+    const sub = [];
+    if (left != null) sub.push(t("fc_left").replace("{v}", left.toFixed(1)));
+    if (solarNow != null && fcNow != null) sub.push(t("fc_now").replace("{a}", fmtKw(solarNow)).replace("{b}", fmtKw(fcNow).replace(" kW", "")));
+    if (peak && peak[1] > 0) sub.push(t("fc_peak").replace("{t}", fmtClock(peak[0])));
+    const graph = curve ? this._fcSvg(curve, day) : `<div class="sf-fc-bar"><i style="width:${done != null && fc > 0 ? clamp((done / fc) * 100, 0, 100).toFixed(1) : 0}%"></i></div>`;
+    const body = sec.querySelector(".sf-fold-body");
+    body.innerHTML = `
+      <div class="sf-fc-row"><div class="sf-fc-main"><b>${done != null ? done.toFixed(1) : "--"}</b> ${escapeHtml(t("fc_of").replace("{v}", fc.toFixed(1)))}</div>${
+        tom != null ? `<div class="sf-fc-tom">${tIcon} ${escapeHtml(t("fc_tomorrow"))} <b>~${tom.toFixed(0)} kWh</b></div>` : ""
+      }</div>
+      ${graph}
+      ${sub.length ? `<div class="sf-fc-sub">${escapeHtml(sub.join(" · "))}</div>` : ""}`;
+  }
+
+  _fcSvg(curve, day) {
+    const W = 440,
+      H = 46;
+    const nz = curve.filter(([, w]) => w > 0);
+    const s0 = startOfDay(0);
+    let a = nz.length ? nz[0][0] - 3600000 : s0 + 5 * 3600000;
+    let b = nz.length ? nz[nz.length - 1][0] + 3600000 : s0 + 21 * 3600000;
+    if (b - a < 4 * 3600000) b = a + 4 * 3600000;
+    const now = Date.now();
+    let max = Math.max(1, ...curve.map(([, w]) => w));
+    const act = day && day.series && day.series.solar ? day.series.solar : null;
+    if (act) act.forEach((v) => v != null && v > max && (max = v));
+    const X = (ms) => (((ms - a) / (b - a)) * W).toFixed(1);
+    const Y = (w) => (H - 4 - (w / max) * (H - 8)).toFixed(1);
+    const fcPath = curve.filter(([ms]) => ms >= a && ms <= b).map(([ms, w], i) => `${i ? "L" : "M"}${X(ms)} ${Y(w)}`).join(" ");
+    let actPath = "",
+      area = "";
+    if (act) {
+      const pts = [];
+      act.forEach((v, i) => {
+        const ms = day.start + i * 300000 + 150000;
+        if (v != null && ms >= a && ms <= Math.min(b, now)) pts.push([ms, v]);
+      });
+      if (pts.length > 1) {
+        actPath = pts.map(([ms, v], i) => `${i ? "L" : "M"}${X(ms)} ${Y(v)}`).join(" ");
+        area = `${actPath} L${X(pts[pts.length - 1][0])} ${H} L${X(pts[0][0])} ${H} Z`;
+      }
+    }
+    const nowX = now >= a && now <= b ? X(now) : null;
+    const sc = this._color("solar");
+    return `<svg class="sf-fc-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${fcPath}" fill="none" stroke="${sc}" stroke-width="1.6" stroke-dasharray="4 4" opacity=".75" vector-effect="non-scaling-stroke"></path>
+      ${area ? `<path d="${area}" fill="${sc}" opacity=".22"></path><path d="${actPath}" fill="none" stroke="${sc}" stroke-width="2.2" vector-effect="non-scaling-stroke"></path>` : ""}
+      ${nowX ? `<line x1="${nowX}" x2="${nowX}" y1="2" y2="${H}" stroke="currentColor" stroke-width="1" opacity=".45" vector-effect="non-scaling-stroke"></line>` : ""}
+    </svg>`;
+  }
+
+  // ---- 1.1.0: day data + chart ---------------------------------------------------------
+  _chartIds() {
+    const solar = this._e("solar_power") ? [this._e("solar_power")] : ["pv1_power", "pv2_power", "pv3_power"].map((k) => this._e(k)).filter(Boolean);
+    this._extraInverters().forEach((u) => u.solar_power && solar.push(u.solar_power));
+    const map = { solar, home: [this._e("total_power")].filter(Boolean), soc: [this._e("battery_soc")].filter(Boolean) };
+    return map;
+  }
+
+  _maybeLoadData() {
+    if (!this._hass || !this._hass.callWS) return;
+    const fcSec = this._sec("forecast");
+    const fcOn = fcSec && !fcSec.classList.contains("hidden") && fcSec.open;
+    const chSec = this._sec("chart");
+    const chOn = chSec && !chSec.classList.contains("hidden") && chSec.open;
+    if (fcOn || (chOn && (this._chartDay || 0) === 0)) this._loadDay(0);
+    if (chOn && this._chartDay === -1) this._loadDay(-1);
+    if ((fcOn || chOn) && this._e("forecast_today")) {
+      const st = this._hass.states[this._e("forecast_today")];
+      const a = st && st.attributes;
+      if (!(a && (a.detailedForecast || a.detailedHourly))) this._loadForecastWs();
+    }
+  }
+
+  async _loadDay(offset) {
+    const hass = this._hass;
+    if (!hass || !hass.callWS) return;
+    this._day = this._day || {};
+    const key = String(offset);
+    const cur = this._day[key];
+    if (cur && (cur.loading || (offset !== 0 && cur.series) || Date.now() - cur.at < DAY_REFRESH_MS)) return;
+    const map = this._chartIds();
+    const ids = [...new Set([].concat(...Object.values(map)))];
+    if (!ids.length) return;
+    const start = startOfDay(offset);
+    const end = offset === 0 ? Date.now() : startOfDay(offset + 1);
+    this._day[key] = Object.assign({}, cur || {}, { loading: true, at: (cur && cur.at) || 0 });
+    let next;
+    try {
+      const buckets = await this._fetchBuckets(ids, start, end);
+      const series = {};
+      Object.entries(map).forEach(([name, list]) => {
+        const arrs = list.map((id) => buckets[id]).filter(Boolean);
+        if (!arrs.length) return;
+        const n = Math.max(...arrs.map((x) => x.length));
+        series[name] = Array.from({ length: n }, (_, i) => {
+          const vals = arrs.map((x) => x[i]).filter((v) => v != null);
+          if (!vals.length) return null;
+          return name === "soc" ? vals[0] : vals.reduce((s, v) => s + v, 0);
+        });
+      });
+      next = { start, end, series, at: Date.now() };
+    } catch (e) {
+      next = { start, end, series: null, at: Date.now(), error: true };
+    }
+    this._day[key] = next;
+    this._chartKey = null;
+    this._fcKey = null;
+    if (this.isConnected && this._built && this._hass) this._updateContent();
+  }
+
+  async _fetchBuckets(ids, start, end) {
+    const hass = this._hass;
+    const STEP = 300000;
+    const N = Math.max(1, Math.ceil((end - start) / STEP));
+    const out = {};
+    const scale = (id, v) => (v == null || isNaN(v) ? null : powerToW(hass, id, Number(v)));
+    let stats = {};
+    try {
+      stats = (await hass.callWS({ type: "recorder/statistics_during_period", start_time: new Date(start).toISOString(), end_time: new Date(end).toISOString(), statistic_ids: ids, period: "5minute", types: ["mean"] })) || {};
+    } catch (e) {
+      stats = {};
+    }
+    const missing = [];
+    ids.forEach((id) => {
+      const rows = stats[id];
+      if (!rows || !rows.length) {
+        missing.push(id);
+        return;
+      }
+      const arr = new Array(N).fill(null);
+      rows.forEach((r) => {
+        const ms = typeof r.start === "number" ? r.start : Date.parse(r.start);
+        const i = Math.floor((ms - start) / STEP);
+        if (i >= 0 && i < N) arr[i] = scale(id, r.mean);
+      });
+      out[id] = arr;
+    });
+    if (missing.length) {
+      const res = await hass.callWS({
+        type: "history/history_during_period",
+        start_time: new Date(start).toISOString(),
+        end_time: new Date(end).toISOString(),
+        entity_ids: missing,
+        minimal_response: true,
+        no_attributes: true,
+        significant_changes_only: false,
+      });
+      missing.forEach((id) => {
+        const rows = (res && res[id]) || [];
+        const pts = rows
+          .map((r) => [r.lu != null ? r.lu * 1000 : Date.parse(r.last_updated || r.last_changed), parseFloat(r.s != null ? r.s : r.state)])
+          .filter(([ms]) => !isNaN(ms));
+        const sum = new Array(N).fill(0),
+          cnt = new Array(N).fill(0);
+        let first = null;
+        pts.forEach(([ms, v]) => {
+          const i = Math.floor((ms - start) / STEP);
+          if (isNaN(v)) return;
+          if (i < 0) {
+            first = v;
+            return;
+          }
+          if (i < N) {
+            sum[i] += v;
+            cnt[i]++;
+          }
+        });
+        let last = first;
+        const now = Date.now();
+        out[id] = sum.map((s, i) => {
+          if (cnt[i]) last = s / cnt[i];
+          else if (start + i * STEP > now) return null;
+          return scale(id, last);
+        });
+      });
+    }
+    return out;
+  }
+
+  _renderChart() {
+    const ids = this._chartIds();
+    const show = this._show("day_chart") && (ids.solar.length > 0 || ids.home.length > 0);
+    const off = this._chartDay || 0;
+    const day = this._day && this._day[String(off)];
+    let total = null;
+    if (off === 0) total = this._n("solar_today");
+    else if (day && day.series && day.series.solar) total = day.series.solar.reduce((s, v) => s + (v || 0), 0) / 12000;
+    const sec = this._secShow("chart", show, total != null ? "☀ " + fmtEnergy(total, 1) : "");
+    if (!sec || !sec.open) return;
+    const body = sec.querySelector(".sf-fold-body");
+    if (!body.querySelector(".sf-ch-chips")) {
+      body.innerHTML = `<div class="sf-ch-chips"><button data-day="0"></button><button data-day="-1"></button></div><div class="sf-ch-plot"></div><div class="sf-ch-read"></div><div class="sf-ch-leg"></div>`;
+      body.querySelectorAll(".sf-ch-chips button").forEach((b) => {
+        b.onclick = () => {
+          this._chartDay = Number(b.dataset.day);
+          this._chartKey = null;
+          this._renderChart();
+          this._maybeLoadData();
+        };
+      });
+    }
+    body.querySelectorAll(".sf-ch-chips button").forEach((b) => {
+      const txt = b.dataset.day === "0" ? t("ch_today") : t("ch_yesterday");
+      if (b.textContent !== txt) b.textContent = txt;
+      b.classList.toggle("on", Number(b.dataset.day) === off);
+    });
+    const curve = off === 0 ? this._fcCurve() : null;
+    const key = [off, day ? day.at : 0, day && day.loading ? 1 : 0, curve ? curve.length : 0, LANG].join("|");
+    if (key === this._chartKey) return;
+    this._chartKey = key;
+    const plot = body.querySelector(".sf-ch-plot");
+    const read = body.querySelector(".sf-ch-read");
+    const sc = this._color("solar"),
+      hc = this._color("home"),
+      bc = this._color("battery_charge");
+    const leg = [[sc, t("ch_solar")], curve ? [sc, t("ch_fc"), true] : null, ids.home.length ? [hc, t("ch_home")] : null, ids.soc.length ? [bc, t("ch_soc")] : null].filter(Boolean);
+    body.querySelector(".sf-ch-leg").innerHTML = leg.map(([c, l, dash]) => `<span class="${dash ? "dash" : ""}" style="--c:${c}">${escapeHtml(l)}</span>`).join("");
+    if (!day || !day.series) {
+      plot.innerHTML = `<div class="sf-ch-empty">${escapeHtml(day && day.error ? t("ch_nodata") : this._hass && this._hass.callWS ? t("ch_loading") : t("ch_nodata"))}</div>`;
+      read.textContent = "";
+      this._maybeLoadData();
+      return;
+    }
+    const S = day.series;
+    const W = 448,
+      H = 222,
+      L = 30,
+      R = 34,
+      T = 24,
+      B = 24;
+    const pw = W - L - R,
+      ph = H - T - B;
+    const dayMs = startOfDay(off + 1) - day.start;
+    const X = (ms) => L + ((ms - day.start) / dayMs) * pw;
+    let max = 0;
+    ["solar", "home"].forEach((k) => (S[k] || []).forEach((v) => v != null && v > max && (max = v)));
+    if (curve) curve.forEach(([, w]) => w > max && (max = w));
+    const top = niceMax((max / 1000) * 1.05);
+    const Y = (w) => T + (1 - w / 1000 / top) * ph;
+    const Ys = (p) => T + (1 - p / 100) * ph;
+    const path = (arr, y) => {
+      let d = "",
+        pen = false;
+      (arr || []).forEach((v, i) => {
+        if (v == null) {
+          pen = false;
+          return;
+        }
+        const x = X(day.start + i * 300000 + 150000).toFixed(1);
+        d += `${pen ? "L" : "M"}${x} ${y(v).toFixed(1)} `;
+        pen = true;
+      });
+      return d;
+    };
+    let grid = "";
+    [0, 0.25, 0.5, 0.75, 1].forEach((f) => {
+      const y = T + (1 - f) * ph;
+      grid += `<line x1="${L}" x2="${W - R}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" class="sf-ch-grid"></line><text x="${L - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" class="sf-ch-ax">${+(top * f).toFixed(2)}</text>`;
+    });
+    if (S.soc) [0, 50, 100].forEach((p) => (grid += `<text x="${W - R + 6}" y="${(Ys(p) + 4).toFixed(1)}" class="sf-ch-ax" fill="${bc}" style="fill:${bc}">${p}%</text>`));
+    [0, 6, 12, 18, 24].forEach((h) => (grid += `<text x="${X(day.start + h * 3600000).toFixed(1)}" y="${H - 6}" text-anchor="middle" class="sf-ch-ax">${String(h).padStart(2, "0")}:00</text>`));
+    const sol = S.solar || [];
+    let area = "";
+    const solPath = path(sol, Y);
+    if (solPath) {
+      const firstI = sol.findIndex((v) => v != null);
+      let lastI = sol.length - 1;
+      while (lastI > 0 && sol[lastI] == null) lastI--;
+      if (firstI >= 0 && sol.slice(firstI, lastI + 1).every((v) => v != null))
+        area = `<path d="${solPath} L${X(day.start + lastI * 300000 + 150000).toFixed(1)} ${Y(0).toFixed(1)} L${X(day.start + firstI * 300000 + 150000).toFixed(1)} ${Y(0).toFixed(1)} Z" fill="${sc}" opacity=".22"></path>`;
+    }
+    const fcPath = curve ? curve.filter(([ms]) => ms >= day.start && ms <= day.start + dayMs).map(([ms, w], i) => `${i ? "L" : "M"}${X(ms).toFixed(1)} ${Y(w).toFixed(1)}`).join(" ") : "";
+    const nowX = off === 0 ? X(Date.now()) : null;
+    plot.innerHTML = `<svg class="sf-ch-svg" viewBox="0 0 ${W} ${H}">
+      ${grid}<text x="${L - 6}" y="${T - 12}" text-anchor="end" class="sf-ch-ax">kW</text>
+      ${fcPath ? `<path d="${fcPath}" fill="none" stroke="${sc}" stroke-width="1.5" stroke-dasharray="4 4" opacity=".75"></path>` : ""}
+      ${area}<path d="${solPath}" fill="none" stroke="${sc}" stroke-width="2"></path>
+      <path d="${path(S.home, Y)}" fill="none" stroke="${hc}" stroke-width="2"></path>
+      <path d="${path(S.soc, Ys)}" fill="none" stroke="${bc}" stroke-width="2"></path>
+      ${nowX != null ? `<line x1="${nowX.toFixed(1)}" x2="${nowX.toFixed(1)}" y1="${T}" y2="${H - B}" class="sf-ch-now"></line>` : ""}
+      <line class="sf-ch-cursor" x1="0" x2="0" y1="${T}" y2="${H - B}" style="display:none"></line>
+      <rect class="sf-ch-hit" x="${L}" y="${T}" width="${pw}" height="${ph}" fill="transparent"></rect>
+    </svg>`;
+    read.textContent = t("ch_hint");
+    const svg = plot.querySelector("svg");
+    const cursor = svg.querySelector(".sf-ch-cursor");
+    const pick = (ev) => {
+      const r = svg.getBoundingClientRect();
+      if (!r.width) return;
+      const x = ((ev.clientX - r.left) / r.width) * W;
+      const i = clamp(Math.floor((((x - L) / pw) * dayMs) / 300000), 0, Math.max(0, sol.length - 1, (S.home || []).length - 1));
+      const ms = day.start + i * 300000;
+      const parts = [fmtClock(ms)];
+      if (sol[i] != null) parts.push("☀ " + fmtKw(sol[i]));
+      if (S.home && S.home[i] != null) parts.push("🏠 " + fmtKw(S.home[i]));
+      if (S.soc && S.soc[i] != null) parts.push("🔋 " + Math.round(S.soc[i]) + " %");
+      read.textContent = parts.join(" · ");
+      const cx = X(ms + 150000).toFixed(1);
+      cursor.setAttribute("x1", cx);
+      cursor.setAttribute("x2", cx);
+      cursor.style.display = "";
+    };
+    svg.addEventListener("pointermove", pick);
+    svg.addEventListener("pointerdown", pick);
+  }
+
   _buildSkeleton() {
     this.innerHTML = `
       <ha-card>
         <style>${this._styles()}</style>
         <div class="sf-root">
           <div class="sf-header">
-            <div class="sf-title"><span class="sf-title-icon"></span><span class="sf-title-text"></span></div>
-            <div class="sf-links"></div>
+            <div class="sf-title"><span class="sf-title-icon"></span><span class="sf-title-text"></span><button class="sf-diag-toggle" type="button"><span></span></button></div>
+            <div class="sf-head-right"><span class="sf-stale-pill hidden"></span><div class="sf-links"></div></div>
           </div>
+          <div class="sf-stale-banner hidden"></div>
 
+          <details class="sf-fold sf-sec sf-fc-sec hidden" data-sec="forecast">
+            <summary class="sf-fold-summary">☀️ <span class="sf-fold-title">${t("sec_forecast")}</span> <span class="sf-fold-val"></span><span class="sf-fold-src"></span></summary>
+            <div class="sf-fold-body"></div>
+          </details>
+
+          <div class="sf-diag-summary hidden"></div>
           <div class="sf-diagram-wrap">
             <svg class="sf-svg" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
 
-          <div class="sf-wallbox-panel" data-wb=""></div>
-          <div class="sf-wallbox-panel" data-wb="${WB2_PREFIX}"></div>
-          <details class="sf-batt-settings sf-fold">
+          <details class="sf-fold sf-sec hidden" data-sec="phase_load">
+            <summary class="sf-fold-summary">${this._mini("bolt", 16)} <span class="sf-fold-title">${t("sec_phase_load")}</span> <span class="sf-fold-val"></span><span class="sf-fold-src"></span></summary>
+            <div class="sf-fold-body"></div>
+          </details>
+          <details class="sf-fold sf-sec sf-wb-sec hidden" data-sec="wallbox">
+            <summary class="sf-fold-summary">${this._mini("car", 17)} <span class="sf-fold-title sf-wb-name"></span> <span class="sf-fold-val"></span></summary>
+            <div class="sf-fold-body"><div class="sf-wallbox-panel" data-wb=""></div></div>
+          </details>
+          <details class="sf-fold sf-sec sf-wb-sec hidden" data-sec="wallbox2">
+            <summary class="sf-fold-summary">${this._mini("car", 17)} <span class="sf-fold-title sf-wb-name"></span> <span class="sf-fold-val"></span></summary>
+            <div class="sf-fold-body"><div class="sf-wallbox-panel" data-wb="${WB2_PREFIX}"></div></div>
+          </details>
+          <details class="sf-batt-settings sf-fold" data-sec="battery_settings">
             <summary class="sf-fold-summary">${this._mini("battery", 17)} <span class="sf-fold-title">${t("battery_settings")}</span> <span class="sf-fold-val"></span></summary>
             <div class="sf-fold-body"></div>
           </details>
-          <details class="sf-phases">
+          <details class="sf-phases" data-sec="phase_details">
             <summary class="sf-phases-summary">${this._mini("bolt", 16)} ${t("phase_details")}</summary>
             <div class="sf-phases-body"></div>
           </details>
-          <div class="sf-today-row"></div>
+          <details class="sf-fold sf-sec hidden" data-sec="today">
+            <summary class="sf-fold-summary">📊 <span class="sf-fold-title">${t("sec_today")}</span> <span class="sf-fold-val"></span></summary>
+            <div class="sf-fold-body"><div class="sf-self hidden"></div><div class="sf-today-row"></div></div>
+          </details>
+          <details class="sf-fold sf-sec hidden" data-sec="chart">
+            <summary class="sf-fold-summary">📈 <span class="sf-fold-title">${t("sec_chart")}</span> <span class="sf-fold-val"></span></summary>
+            <div class="sf-fold-body"></div>
+          </details>
         </div>
       </ha-card>
     `;
+    this._bindSections();
+    this._staleKey = null;
+    this._chartKey = null;
+    this._fcKey = null;
     this._battSettingsBuilt = false;
     this._wbBuilt = {};
     this._phasesBuilt = false;
@@ -1403,6 +2618,65 @@ class SolaxFveCard extends HTMLElement {
       .sf-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 10px; background: rgba(127,127,127,0.07); }
       .sf-stat-label { font-size: 0.66rem; color: var(--secondary-text-color); }
       .sf-stat-value { font-size: 0.86rem; font-weight: 700; color: var(--primary-text-color); }
+      .sf-head-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      .sf-title { cursor: pointer; user-select: none; }
+      .sf-diag-toggle { width: 12px; height: 22px; border: 0; background: none; color: var(--secondary-text-color); cursor: pointer; display: grid; place-items: center; padding: 0; margin-left: -5px; opacity: .7; flex: none; }
+      .sf-diag-toggle span { display: inline-block; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-135deg); margin-top: 4px; transition: transform .2s ease, margin .2s ease; }
+      .sf-diag-toggle.collapsed span { transform: rotate(45deg); margin-top: -4px; }
+      .sf-sec[open] > .sf-fold-summary .sf-fold-val { display: none; }
+      .sf-hidden, .hidden.sf-sec, .sf-diag-summary.hidden, .sf-stale-pill.hidden, .sf-stale-banner.hidden, .sf-self.hidden { display: none !important; }
+      .sf-diag-summary { display: flex; flex-wrap: wrap; gap: 8px; }
+      .sf-ds-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 12px; background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); font-size: .92rem; }
+      .sf-ds-chip b { color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+      .sf-stale-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 11px; font-size: .84rem; font-weight: 800; background: rgba(229,115,60,.18); border: 1px solid rgba(229,115,60,.55); color: #f0915a; }
+      .sf-stale-banner { display: flex; gap: 10px; align-items: flex-start; background: rgba(229,115,60,.12); border: 1px solid rgba(229,115,60,.45); color: #e8865a; border-radius: 12px; padding: 10px 12px; font-size: .86rem; line-height: 1.35; }
+      .sf-stale-banner b { color: #f0915a; }
+      .sf-root.sf-stale .sf-diagram-wrap, .sf-root.sf-stale .sf-diag-summary { opacity: .42; filter: grayscale(.85); }
+      .sf-root.sf-stale .sf-flow, .sf-root.sf-stale .sf-arrow-move, .sf-root.sf-stale .sf-led, .sf-root.sf-stale .sf-sun-glow, .sf-root.sf-stale .sf-batt-blink, .sf-root.sf-stale .sf-batt-arrow { animation-play-state: paused; }
+      .sf-fold-src { font-size: .78rem; font-weight: 600; letter-spacing: 0; opacity: .75; margin-left: auto; text-transform: none; }
+      .sf-fold-src:empty { display: none; }
+      .sf-fold-summary:has(.sf-fold-src:not(:empty))::after { margin-left: 8px; }
+      .sf-fc-sec { background: rgba(245,166,35,.08); border: 1px solid rgba(245,166,35,.28); }
+      .sf-fc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+      .sf-fc-main { font-size: 1.02rem; color: var(--primary-text-color); }
+      .sf-fc-main b { font-size: 1.35rem; color: var(--sf-solar, #f5a623); font-variant-numeric: tabular-nums; }
+      .sf-fc-tom { font-size: .92rem; color: var(--secondary-text-color); }
+      .sf-fc-tom b { color: var(--primary-text-color); }
+      .sf-fc-sub { font-size: .8rem; color: var(--secondary-text-color); }
+      .sf-fc-svg { width: 100%; height: 46px; display: block; color: var(--primary-text-color); }
+      .sf-fc-bar { position: relative; height: 10px; border-radius: 6px; background: rgba(127,127,127,.18); overflow: hidden; }
+      .sf-fc-bar i { position: absolute; inset: 0 auto 0 0; background: var(--sf-solar, #f5a623); border-radius: 6px; }
+      .sf-sec > .sf-fold-body { gap: 8px; }
+      .sf-pl-row { display: grid; grid-template-columns: 26px 1fr 96px; align-items: center; gap: 10px; font-size: .86rem; }
+      .sf-pl-l { font-weight: 800; color: var(--secondary-text-color); }
+      .sf-pl-bar { position: relative; height: 12px; border-radius: 6px; background: rgba(127,127,127,.18); overflow: hidden; }
+      .sf-pl-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; transition: width .6s ease; }
+      .sf-pl-bar s { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--primary-text-color); opacity: .35; }
+      .sf-pl-v { text-align: right; font-weight: 800; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+      .sf-pl-warn { font-size: .82rem; color: #f0a030; }
+      .sf-self { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      @container (max-width: 360px) { .sf-self { grid-template-columns: 1fr; } }
+      .sf-ring { display: flex; align-items: center; gap: 12px; background: rgba(127,127,127,0.07); border-radius: 12px; padding: 10px 12px; }
+      .sf-ring svg { width: 62px; height: 62px; flex: none; }
+      .sf-ring-pct { font-size: 15px; font-weight: 800; fill: var(--primary-text-color); }
+      .sf-ring-t { font-size: .78rem; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+      .sf-ring-s { font-size: .78rem; color: var(--secondary-text-color); margin-top: 2px; }
+      .sf-ch-chips { display: flex; gap: 6px; }
+      .sf-ch-chips button { font: inherit; border: 1px solid var(--divider-color); border-radius: 999px; padding: 4px 12px; font-size: .8rem; color: var(--secondary-text-color); background: transparent; cursor: pointer; }
+      .sf-ch-chips button.on { background: color-mix(in srgb, var(--sf-solar, #f5a623) 16%, transparent); border-color: var(--sf-solar, #f5a623); color: var(--primary-text-color); font-weight: 700; }
+      .sf-ch-svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+      .sf-ch-grid { stroke: rgba(127,127,127,.18); }
+      .sf-ch-ax { font-size: 10px; fill: var(--secondary-text-color); }
+      .sf-ch-now { stroke: var(--primary-text-color); opacity: .4; stroke-dasharray: 2 3; }
+      .sf-ch-cursor { stroke: var(--primary-text-color); opacity: .55; }
+      .sf-ch-read { font-size: .8rem; color: var(--secondary-text-color); min-height: 1.2em; font-variant-numeric: tabular-nums; }
+      .sf-ch-empty { padding: 26px 0; text-align: center; font-size: .86rem; color: var(--secondary-text-color); }
+      .sf-ch-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--secondary-text-color); }
+      .sf-ch-leg span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+      .sf-ch-leg span.dash::before { background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 7px); }
+      .sf-wb-sec > .sf-fold-body { padding: 0 6px 6px; }
+      .sf-wb-sec .sf-panel { background: transparent; padding: 4px 10px 10px; }
+      .sf-wb-sec .sf-wb-title { display: none; }
     `;
   }
 
@@ -1438,6 +2712,7 @@ class SolaxFveCard extends HTMLElement {
           icon: this._loadIcon(l),
           value: sumEntities(hass, l.entity, l.extra_entities, true),
           today: l.today || l.today_extra ? sumEntities(hass, l.today, l.today_extra) : null,
+          acc: this._shAcc(l),
         }))
       : [];
 
@@ -1448,12 +2723,41 @@ class SolaxFveCard extends HTMLElement {
       remainder = Math.max(0, totalPower - loadsSum);
     }
 
+    this.style.setProperty("--sf-solar", this._color("solar"));
+    this._plState = this._phaseLoad();
+    this._renderStale();
+    this._renderForecast(solar);
     this._renderDiagram({ pv1, pv2, pv3, solar, battery, soc, grid, loads, remainder, total: totalPower });
+    this._renderDiagSummary({ solar, battery, soc, grid, total: totalPower });
+    this._renderPhaseLoad(this._plState);
     this._renderBatterySettings();
     this._renderWallboxPanel("");
     this._renderWallboxPanel(WB2_PREFIX);
+    ["", WB2_PREFIX].forEach((pre) => {
+      const panel = this.querySelector(`.sf-wallbox-panel[data-wb="${pre}"]`);
+      const on = !!panel && !panel.classList.contains("hidden");
+      const sec = this._secShow(pre ? "wallbox2" : "wallbox", on, on ? this._wbSummary(pre) : "");
+      if (sec) {
+        const name = (pre ? this._config.wallbox2_label : this._config.wallbox_label) || (pre ? "Wallbox 2" : t("sec_wallbox"));
+        const el = sec.querySelector(".sf-wb-name");
+        if (el.textContent !== name) el.textContent = name;
+      }
+    });
     this._renderPhaseDetails();
-    this._renderTodayRow();
+    this._renderTodaySection();
+    this._renderChart();
+    this._maybeLoadData();
+  }
+
+  _wbSummary(prefix) {
+    this._wbPrefix = prefix;
+    try {
+      const status = this._tr(rawState(this._hass, this._e("wallbox_status")), "wallbox");
+      const p = this._p("wallbox_power");
+      return [status, p != null ? this._fmtP(p) : ""].filter(Boolean).join(" · ");
+    } finally {
+      this._wbPrefix = "";
+    }
   }
 
   _renderLinks() {
@@ -1564,7 +2868,7 @@ class SolaxFveCard extends HTMLElement {
     const gridPos = { x: 436, y: midY - 50 };
     const homeTop = 458 - shift;
     const homeBottom = 584 - shift;
-    const trunkTop = 404 - shift;
+    const trunkTop = 404 - shift + (this._extraInverters().length ? 14 : 0);
     const busY = 608 - shift;
     const loadTop = 624 - shift;
     const H = layout === "row" ? loadTop + 112 : layout === "tiles" ? busY + TILE_BUS_GAP + TILE_DROP + rowsN * TILE_PITCH - (TILE_PITCH - TILE_H) + 14 : loadTop + rowsN * ROW_H - 14;
@@ -1691,6 +2995,11 @@ class SolaxFveCard extends HTMLElement {
       if (d.grid != null) nodes.push(this._lineLabel(357, midY, this._fmtP(Math.abs(d.grid)), gridColor));
       nodes.push(this._pylonNode(gridPos, d.grid, gridColor));
       nodes.push(this._tariffNode({ x: gridPos.x, y: gridPos.y + 176 }));
+      const pa = this._plState && this._plState.alarm;
+      if (pa) {
+        const col = this._plColor(pa, this._plState);
+        nodes.push(`<g class="sf-pl-badge" transform="translate(${gridPos.x},${gridPos.y + 212})"><rect x="-46" y="-13" width="92" height="24" rx="12" fill="${col}" fill-opacity=".18" stroke="${col}"></rect><text y="4" text-anchor="middle" style="font-size:13px;font-weight:800" fill="${col}">⚠ ${pa.ph} ${pa.a.toFixed(1)} A</text></g>`);
+      }
     }
 
     nodes.push(this._inverterNode(invPos));
@@ -1751,9 +3060,10 @@ class SolaxFveCard extends HTMLElement {
     svg.querySelector(".sf-lines").innerHTML = lines.join("");
     svg.querySelector(".sf-nodes").innerHTML = nodes.join("");
     this._syncImgLayer(svg, invPos, 132, 132);
-    svg.querySelectorAll(".sf-box[data-entity]").forEach((el) => {
+    svg.querySelectorAll(".sf-box").forEach((el) => {
       const id = el.getAttribute("data-entity");
-      if (id) el.addEventListener("click", () => this._openMoreInfo(id));
+      const node = el.getAttribute("data-node");
+      if (id || (node && (this._config.tap_actions || {})[node])) el.addEventListener("click", () => this._tap(node, id));
     });
   }
 
@@ -1888,7 +3198,7 @@ class SolaxFveCard extends HTMLElement {
     const tt = today != null ? fmtEnergy(today, 1) + " " + t("today") : "";
     const w = 34 + p.length * 13.5 + (tt ? 18 + tt.length * 7.6 : 0);
     return `
-      <g class="sf-box" data-entity="${this._e("solar_power") || this._e("solar_today")}">
+      <g class="sf-box" data-node="solar" data-entity="${this._e("solar_power") || this._e("solar_today")}">
         <rect x="${(pos.x - w / 2).toFixed(1)}" y="${pos.y - 22}" width="${w.toFixed(1)}" height="32" rx="16" fill="var(--ha-card-background, var(--card-background-color, #1c1c1c))" stroke="${color}" stroke-opacity=".55" stroke-width="1.4"></rect>
         <text class="sf-t-sum" x="${pos.x}" y="${pos.y + 1}" fill="${color}" style="font-size:21px">${escapeHtml(p)}${tt ? `<tspan dx="${p ? 8 : 0}" style="font-size:${p ? 13.5 : 17}px;font-weight:700;fill:${todayColor}">${p ? "· " : ""}${escapeHtml(tt)}</tspan>` : ""}</text>
       </g>`;
@@ -1905,7 +3215,7 @@ class SolaxFveCard extends HTMLElement {
     const vaText = details && va.length ? `<text class="sf-t-detail" x="${pos.x}" y="${pos.y + 107}"${narrow ? ` style="font-size:12.5px"` : ""}>${escapeHtml(va.join(" · "))}</text>` : "";
     const shareText = details && share != null ? ` · ${share}%` : "";
     return `
-      <g class="sf-box" data-entity="${entityId || ""}">
+      <g class="sf-box" data-node="solar" data-entity="${entityId || ""}">
         ${this._panelArt(pos.x, pos.y, 88, 44, shortLabel, producing)}
         <text class="sf-t-value" x="${pos.x}" y="${pos.y + 72}">${escapeHtml(this._fmtP(power))}</text>
         <text class="sf-t-label" x="${pos.x}" y="${pos.y + 90}"${fsL}>${escapeHtml(label + shareText)}</text>
@@ -1942,7 +3252,7 @@ class SolaxFveCard extends HTMLElement {
     const todayText =
       today != null ? `<tspan class="sf-t-detail" style="font-size:14px" dx="6">· ${escapeHtml(fmtEnergy(today, 1))} ${t("today")}</tspan>` : "";
     return `
-      <g class="sf-box" data-entity="${this._e("solar_power")}">
+      <g class="sf-box" data-node="solar" data-entity="${this._e("solar_power")}">
         <text class="sf-t-sum" x="${pos.x}" y="${pos.y}" fill="${color}">${escapeHtml(this._fmtP(solar))}${todayText}</text>
       </g>`;
   }
@@ -1953,7 +3263,7 @@ class SolaxFveCard extends HTMLElement {
     if (today != null) parts.push(fmtEnergy(today, 1) + " " + t("today"));
     const id = this._e("solar_power") || this._e("solar_today") || "";
     return `
-      <g class="sf-box" data-entity="${id}">
+      <g class="sf-box" data-node="solar" data-entity="${id}">
         ${this._loadArt("sun", pos.x - 104, pos.y - 5, 19, color, false)}
         <text class="sf-t-status" x="${pos.x + 12}" y="${pos.y}" fill="${color}">${escapeHtml(parts.join(" · "))}</text>
         <text class="sf-t-label" x="${pos.x}" y="${pos.y + 19}">${escapeHtml(t("no_production"))}</text>
@@ -1963,7 +3273,7 @@ class SolaxFveCard extends HTMLElement {
   _pvTodayNode(pos, today) {
     const color = this._color("solar_today");
     return `
-      <g class="sf-box" data-entity="${this._e("solar_today")}">
+      <g class="sf-box" data-node="solar" data-entity="${this._e("solar_today")}">
         <text class="sf-t-today" x="${pos.x}" y="${pos.y + 30}" fill="${color}">${escapeHtml(fmtEnergy(today, 1))}</text>
         <text class="sf-t-label" x="${pos.x}" y="${pos.y + 50}" style="fill:${color}; opacity:.85">${escapeHtml(t("produced_today"))}</text>
       </g>`;
@@ -1989,16 +3299,31 @@ class SolaxFveCard extends HTMLElement {
     if (power != null) sub.push((powerLabel ? powerLabel + " " : "") + this._fmtP(power));
     if (temp != null) sub.push(temp.toFixed(1) + " °C");
 
+    const extras = this._extraInverters();
+    let multi = "";
+    if (extras.length) {
+      const units = [{ label: this._config.inverter_label || `${t("inv_short")}1`, p: numPower(this._hass, this._e("inverter_power")) }].concat(
+        extras.map((u, i) => {
+          const p = numPower(this._hass, u.inverter_power);
+          return { label: u.label || `${t("inv_short")}${i + 2}`, p: p != null ? p : numPower(this._hass, u.solar_power) };
+        }),
+      );
+      const hub = this._color("hub");
+      multi =
+        `<text class="sf-t-detail sf-inv-multi" x="${pos.x}" y="${pos.y + h / 2 + 58}">${escapeHtml(units.map((u) => `${u.label} ${fmtKw(u.p)}`).join(" · "))}</text>` +
+        `<g class="sf-inv-badge" transform="translate(${pos.x + 50},${pos.y - h / 2 + 22})"><rect x="-17" y="-12" width="34" height="22" rx="11" fill="${hub}"></rect><text y="4" text-anchor="middle" style="font-size:13px;font-weight:800" fill="#1c1c1e">×${extras.length + 1}</text></g>`;
+    }
     const comm = this._comm("inverter_comm_health", "inverter_comm_rate");
     const commDot = comm
       ? `<circle class="sf-comm-dot sf-comm-${comm.level}" cx="${pos.x + w / 2 - 7}" cy="${pos.y - h / 2 + 7}" r="${comm.level === "ok" ? 4 : 5.5}" fill="${comm.color}"><title>${escapeHtml(comm.text)}</title></circle>`
       : "";
     return `
-      <g class="sf-box" data-entity="${this._e("inverter_status")}">
+      <g class="sf-box" data-node="inverter" data-entity="${this._e("inverter_status")}">
         ${art}
         ${commDot}
         <text class="sf-t-status" x="${pos.x}" y="${pos.y + h / 2 + 22}" fill="${ledColor}">${escapeHtml(status || t("inverter"))}</text>
         <text class="sf-t-detail" x="${pos.x}" y="${pos.y + h / 2 + 40}">${escapeHtml(sub.join(" · "))}</text>
+        ${multi}
       </g>`;
   }
 
@@ -2030,7 +3355,7 @@ class SolaxFveCard extends HTMLElement {
         ? `<text class="sf-t-detail" x="${pos.x}" y="${pos.y + 148}">↓ ${escapeHtml(fmtEnergy(imp, 1))} · ↑ ${escapeHtml(fmtEnergy(exp, 1))}</text>`
         : "";
     return `
-      <g class="sf-box" data-entity="${this._e("grid_power")}">
+      <g class="sf-box" data-node="grid" data-entity="${this._e("grid_power")}">
         ${this._pylonArt(pos.x, pos.y, 78, 100, color, grid != null)}
         <text class="sf-t-status" x="${pos.x}" y="${pos.y + 126}" fill="${color}">${escapeHtml(label)}</text>
         ${details}
@@ -2264,9 +3589,14 @@ class SolaxFveCard extends HTMLElement {
     const icon = kind ? this._loadArt(kind, cx, cy, 26, tone, isOn) : `<text class="sf-t-icon" x="${cx}" y="${cy}" style="font-size:22px">${l.icon || "⚡"}</text>`;
     const avail = b.w - 58 - 8;
     const labelFs = Math.min(12, avail / Math.max(1, String(l.label || "").length * 0.72));
-    const today = l.today != null ? `<text class="sf-t-detail" x="${b.x + 58}" y="${(b.y + b.h - 11).toFixed(1)}" style="text-anchor:start;font-size:11px">${escapeHtml(fmtEnergy(l.today, 1))} ${t("today")}</text>` : "";
+    const acc = l.acc && l.acc.length ? l.acc : null;
+    const today = acc
+      ? `<text class="sf-sh-text" x="${b.x + 58}" y="${(b.y + b.h - 11).toFixed(1)}" style="text-anchor:start;font-size:10.5px;font-weight:700" fill="#f5a623">${escapeHtml(this._shText(acc))}</text>${this._shBadge(b.x + b.w - 15, b.y + 15)}`
+      : l.today != null
+        ? `<text class="sf-t-detail" x="${b.x + 58}" y="${(b.y + b.h - 11).toFixed(1)}" style="text-anchor:start;font-size:11px">${escapeHtml(fmtEnergy(l.today, 1))} ${t("today")}</text>`
+        : "";
     return `
-      <g class="sf-box${!isOn && this._show("dim_idle_loads") ? " sf-load-idle" : ""}" data-entity="${l.entity || ""}">
+      <g class="sf-box${!isOn && !acc && this._show("dim_idle_loads") ? " sf-load-idle" : ""}" data-node="loads" data-entity="${l.entity || ""}">
         <rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="14" fill="${tone}" opacity="${isOn ? 0.14 : 0.06}"></rect>
         <rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="14" fill="none" stroke="${tone}" stroke-width="1.4" opacity="${isOn ? 0.6 : 0.3}"></rect>
         <circle cx="${cx}" cy="${cy}" r="20" fill="${tone}" opacity="${isOn ? 0.18 : 0.1}"></circle>
@@ -2284,17 +3614,21 @@ class SolaxFveCard extends HTMLElement {
     const vy = cy + r + 22 * sc;
     const ly = vy + 19 * sc;
     const ty = ly + 17 * sc;
-    const today =
-      l.today != null ? `<text class="sf-t-detail" x="${pos.x}" y="${ty.toFixed(1)}">${escapeHtml(fmtEnergy(l.today, 1))} ${t("today")}</text>` : "";
+    const acc = l.acc && l.acc.length ? l.acc : null;
+    const today = acc
+      ? `<text class="sf-sh-text" x="${pos.x}" y="${ty.toFixed(1)}" style="font-size:${(12 * sc).toFixed(1)}px;font-weight:700;text-anchor:middle" fill="#f5a623">${escapeHtml(this._shText(acc))}</text>${this._shBadge(pos.x + r * 0.85, cy - r * 0.85)}`
+      : l.today != null
+        ? `<text class="sf-t-detail" x="${pos.x}" y="${ty.toFixed(1)}">${escapeHtml(fmtEnergy(l.today, 1))} ${t("today")}</text>`
+        : "";
     const isOn = l.value != null && l.value > 3;
-    const idle = !l.is_home && this._show("dim_idle_loads") && !isOn;
+    const idle = !l.is_home && !acc && this._show("dim_idle_loads") && !isOn;
     const tone = isOn || l.is_home ? color : IDLE_LOAD_COLOR;
     const kind = this._loadArtKind(l);
     const iconSvg = kind
       ? this._loadArt(kind, pos.x, cy, 30 * sc, tone, isOn)
       : `<text class="sf-t-icon" x="${pos.x}" y="${cy.toFixed(1)}" style="font-size:${(23 * sc).toFixed(1)}px">${l.icon || "⚡"}</text>`;
     return `
-      <g class="sf-box${idle ? " sf-load-idle" : ""}" data-entity="${l.entity || ""}">
+      <g class="sf-box${idle ? " sf-load-idle" : ""}" data-node="${l.is_home ? "home" : "loads"}" data-entity="${l.entity || ""}">
         <circle cx="${pos.x}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${tone}" opacity="${isOn ? 0.16 : 0.09}"></circle>
         <circle cx="${pos.x}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="${tone}" stroke-width="1.5" opacity="${isOn ? 0.55 : 0.35}"></circle>
         ${iconSvg}
@@ -2316,7 +3650,7 @@ class SolaxFveCard extends HTMLElement {
         : "";
     const kind = this._loadArtKind(item) || "home";
     return `
-      <g class="sf-box sf-home" data-entity="${item.entity || ""}">
+      <g class="sf-box sf-home" data-node="home" data-entity="${item.entity || ""}">
         <rect x="${x}" y="${pos.y}" width="${w}" height="${h}" rx="18" fill="${color}" opacity="${isOn ? 0.12 : 0.07}"></rect>
         <rect x="${x}" y="${pos.y}" width="${w}" height="${h}" rx="18" fill="none" stroke="${color}" stroke-width="1.8" opacity="${isOn ? 0.7 : 0.4}"></rect>
         ${this._loadArt(kind, x + 46, pos.y + h / 2, 46, color, isOn)}
@@ -2428,7 +3762,7 @@ class SolaxFveCard extends HTMLElement {
       : "";
 
     return `
-      <g class="sf-box sf-batt-graphic" data-entity="${this._e("battery_power")}">
+      <g class="sf-box sf-batt-graphic" data-node="battery" data-entity="${this._e("battery_power")}">
         <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="9" fill="none" stroke="${socColor}" stroke-width="2.5"></rect>
         <rect x="${pos.x - 9}" y="${by - 6}" width="18" height="6" rx="2" fill="${socColor}"></rect>
         ${this._battSegments(bx, by, bw, innerH, socClamped, socColor, discharging)}
@@ -2949,6 +4283,10 @@ const ENTITY_FIELDS = [
   { key: "car_state", domains: ["sensor"], group: "wallbox" },
   { key: "wallbox_comm_health", domains: ["sensor"], group: "wallbox" },
   { key: "wallbox_comm_rate", domains: ["sensor"], group: "wallbox" },
+  { key: "forecast_today", domains: ["sensor"], group: "forecast" },
+  { key: "forecast_remaining", domains: ["sensor"], group: "forecast" },
+  { key: "forecast_tomorrow", domains: ["sensor"], group: "forecast" },
+  { key: "forecast_power_now", domains: ["sensor"], group: "forecast" },
 ];
 
 const WB_KEYS = new Set(ENTITY_FIELDS.filter((f) => f.group === "wallbox").map((f) => f.key));
@@ -2978,6 +4316,11 @@ const SHOW_FIELDS = [
   { key: "energy_today" },
   { key: "translate_sk" },
   { key: "animation" },
+  { key: "forecast" },
+  { key: "self_sufficiency" },
+  { key: "day_chart" },
+  { key: "phase_load" },
+  { key: "stale_warning" },
 ];
 
 const COLOR_FIELDS = [
@@ -3294,6 +4637,208 @@ class SolaxFveCardEditor extends HTMLElement {
     body.appendChild(add);
   }
 
+  // ---- 1.1.0 editor -------------------------------------------------------------
+  _note(body, text, color) {
+    const n = document.createElement("div");
+    n.className = "sf-ed-note";
+    if (color) n.style.setProperty("--nc", color);
+    n.textContent = text;
+    body.appendChild(n);
+    return n;
+  }
+
+  _brandEditor(wrap) {
+    this._selectRow(wrap, t("ed_brand"), "brand", "solax", BRANDS);
+    this._note(wrap, t("ed_brand_info"), "#7c8796");
+    const btn = document.createElement("button");
+    btn.className = "sf-ed-add-btn sf-ed-scan";
+    btn.textContent = t("ed_brand_scan");
+    const msg = document.createElement("div");
+    msg.className = "sf-ed-scan-msg";
+    btn.onclick = () => {
+      const n = this._scanBrand();
+      msg.textContent = t("ed_brand_found").replace("{n}", n);
+    };
+    wrap.appendChild(btn);
+    wrap.appendChild(msg);
+  }
+
+  /** Fills empty entity fields for the chosen brand (+ forecast). Returns the number of filled fields. */
+  _scanBrand() {
+    const hass = this._hass;
+    if (!hass) return 0;
+    const brand = this._config.brand || "solax";
+    const found = Object.assign({}, brand === "solax" ? SolaxFveCard._solaxStub(hass).entities : brandEntities(hass, brand), forecastEntities(hass));
+    LANG = resolveLang(hass, this._config);
+    this._config.entities = Object.assign({}, this._config.entities || {});
+    let n = 0;
+    Object.entries(found).forEach(([k, id]) => {
+      if (id && !this._config.entities[k]) {
+        this._config.entities[k] = id;
+        n++;
+      }
+    });
+    const opts = (BRAND_PRESETS[brand] && BRAND_PRESETS[brand].options) || {};
+    Object.entries(opts).forEach(([k, v]) => {
+      if (this._config[k] === undefined) this._config[k] = v;
+    });
+    this._emit();
+    this._rerender();
+    return n;
+  }
+
+  _invertersEditor(body) {
+    this._textRow(body, t("ed_inverter_label"), "inverter_label", `${t("inv_short")}1`);
+    const head = document.createElement("div");
+    head.className = "sf-ed-subhead";
+    head.textContent = t("ed_inverters_extra");
+    body.appendChild(head);
+    this._note(body, t("ed_inverters_info"));
+    if (!Array.isArray(this._config.inverters)) this._config.inverters = [];
+    const list = document.createElement("div");
+    list.className = "sf-ed-loads-list";
+    this._config.inverters.forEach((u, i) => {
+      const card = document.createElement("div");
+      card.className = "sf-ed-load-card";
+      card.style.setProperty("--lc", "#d9b43a");
+      const h = document.createElement("div");
+      h.className = "sf-ed-load-head";
+      const name = document.createElement("input");
+      name.type = "text";
+      name.className = "sf-ed-text";
+      name.placeholder = t("ed_inv_label");
+      name.value = u.label || "";
+      name.oninput = () => {
+        this._config.inverters[i].label = name.value;
+        this._emit();
+      };
+      h.appendChild(name);
+      const rm = document.createElement("button");
+      rm.className = "sf-ed-icon-btn";
+      rm.textContent = "✕";
+      rm.onclick = () => {
+        this._config.inverters.splice(i, 1);
+        this._emit();
+        this._rerender();
+      };
+      h.appendChild(rm);
+      card.appendChild(h);
+      [
+        ["inverter_power", "ed_inv_power"],
+        ["solar_power", "ed_inv_solar"],
+        ["solar_today", "ed_inv_today"],
+      ].forEach(([k, lab]) => {
+        this._entityPickerRow(card, t(lab), u[k] || "", ["sensor"], (v) => {
+          this._config.inverters[i][k] = v;
+          this._emit();
+        });
+      });
+      list.appendChild(card);
+    });
+    body.appendChild(list);
+    const add = document.createElement("button");
+    add.className = "sf-ed-add-btn";
+    add.textContent = t("ed_add_inverter");
+    add.onclick = () => {
+      this._config.inverters.push({ label: `${t("inv_short")}${this._config.inverters.length + 2}` });
+      this._emit();
+      this._rerender();
+    };
+    body.appendChild(add);
+  }
+
+  _tapEditor(wrap) {
+    const sec = this._section(t("ed_taps"), "👆", false, "#9b7be0");
+    this._note(sec.body, t("ed_taps_info"), "#9b7be0");
+    const holders = { navigate: "/energy", url: "https://…", "perform-action": "script.my_script", toggle: "switch.xyz", "more-info": "sensor.xyz" };
+    const field = { navigate: "navigation_path", url: "url_path", "perform-action": "perform_action", toggle: "entity", "more-info": "entity" };
+    TAP_NODES.forEach((node) => {
+      const cur = (this._config.tap_actions || {})[node] || {};
+      const row = document.createElement("div");
+      row.className = "sf-ed-row sf-ed-tap";
+      row.innerHTML = `<div class="sf-ed-label">${escapeHtml(t("tap_" + node))}</div>`;
+      const sel = document.createElement("select");
+      sel.className = "sf-ed-select";
+      [["", t("act_default")], ["navigate", t("act_navigate")], ["url", t("act_url")], ["perform-action", t("act_action")], ["toggle", t("act_toggle")], ["none", t("act_none")]].forEach(([v, txt]) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = txt;
+        if ((cur.action === "more-info" ? "" : cur.action || "") === v) o.selected = true;
+        sel.appendChild(o);
+      });
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "sf-ed-text";
+      const sync = () => {
+        const a = sel.value;
+        input.style.display = a && a !== "none" ? "" : "none";
+        input.placeholder = holders[a] || "";
+        input.value = (a && cur[field[a]]) || "";
+      };
+      const save = () => {
+        const a = sel.value;
+        const map = Object.assign({}, this._config.tap_actions || {});
+        if (!a) delete map[node];
+        else {
+          const v = { action: a };
+          if (field[a] && input.value.trim()) v[field[a]] = input.value.trim();
+          map[node] = v;
+        }
+        this._config.tap_actions = map;
+        Object.assign(cur, map[node] || { action: "" });
+        this._emit();
+      };
+      sel.onchange = () => {
+        sync();
+        save();
+      };
+      input.oninput = save;
+      sync();
+      const box = document.createElement("div");
+      box.className = "sf-ed-tap-ctl";
+      box.appendChild(sel);
+      box.appendChild(input);
+      row.appendChild(box);
+      sec.body.appendChild(row);
+    });
+    wrap.appendChild(sec.details);
+  }
+
+  _sectionsEditor(wrap) {
+    const sec = this._section(t("ed_sections"), "🗂️", false, "#2e9e6b");
+    this._note(sec.body, t("ed_sections_info"), "#2e9e6b");
+    const names = {
+      diagram: t("diag_toggle"),
+      forecast: t("sec_forecast"),
+      phase_load: t("sec_phase_load"),
+      wallbox: this._config.wallbox_label || t("sec_wallbox"),
+      wallbox2: this._config.wallbox2_label || "Wallbox 2",
+      battery_settings: t("battery_settings"),
+      phase_details: t("phase_details"),
+      today: t("sec_today"),
+      chart: t("sec_chart"),
+    };
+    SECTION_KEYS.forEach((key) => {
+      if (key === "wallbox2" && !this._config.wallbox2) return;
+      const row = document.createElement("div");
+      row.className = "sf-ed-row sf-ed-row--toggle";
+      row.innerHTML = `<div class="sf-ed-label">${escapeHtml(names[key])} <span class="sf-ed-dim">· ${escapeHtml(t("ed_collapsed"))}</span></div>`;
+      const sw = document.createElement("div");
+      const cur = (this._config.collapsed || {})[key];
+      const on = cur !== undefined ? !!cur : !!DEFAULT_COLLAPSED[key];
+      sw.className = "sf-ed-switch" + (on ? " on" : "");
+      sw.innerHTML = `<div class="knob"></div>`;
+      sw.onclick = () => {
+        const nowOn = !sw.classList.contains("on");
+        sw.classList.toggle("on", nowOn);
+        this._set(`collapsed.${key}`, nowOn);
+      };
+      row.appendChild(sw);
+      sec.body.appendChild(row);
+    });
+    wrap.appendChild(sec.details);
+  }
+
   _toggleRow(body, field) {
     const row = document.createElement("div");
     row.className = "sf-ed-row sf-ed-row--toggle";
@@ -3495,6 +5040,22 @@ class SolaxFveCardEditor extends HTMLElement {
       this._emit();
     });
 
+    const shRow = document.createElement("div");
+    shRow.className = "sf-ed-row";
+    shRow.innerHTML = `<div class="sf-ed-label">${escapeHtml(t("ed_sh"))}</div>`;
+    const shInput = document.createElement("input");
+    shInput.type = "text";
+    shInput.className = "sf-ed-text sf-ed-text--wide";
+    shInput.placeholder = "sensor.smart_heating_obyvacka_stav";
+    shInput.value = load.smart_heating || "";
+    shInput.oninput = () => {
+      this._config.loads[index].smart_heating = shInput.value;
+      this._emit();
+    };
+    shRow.appendChild(shInput);
+    card.appendChild(shRow);
+    this._note(card, load.smart_heating ? t("ed_sh_info") : t("ed_sh_short"), "#e0a020");
+
     return card;
   }
 
@@ -3507,6 +5068,7 @@ class SolaxFveCardEditor extends HTMLElement {
     this._selectRow(wrap, LANG === "sk" ? "Jazyk / Language" : "Language / Jazyk", "language", "auto", [["auto", t("ed_lang_auto")], ...LANGUAGES], true);
     this._textRow(wrap, t("ed_title"), "title", t("title"));
     this._textRow(wrap, t("ed_title_icon"), "title_icon", DEFAULT_TITLE_ICON);
+    this._brandEditor(wrap);
 
     const linksSec = this._section(t("ed_links"), "🔗", false, "#5b8def", t("ed_n_links").replace("{n}", (Array.isArray(this._config.links) ? this._config.links : defaultLinks()).length));
     const linkInfo = document.createElement("div");
@@ -3537,10 +5099,16 @@ class SolaxFveCardEditor extends HTMLElement {
     ENTITY_FIELDS.filter((f) => f.group === "solar").forEach((f) => this._entityFieldRow(solarSec.body, f));
     wrap.appendChild(solarSec.details);
 
+    const fcSec = this._section(t("ed_forecast"), "🌤️", false, "#f5a623");
+    ENTITY_FIELDS.filter((f) => f.group === "forecast").forEach((f) => this._entityFieldRow(fcSec.body, f));
+    this._note(fcSec.body, t("ed_forecast_info"));
+    wrap.appendChild(fcSec.details);
+
     const invSec = this._section(t("ed_inverter"), "🔆", false, "#d9b43a");
     this._textRow(invSec.body, t("ed_inverter_image"), "inverter_image", "", "sf-ed-text--wide");
     this._textRow(invSec.body, t("ed_inverter_power_label"), "inverter_power_label", t("output"));
     ENTITY_FIELDS.filter((f) => f.group === "inverter").forEach((f) => this._entityFieldRow(invSec.body, f));
+    this._invertersEditor(invSec.body);
     wrap.appendChild(invSec.details);
 
     const battSec = this._section(t("ed_battery"), "🔋", false, "#4caf7d", (this._config.batteries || []).length ? t("ed_n_batteries").replace("{n}", (this._config.batteries || []).length + 1) : "");
@@ -3555,6 +5123,8 @@ class SolaxFveCardEditor extends HTMLElement {
     const gridSec = this._section(t("ed_grid"), "🔌", false, "#e0577a");
     ENTITY_FIELDS.filter((f) => f.group === "grid").forEach((f) => this._entityFieldRow(gridSec.body, f));
     this._signRow(gridSec.body, t("ed_invert_grid"), "invert_grid");
+    this._numRow(gridSec.body, t("ed_phase_limit"), "phase_limit_a", 25, "1");
+    this._numRow(gridSec.body, t("ed_phase_warn"), "phase_warn_pct", 80, "5");
     wrap.appendChild(gridSec.details);
 
     const loadsSec = this._section(t("ed_loads"), "🧩", true, "#4ba3c7", t("ed_n_loads").replace("{n}", (this._config.loads || []).length));
@@ -3637,8 +5207,12 @@ class SolaxFveCardEditor extends HTMLElement {
       wrap.appendChild(wb2.details);
     }
 
+    this._tapEditor(wrap);
+    this._sectionsEditor(wrap);
+
     const showSec = this._section(t("ed_display"), "👁️", false, "#7c8796");
     SHOW_FIELDS.forEach((f) => this._toggleRow(showSec.body, f));
+    this._numRow(showSec.body, t("ed_stale_min"), "stale_minutes", STALE_DEFAULT_MIN, "1");
 
     const speedRow = document.createElement("div");
     speedRow.className = "sf-ed-row";
@@ -3680,6 +5254,11 @@ class SolaxFveCardEditor extends HTMLElement {
   _editorStyles() {
     return `
       .sf-ed-root { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+      .sf-ed-note { --nc: #e0a020; border-left: 3px solid var(--nc); background: color-mix(in srgb, var(--nc) 9%, transparent); padding: 8px 10px; border-radius: 6px; font-size: .78rem; line-height: 1.4; opacity: .9; }
+      .sf-ed-scan-msg { font-size: .78rem; opacity: .75; min-height: 1em; }
+      .sf-ed-dim { opacity: .6; font-size: .8em; }
+      .sf-ed-tap-ctl { display: flex; gap: 6px; flex: 1 1 60%; justify-content: flex-end; flex-wrap: wrap; }
+      .sf-ed-tap-ctl .sf-ed-text { flex: 1 1 140px; min-width: 0; }
       .sf-ed-section { --sec: #7c8796; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--sec) 35%, transparent);
         border-left: 5px solid var(--sec); background: color-mix(in srgb, var(--sec) 7%, transparent); overflow: hidden; }
       .sf-ed-section[open] { background: color-mix(in srgb, var(--sec) 10%, transparent); }
@@ -3748,7 +5327,7 @@ if (!window.customCards.some((c) => c.type === "solax-fve-card")) {
 }
 
 console.info(
-  `%c SOLAX-FVE-CARD %c v${CARD_VERSION} `,
+  `%c FVE-CARD %c v${CARD_VERSION} `,
   "color:#fff;background:#f5a623;font-weight:700;border-radius:3px 0 0 3px;padding:2px 4px",
   "color:#f5a623;background:#222;border-radius:0 3px 3px 0;padding:2px 4px",
 );

@@ -1,10 +1,12 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/icon.png" alt="SolaX FVE Card" width="128">
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/icon.png" alt="FVE Card" width="128">
 
-# SolaX FVE Card
+# FVE Card
 
-**Animovaná karta toku energie pre Home Assistant a meniče SolaX**
+**Animovaná karta toku energie pre Home Assistant – SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge …**
+
+<sub>predtým *SolaX FVE Card* – typ karty ostáva `custom:solax-fve-card`, v dashboardoch netreba nič meniť</sub>
 
 FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaže · wallbox a elektromobil
 
@@ -17,7 +19,7 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 
 [![Otvoriť tento repozitár v HACS vo vašom Home Assistant.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomasbobala&repository=solax-fve-card&category=plugin)
 
-<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-sk.png" alt="SolaX FVE Card po slovensky" width="430">
+<img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-day-sk.png" alt="FVE Card po slovensky" width="430">
 
 </div>
 
@@ -49,13 +51,20 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 | ✨ **Animácia** | Putujúce pulzujúce šípky po každom toku – rýchlosť podľa výkonu. Pri dlaždiciach má každá záťaž vlastnú farebnú šípku, ktorá ide od domu. |
 | 🌍 **Jazyky** | Angličtina a slovenčina, automaticky podľa Home Assistant (alebo nastavené pre kartu). |
 | 🛠️ **Vizuálny editor** | Všetko sa nastavuje v UI – YAML netreba. Entity integrácie `solax_modbus` sa nájdu automaticky. |
+| 🌤️ **Predpoveď** | Forecast.Solar / Solcast: vyrobené oproti predpovedi, zajtrajšok, koľko zostáva, krivka so skutočnou výrobou. |
+| 📈 **Priebeh dňa** | Výroba, predpoveď, spotreba domu a SOC batérie za dnešok alebo včerajšok, krúžky **sebestačnosti** a **vlastnej spotreby**. |
+| ⚡ **Zaťaženie fáz** | Prúd každej fázy oproti hlavnému ističu, varovanie a odznak pri stožiari, keď je fáza blízko limitu. |
+| ⚠️ **Staré dáta** | Odznak, pruh a zošednutý diagram, keď menič prestane posielať údaje. |
+| 🗂️ **Sekcie** | Každá sekcia sa dá zbaliť; stav sa uloží do konfigurácie karty. |
+| 🔌 **Značky a ďalšie** | Predvoľby entít pre SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge; viac meničov; akcie pri ťuknutí; odznak akumulácie zo Smart Heating. |
 | 📦 **Bez závislostí** | Jeden čistý JavaScript súbor, žiadny build, žiadne externé požiadavky. |
 
 ## Požiadavky
 
 - Home Assistant **2023.9** alebo novší
 - Odporúčané: integrácia [SolaX Modbus](https://github.com/wills106/homeassistant-solax-modbus) (`solax_modbus`).
-  Funguje aj akýkoľvek iný zdroj – entity len vyberiete v editore.
+  Iné značky majú predvoľby (pozri [Iné značky meničov](#iné-značky-meničov)) a funguje aj akýkoľvek iný zdroj – entity len vyberiete v editore.
+- Voliteľné: [Forecast.Solar](https://www.home-assistant.io/integrations/forecast_solar/) alebo [Solcast](https://github.com/BJReplay/ha-solcast-solar) pre predpoveď, [Smart Heating](https://github.com/tomasbobala/smart_heating) pre odznak akumulácie.
 
 ## Inštalácia
 
@@ -66,7 +75,7 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
    [![Otvoriť v HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomasbobala&repository=solax-fve-card&category=plugin)
 
    Alebo ručne: **HACS → ⋮ → Custom repositories**, URL `https://github.com/tomasbobala/solax-fve-card`, typ **Dashboard**.
-2. Vyhľadajte **SolaX FVE Card** a kliknite na **Download**.
+2. Vyhľadajte **FVE Card** (predtým *SolaX FVE Card*) a kliknite na **Download**.
 3. Obnovte prehliadač (v mobile aplikáciu zavrite a znova otvorte).
 
 HACS zaregistruje resource automaticky.
@@ -82,7 +91,7 @@ HACS zaregistruje resource automaticky.
 
 ## Rýchly štart
 
-1. Otvorte dashboard → **Upraviť** → **Pridať kartu** → vyhľadajte **SolaX FVE Card**.
+1. Otvorte dashboard → **Upraviť** → **Pridať kartu** → vyhľadajte **FVE Card**.
 2. Karta sama doplní nájdené entity `solax_modbus`. Prejdite sekcie editora a upravte, čo treba.
 3. V sekcii **Záťaže** pridajte bojler, kúrenie, klímu …
 
@@ -117,6 +126,13 @@ Všetky voľby sú nepovinné, pokiaľ nie je uvedené inak, a všetky sa dajú 
 | `animation_speed` | text | `normal` | `slow`, `normal`, `fast` |
 | `colors` | mapa | – | Pozri [Farby](#farby) |
 | `show` | mapa | – | Pozri [Čo zobraziť](#čo-zobraziť) |
+| `brand` | text | zistí sa | `solax`, `huawei`, `fronius`, `goodwe`, `deye`, `solaredge`, `generic` – pozri [Iné značky meničov](#iné-značky-meničov) |
+| `collapsed` | mapa | – | Zbalené sekcie – pozri [Sekcie karty](#sekcie-karty) |
+| `stale_minutes` | číslo | `10` | Upozornenie na staré dáta po toľkých minútach |
+| `phase_limit_a` | číslo | `25` | Istič na fázu (A) – pozri [Zaťaženie fáz](#zaťaženie-fáz) |
+| `phase_warn_pct` | číslo | `80` | Varovanie od tohto % ističa |
+| `tap_actions` | mapa | – | Pozri [Ťuknutie na prvky](#ťuknutie-na-prvky) |
+| `inverters`, `inverter_label` | zoznam, text | – | Pozri [Viac meničov](#viac-meničov) |
 
 ### Entity
 
@@ -211,6 +227,7 @@ loads:
 | `extra_entities` | Ďalšie entity výkonu na sčítanie, oddelené čiarkou |
 | `today`, `today_extra` | Denná energia / ďalšie na sčítanie |
 | `icon_entity` | `climate` entita – ikona podľa `hvac_action` / režimu |
+| `smart_heating` | Senzory stavu zón Smart Heating, oddelené čiarkou – pozri [Smart Heating](#smart-heating) |
 
 Emoji → kresba: 🏠 🏡 → dom, 🚿 🛁 → bojler, ♨️ → kúrenie, 🔥 → oheň, ❄️ → chladenie, 🌡️ → teplomer, 🚗 🚙 → auto, 🔌 ⚡ → blesk.
 
@@ -294,6 +311,108 @@ entities:
 Entitu STOP si karta nájde sama podľa názvov entít druhého wallboxu, rovnako ako pri prvom.
 Ak chceš vidieť druhé auto medzi záťažami (s vlastnou šípkou), pridaj ho ako záťaž s `entity: sensor.wallbox_2_charge_power_total`.
 
+### Predpoveď výroby
+
+Nainštaluj **Forecast.Solar** (súčasť Home Assistant, zadarmo) alebo **Solcast**. Nová karta si senzory nájde sama; pri existujúcej ich vyplň v editore v sekcii *Predpoveď výroby*.
+
+```yaml
+entities:
+  forecast_today: sensor.energy_production_today              # Forecast.Solar
+  forecast_remaining: sensor.energy_production_today_remaining
+  forecast_tomorrow: sensor.energy_production_tomorrow
+  forecast_power_now: sensor.power_production_now             # voliteľné
+```
+
+Pruh pod hlavičkou ukáže *vyrobené z ~predpovede kWh dnes*, predpoveď na zajtra, koľko ešte zostáva, výkon teraz oproti predpovedi a očakávanú špičku. Krivka (prerušovaná = predpoveď, plná = skutočná výroba) sa berie z atribútu Solcast `detailedForecast` alebo – pri Forecast.Solar – z predpovede v Energy dashboarde (pridaj predpoveď k solárnym panelom v **Nastavenia → Dashboardy → Energie**). Bez krivky sa ukáže jednoduchý pruh.
+
+### Sekcie karty
+
+Predpoveď, tok energie, zaťaženie fáz, wallbox, nastavenie batérie, detaily fáz, dnešok a priebeh dňa sa dajú zbaliť. Ťukni na hlavičku sekcie – pri diagrame toku energie na názov karty (ostane viditeľný úzky riadok s hlavnými hodnotami).
+
+Stav sa uloží do konfigurácie karty (`collapsed:`), takže je rovnaký na všetkých zariadeniach. Potrebuješ **admin** účet; ostatným používateľom si to pamätá len daný prehliadač. Predvolené stavy sa dajú nastaviť v editore v sekcii *Sekcie karty*:
+
+```yaml
+collapsed:
+  diagram: false
+  phase_load: true
+  chart: true
+```
+
+Kľúče: `diagram`, `forecast`, `phase_load`, `wallbox`, `wallbox2`, `battery_settings`, `phase_details`, `today`, `chart`. Nastavenie batérie a detaily fáz sú na začiatku zbalené.
+
+### Upozornenie na staré dáta
+
+Keď sa žiadna z výkonových entít (FV, menič, sieť, batéria, dom) nezmenila `stale_minutes` minút (predvolene **10**), v hlavičke sa objaví **⚠ 12 min**, pod ňou pruh s časom poslednej zmeny a diagram zošedne a zastaví animáciu. Ak sú všetky nedostupné, pruh to napíše. Pomôže pri výpadku Modbus spojenia, keď by karta inak ukazovala posledné hodnoty.
+
+### Sebestačnosť a priebeh dňa
+
+Sekcia **Dnes** ukáže dva krúžky: *sebestačnosť* = 1 − odber zo siete / spotreba domu, *vlastná spotreba* = 1 − export / výroba (z denných entít). Pod nimi sú denné súčty (`show.energy_today`).
+
+**Priebeh dňa** kreslí výrobu, predpoveď, spotrebu domu a SOC batérie za dnešok alebo včerajšok z recordera (5‑minútové štatistiky, inak história). Ťuknutím alebo prejdením myšou po grafe uvidíš hodnoty v danom čase.
+
+### Zaťaženie fáz
+
+S výkonom siete po fázach (`grid_power_l1` – `l3`) karta ukáže prúd každej fázy oproti hlavnému ističu aj smer (↓ odber, ↑ dodávka). Od `phase_warn_pct` (predvolene 80 %) je pruh oranžový (pri 100 % červený), pribudne riadok s varovaním a stožiar dostane odznak **⚠ L2 22.6 A**.
+
+```yaml
+phase_limit_a: 25     # istič na fázu
+phase_warn_pct: 80
+```
+
+Prúd = |výkon| / napätie fázy (`grid_voltage_l1` – `l3`, inak 230 V).
+
+### Smart Heating
+
+Ak používaš integráciu [Smart Heating](https://github.com/tomasbobala/smart_heating) (verzia 0.23 alebo novšia), záťaž môže ukázať, keď zóna ukladá prebytok FVE do tepla. Pridaj k záťaži senzory stavu zón:
+
+```yaml
+loads:
+  - label: Kúrenie
+    icon: ♨️
+    entity: sensor.heating_power
+    smart_heating: sensor.smart_heating_obyvacka_stav, sensor.smart_heating_kupelna_stav
+```
+
+Kým zóna akumuluje, dlaždica dostane odznak ☀ a text **☀ akum. 23→25°** (cieľ → maximum), pri viacerých zónach **☀ 2 zóny**. Bez tejto integrácie pole nechaj prázdne.
+
+### Iné značky meničov
+
+`brand:` určuje sadu entít pre tlačidlo **🔍 Vyhľadať entity** v editore a pre novú kartu (zistí sa automaticky): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk cez Solarman), `solaredge` (SolarEdge Modbus Multi), `generic`. Tlačidlo vyplní len prázdne polia a nastaví aj znamienka, ktoré značka potrebuje (napr. `invert_grid` pri Huawei). Predvoľby sú „najlepší odhad“ – výsledok skontroluj a jednotlivé entity uprav, ak ich tvoja integrácia volá inak.
+
+### Ťuknutie na prvky
+
+Každá časť diagramu predvolene otvorí *viac info*. Pre každý uzol sa to dá zmeniť – `solar`, `battery`, `inverter`, `grid`, `home`, `loads`:
+
+```yaml
+tap_actions:
+  battery:
+    action: navigate
+    navigation_path: /energy
+  grid:
+    action: url
+    url_path: https://www.solaxcloud.com
+  home:
+    action: perform-action
+    perform_action: script.prehlad_spotreby
+  loads:
+    action: none
+```
+
+Akcie: `more-info` (voliteľne `entity`), `navigate`, `url`, `perform-action` (`perform_action`, voliteľne `data`, `target`), `toggle` (`entity`), `none`.
+
+### Viac meničov
+
+```yaml
+inverter_label: Dom
+inverters:
+  - label: Garáž
+    inverter_power: sensor.solax_2_inverter_power
+    solar_power: sensor.solax_2_pv_power_total
+    solar_today: sensor.solax_2_today_s_solar_energy
+```
+
+Výkon a výroba ďalších meničov sa pripočítajú do solárnej časti a k meniču. Menič dostane odznak **×2** a riadok s výkonom každého meniča. Stringy ďalších meničov sa nekreslia zvlášť.
+
 ### Tlačidlá
 
 ```yaml
@@ -342,6 +461,11 @@ Pod `show:` (`true` / `false`).
 | `energy_today` | `false` | Spodný riadok denných súčtov |
 | `translate_sk` | `true` | Prekladať stavy zariadení do jazyka karty |
 | `animation` | `true` | Animované toky |
+| `forecast` | `true` | Pruh predpovede výroby (keď sú zadané entity predpovede) |
+| `self_sufficiency` | `true` | Krúžky sebestačnosti / vlastnej spotreby |
+| `day_chart` | `true` | Graf priebehu dňa |
+| `phase_load` | `true` | Zaťaženie fáz (potrebuje výkon siete po fázach) |
+| `stale_warning` | `true` | Upozornenie na staré dáta |
 
 ### Farby
 
@@ -364,6 +488,10 @@ Kompletný príklad je v [`examples/card.yaml`](examples/card.yaml).
 | Dlaždice záťaží + Ostatné | Dve batérie + druhý wallbox | Tri stringy |
 |---|---|---|
 | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-tiles-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-multi-en.png" width="280"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-3strings-en.png" width="280"> |
+
+| Predpoveď, priebeh dňa, 2 meniče, Smart Heating | Zbalené sekcie | Varovanie fázy | Staré dáta |
+|---|---|---|---|
+| <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-v110-en.png" width="210"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-sections-en.png" width="210"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-phase-en.png" width="210"> | <img src="https://raw.githubusercontent.com/tomasbobala/solax-fve-card/main/docs/images/card-stale-en.png" width="210"> |
 
 ## Riešenie problémov
 

@@ -2,6 +2,46 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] – 2026-11-15
+
+**The card is now called FVE Card** (formerly SolaX FVE Card). Only the display name changed – the card type
+`custom:solax-fve-card`, the file and the repository stay the same, nothing to change in dashboards.
+/ **Karta sa teraz volá FVE Card** (predtým SolaX FVE Card). Zmenil sa len zobrazený názov – typ
+`custom:solax-fve-card`, súbor aj repozitár ostávajú, v dashboardoch netreba nič meniť.
+
+### Added / Pridané
+
+- **Solar forecast** (Forecast.Solar / Solcast): produced vs. forecast today, tomorrow, remaining, power now
+  vs. forecast, peak time and a curve with the real production. / **Predpoveď výroby**: vyrobené oproti
+  predpovedi, zajtrajšok, koľko zostáva, výkon teraz oproti predpovedi, špička a krivka so skutočnou výrobou.
+- **Collapsible sections** – forecast, energy flow (tap the title), phase load, wallbox, battery settings, phase
+  details, today and day profile. The state is saved into the card config (`collapsed:`) for admin users,
+  otherwise in the browser. / **Zbaliteľné sekcie** – stav sa uloží do konfigurácie karty (admin), inak do
+  prehliadača.
+- **Stale data warning** – badge, banner and greyed-out diagram when the power entities have not changed for
+  `stale_minutes` (default 10) or are unavailable. / **Upozornenie na staré dáta**.
+- **Self-sufficiency and self-consumption** rings in the new *Today* section. / Krúžky **sebestačnosti** a
+  **vlastnej spotreby** v sekcii *Dnes*.
+- **Day profile** chart – production, forecast, home consumption and battery SOC for today or yesterday from the
+  recorder, with a tap/hover readout. / Graf **priebehu dňa**.
+- **Phase load** – current per phase against the breaker (`phase_limit_a`, `phase_warn_pct`), warning and pylon
+  badge. / **Zaťaženie fáz** voči ističu s varovaním.
+- **Smart Heating** – `smart_heating:` on a load shows ☀ and the accumulation target while a zone stores PV
+  surplus as heat (needs the Smart Heating integration 0.23+). / Odznak akumulácie zo **Smart Heating**.
+- **Inverter brand presets** (`brand:`) for SolaX, Huawei Solar, Fronius, GoodWe, Deye/Sunsynk (Solarman),
+  SolarEdge Modbus Multi and generic names, auto-detected for new cards, plus a *Find entities* button in the
+  editor. / **Predvoľby značiek meničov** a tlačidlo *Vyhľadať entity*.
+- **Tap actions** per node (`tap_actions:` – more-info, navigate, url, perform-action, toggle, none). /
+  **Akcie pri ťuknutí** pre každý uzol.
+- **More inverters** (`inverters:`) – power and production are added up, ×N badge and a per-inverter line. /
+  **Viac meničov**.
+
+### Changed / Zmenené
+
+- The wallbox panel sits in a collapsible section with its status in the header. / Panel wallboxu je v
+  zbaliteľnej sekcii so stavom v hlavičke.
+- The daily totals (`show.energy_today`) moved into the *Today* section. / Denné súčty sú v sekcii *Dnes*.
+
 ## [1.0.7] – 2026-11-15
 
 ### Fixed / Opravené

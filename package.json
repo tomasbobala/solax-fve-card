@@ -1,7 +1,7 @@
 {
   "name": "solax-fve-card",
-  "version": "1.0.7",
-  "description": "Animated energy-flow card for Home Assistant and SolaX inverters",
+  "version": "1.1.0",
+  "description": "FVE Card – animated energy-flow card for Home Assistant (SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge)",
   "main": "dist/solax-fve-card.js",
   "private": true,
   "scripts": {
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/tomasbobala/solax-fve-card.git"
   },
-  "keywords": ["home-assistant", "hacs", "lovelace", "custom-card", "solax", "solar", "energy"],
+  "keywords": ["home-assistant", "hacs", "lovelace", "custom-card", "solax", "solar", "energy", "forecast", "huawei", "fronius", "goodwe", "deye", "solaredge"],
   "author": "Tomáš Bobala",
   "license": "MIT",
   "bugs": { "url": "https://github.com/tomasbobala/solax-fve-card/issues" },

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SolaX FVE Card – demo</title>
+  <title>FVE Card – demo</title>
   <style>
     :root {
       --primary-text-color: #e8e8e8;
@@ -48,7 +48,6 @@
       const day = {
         "sensor.solax_pv_power_1": s(6240), "sensor.solax_pv_voltage_1": s(521.4), "sensor.solax_pv_current_1": s(11.9),
         "sensor.solax_pv_power_2": s(2810), "sensor.solax_pv_voltage_2": s(410.2), "sensor.solax_pv_current_2": s(6.8),
-        "sensor.solax_pv_power_3": s(1930), "sensor.solax_pv_voltage_3": s(388.6), "sensor.solax_pv_current_3": s(5.0),
         "sensor.solax_pv_power_total": s(9050), "sensor.solax_today_s_solar_energy": s(41.6),
         "sensor.solax_run_mode": s("Normal Mode"), "sensor.solax_inverter_temperature": s(41.2),
         "sensor.solax_inverter_power": s(7420),
@@ -90,6 +89,27 @@
         "switch.low_tariff": s("on"),
       };
       if (q.get("wb2")) day["sensor.solax_energy_dashboard_solax_home_consumption_power"] = s(8240);
+      if (q.get("pv3")) Object.assign(day, { "sensor.solax_pv_power_3": s(1930), "sensor.solax_pv_voltage_3": s(388.6), "sensor.solax_pv_current_3": s(5.0) });
+      // 1.1.0 demo data
+      if (q.get("fc") !== "0") Object.assign(day, {
+        "sensor.solcast_pv_forecast_forecast_today": s(47.2, { unit_of_measurement: "kWh", detailedForecast: fcCurve() }),
+        "sensor.solcast_pv_forecast_forecast_remaining_today": s(5.6, { unit_of_measurement: "kWh" }),
+        "sensor.solcast_pv_forecast_forecast_tomorrow": s(32.4, { unit_of_measurement: "kWh" }),
+        "sensor.solcast_pv_forecast_power_now": s(8400, { unit_of_measurement: "W" }),
+      });
+      if (q.get("sh")) Object.assign(day, {
+        "sensor.heating_power": s(1250), "sensor.solax_energy_dashboard_solax_home_consumption_power": s(5490),
+        "sensor.smart_heating_obyvacka_stav": s("heating", { fve_akumulacia_ciel: 23, fve_akumulacia_max: 25 }),
+      });
+      if (q.get("inv2")) Object.assign(day, { "sensor.solax_2_inverter_power": s(2220), "sensor.solax_2_pv_power_total": s(2300), "sensor.solax_2_today_s_solar_energy": s(9.4) });
+      if (q.get("phase") === "hot") Object.assign(day, {
+        "sensor.solax_energy_dashboard_solax_grid_power": s(8650),
+        "sensor.solax_measured_power_l1": s(-2280), "sensor.solax_measured_power_l2": s(-5180), "sensor.solax_measured_power_l3": s(-1190),
+      });
+      if (q.get("stale")) {
+        const old = new Date(Date.now() - 12 * 60000).toISOString();
+        Object.keys(day).forEach((k) => (day[k] = Object.assign({}, day[k], { last_updated: old, last_changed: old })));
+      }
       if (scene !== "night") return day;
       return Object.assign({}, day, {
         "sensor.solax_pv_power_1": s(0), "sensor.solax_pv_voltage_1": s(0), "sensor.solax_pv_current_1": s(0),
@@ -107,8 +127,42 @@
       });
     }
 
+    function bell(h, peak, a, b) { return h <= a || h >= b ? 0 : peak * Math.pow(Math.sin(((h - a) / (b - a)) * Math.PI), 1.6); }
+    function day0() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }
+    function fcCurve() {
+      const out = [];
+      for (let m = 0; m < 24 * 60; m += 30) out.push({ period_start: new Date(day0() + m * 60000).toISOString(), pv_estimate: +(bell(m / 60 + 0.25, 9.4, 6.4, 18.2)).toFixed(3) });
+      return out;
+    }
+    // fake recorder statistics for the day chart
+    function series(id, h, off) {
+      const fc = bell(h, 9.4, 6.4, 18.2);
+      if (/pv_power_total|pv_power_\d/.test(id)) return 1000 * Math.max(0, fc * (0.93 + 0.07 * Math.sin(h * 3.1)) - (h > 10.2 && h < 10.8 ? 2.2 : 0)) * (off ? 0.7 : 1) * (/_\d$/.test(id) ? 0.5 : 1) * (/solax_2_/.test(id) ? 0.22 : 1);
+      if (/home_consumption_power/.test(id)) return 1000 * (0.45 + (h > 6.3 && h < 8 ? 1.9 : 0) + (h > 11 && h < 13.4 ? 3.6 : 0) + (h > 9 && h < 10 ? 2 : 0) + 0.25 * Math.sin(h * 2.3) ** 2 + (h > 17 && h < 21 ? 1.2 : 0));
+      if (/battery_capacity/.test(id)) return h < 7 ? 46 - h * 4 : h < 10 ? 18 + (h - 7) * 0.5 : Math.min(100, 19.5 + (h - 10) * 16.4) - (h > 16 ? (h - 16) * 9 : 0);
+      return null;
+    }
+    async function callWS(msg) {
+      if (msg.type === "recorder/statistics_during_period") {
+        const out = {};
+        const a = Date.parse(msg.start_time), b = Date.parse(msg.end_time);
+        msg.statistic_ids.forEach((id) => {
+          const rows = [];
+          for (let ms = a; ms < b; ms += 300000) {
+            const h = (ms - a) / 3600000 + 0.04;
+            const v = series(id, h, a < day0());
+            if (v != null) rows.push({ start: ms, mean: v });
+          }
+          if (rows.length) out[id] = rows;
+        });
+        return out;
+      }
+      return {};
+    }
     function hass(scene) {
-      return { states: states(scene), language: lang, locale: { language: lang }, callService: () => {} };
+      const h = { states: states(scene), language: lang, locale: { language: lang }, callService: () => {}, user: { is_admin: false } };
+      if (q.get("chart") !== "0") h.callWS = callWS;
+      return h;
     }
 
     function config() {
@@ -150,6 +204,10 @@
         });
         cfg.loads.splice(2, 0, { id: "car2", label: sk ? "Auto 2" : "Car 2", icon: "🚙", color: "#b07ce0", entity: "sensor.evc2_charge_power_total" });
       }
+      if (q.get("sh")) cfg.loads.find((l) => l.id === "heat").smart_heating = "sensor.smart_heating_obyvacka_stav";
+      if (q.get("inv2")) cfg.inverters = [{ label: sk ? "M2" : "Inv2", inverter_power: "sensor.solax_2_inverter_power", solar_power: "sensor.solax_2_pv_power_total", solar_today: "sensor.solax_2_today_s_solar_energy" }];
+      if (q.get("energy")) cfg.show = Object.assign({}, cfg.show, { energy_today: true });
+      if (q.get("collapse")) cfg.collapsed = Object.fromEntries(q.get("collapse").split(",").map((k) => [k, true]));
       if (q.get("batt")) {
         cfg.battery_label = "A";
         cfg.battery_capacity_kwh = 11.5;

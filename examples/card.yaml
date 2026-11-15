@@ -100,3 +100,44 @@ show:
 #   pv3_power: sensor.solax_pv_power_3
 #   pv3_voltage: sensor.solax_pv_voltage_3
 #   pv3_current: sensor.solax_pv_current_3
+
+# --- Optional (1.1.0+) -------------------------------------------------
+# Solar forecast / Predpoveď výroby (Forecast.Solar or Solcast)
+# entities:
+#   forecast_today: sensor.energy_production_today
+#   forecast_remaining: sensor.energy_production_today_remaining
+#   forecast_tomorrow: sensor.energy_production_tomorrow
+#
+# Collapsed sections / Zbalené sekcie (tap a section header in the card to save)
+# collapsed:
+#   chart: true
+#   phase_load: true
+#
+# Stale data warning / Upozornenie na staré dáta
+# stale_minutes: 10
+#
+# Phase load / Zaťaženie fáz
+# phase_limit_a: 25
+# phase_warn_pct: 80
+#
+# Inverter brand preset / Značka meniča
+# brand: solax   # huawei, fronius, goodwe, deye, solaredge, generic
+#
+# Tap actions / Ťuknutie na prvky
+# tap_actions:
+#   battery: { action: navigate, navigation_path: /energy }
+#   home: { action: perform-action, perform_action: script.show_consumption }
+#
+# More inverters / Viac meničov
+# inverter_label: House
+# inverters:
+#   - label: Garage
+#     inverter_power: sensor.solax_2_inverter_power
+#     solar_power: sensor.solax_2_pv_power_total
+#     solar_today: sensor.solax_2_today_s_solar_energy
+#
+# Smart Heating accumulation on a load / Akumulácia Smart Heating pri záťaži
+# loads:
+#   - label: Heating
+#     entity: sensor.heating_power
+#     smart_heating: sensor.smart_heating_obyvacka_stav
