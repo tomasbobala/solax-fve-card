@@ -4,7 +4,7 @@
 
 # FVE Card
 
-**Animovaná karta toku energie pre Home Assistant – SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge …**
+**Animovaná karta toku energie pre Home Assistant – SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge, Sunways …**
 
 <sub>predtým *SolaX FVE Card* – typ karty ostáva `custom:solax-fve-card`, v dashboardoch netreba nič meniť</sub>
 
@@ -58,7 +58,7 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 | ⚡ **Zaťaženie fáz** | Prúd každej fázy oproti hlavnému ističu, varovanie a odznak pri stožiari, keď je fáza blízko limitu. |
 | ⚠️ **Staré dáta** | Odznak, pruh a zošednutý diagram, keď menič prestane posielať údaje. |
 | 🗂️ **Sekcie** | Každá sekcia sa dá zbaliť; stav sa uloží do konfigurácie karty. |
-| 🔌 **Značky a ďalšie** | Predvoľby entít pre SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge; viac meničov; akcie pri ťuknutí; odznak akumulácie zo Smart Heating. |
+| 🔌 **Značky a ďalšie** | Predvoľby entít pre SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge, Sunways; viac meničov; akcie pri ťuknutí; odznak akumulácie zo Smart Heating. |
 | 📦 **Bez závislostí** | Jeden čistý JavaScript súbor, žiadny build, žiadne externé požiadavky. |
 
 ## Požiadavky
@@ -128,7 +128,7 @@ Všetky voľby sú nepovinné, pokiaľ nie je uvedené inak, a všetky sa dajú 
 | `animation_speed` | text | `normal` | `slow`, `normal`, `fast` |
 | `colors` | mapa | – | Pozri [Farby](#farby) |
 | `show` | mapa | – | Pozri [Čo zobraziť](#čo-zobraziť) |
-| `brand` | text | zistí sa | `solax`, `huawei`, `fronius`, `goodwe`, `deye`, `solaredge`, `generic` – pozri [Iné značky meničov](#iné-značky-meničov) |
+| `brand` | text | zistí sa | `solax`, `huawei`, `fronius`, `goodwe`, `deye`, `solaredge`, `sunways`, `generic` – pozri [Iné značky meničov](#iné-značky-meničov) |
 | `collapsed` | mapa | – | Zbalené sekcie – pozri [Sekcie karty](#sekcie-karty) |
 | `stale_minutes` | číslo | `10` | Upozornenie na staré dáta po toľkých minútach |
 | `phase_limit_a` | číslo | `25` | Istič na fázu (A) – pozri [Zaťaženie fáz](#zaťaženie-fáz) |
@@ -186,6 +186,7 @@ Zadávajú sa pod `entities:`. Výkon v kW sa prepočíta automaticky.
 | `home_label`, `home_icon` | text | `Dom`, `🏠` | Uzol domu |
 | `home_mode` | text | `total` | `total` = celá spotreba, `remainder` = mínus záťaže pod ním |
 | `loads_layout` | text | `row` | `row` = jeden rad (pôvodné), `rows` = krúžky vo viacerých radoch, `tiles` = dlaždice v mriežke |
+| `card_columns` | text | `auto` | Rozloženie karty: `auto` = na mobile 1 stĺpec, od ~760 px 2, od ~1150 px 3; `1`, `2`, `3` = pevne (pri príliš úzkej karte prejde na menej stĺpcov: 2 potrebujú 600 px, 3 potrebujú 1000 px) |
 | `loads_per_row` | číslo | `3` | Záťaží v rade pre `rows` a `tiles` |
 | `other_label`, `other_icon`, `other_color` | text | `Ostatné`, `🔌`, `#9aa0a8` | Dlaždica OSTATNÉ (dom mínus merané záťaže) |
 | `inverter_image` | text | – | Vlastný obrázok meniča, napr. `/local/menic.png` |
@@ -379,7 +380,7 @@ Kým zóna akumuluje, dlaždica dostane odznak ☀ a text **☀ akum. 23→25°*
 
 ### Iné značky meničov
 
-`brand:` určuje sadu entít pre tlačidlo **🔍 Vyhľadať entity** v editore a pre novú kartu (zistí sa automaticky): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk cez Solarman), `solaredge` (SolarEdge Modbus Multi), `generic`. Tlačidlo vyplní len prázdne polia a nastaví aj znamienka, ktoré značka potrebuje (napr. `invert_grid` pri Huawei). Predvoľby sú „najlepší odhad“ – výsledok skontroluj a jednotlivé entity uprav, ak ich tvoja integrácia volá inak.
+`brand:` určuje sadu entít pre tlačidlo **🔍 Vyhľadať entity** v editore a pre novú kartu (zistí sa automaticky): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk cez Solarman), `solaredge` (SolarEdge Modbus Multi), `sunways` (Sunways cez SolaX Modbus), `generic`. Tlačidlo vyplní len prázdne polia a nastaví aj znamienka, ktoré značka potrebuje (napr. `invert_grid` pri Huawei). Predvoľby sú „najlepší odhad“ – výsledok skontroluj a jednotlivé entity uprav, ak ich tvoja integrácia volá inak.
 
 ### Ťuknutie na prvky
 
@@ -542,7 +543,7 @@ Nahlásenia chýb aj pull requesty sú vítané – pozri [CONTRIBUTING.md](CONT
 
 ## Licencia
 
-[MIT](LICENSE) © 2026 Tomáš Bobala
+[MIT](LICENSE) © 2026 Tomáš Bobaľa
 
 ---
 

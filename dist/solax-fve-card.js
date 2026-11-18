@@ -1,4 +1,6 @@
-const CARD_VERSION = "1.1.1";
+const CARD_VERSION = "1.3.0";
+const CARD_COLUMNS = ["auto", "1", "2", "3"];
+const CARD_AUTHOR = "Tomáš Bobaľa";
 
 const I18N = {
   en: {
@@ -35,6 +37,9 @@ const I18N = {
     stale_unavail: "Inverter data is unavailable",
     sec_wallbox: "Wallbox",
     diag_toggle: "Energy flow",
+    info_title: "Info",
+    info_version: "Version",
+    info_dev: "Developer",
     sh_acc: "acc.",
     sh_zones: "zones",
     inv_short: "Inv",
@@ -73,7 +78,7 @@ const I18N = {
     act_toggle: "Toggle",
     act_none: "Nothing",
     ed_sections: "Card sections",
-    ed_sections_info: "Tick the sections that should start collapsed. Tapping a section header in the card saves it here too (for an admin user; otherwise it is remembered in that browser only).",
+    ed_sections_info: "Tick the sections that should start collapsed. Tapping a section header in the card is remembered in that browser only; these ticks are the default.",
     ed_collapsed: "collapsed",
     "show.forecast": "Solar forecast",
     "show.self_sufficiency": "Self-sufficiency and self-consumption",
@@ -207,6 +212,12 @@ const I18N = {
     ed_fast: "Fast",
     ed_decimals: "Decimal places (kW)",
     ed_power_unit: "Power unit",
+    ed_card_columns: "Card layout",
+    ed_cols_auto: "Automatic (by width)",
+    ed_cols_1: "1 column",
+    ed_cols_2: "2 columns",
+    ed_cols_3: "3 columns",
+    ed_cols_info: "Automatic: 1 column on a phone, 2 from about 760 px, 3 from about 1150 px. Fixed: 2 from 600 px, 3 from 1000 px. A fixed choice falls back to fewer columns when the card is too narrow.",
     ed_unit_auto: "Automatic (W / kW)",
     ed_colors: "Colors",
 
@@ -342,6 +353,9 @@ const I18N = {
     stale_unavail: "Údaje z meniča sú nedostupné",
     sec_wallbox: "Wallbox",
     diag_toggle: "Tok energie",
+    info_title: "Info",
+    info_version: "Verzia",
+    info_dev: "Vývojár",
     sh_acc: "akum.",
     sh_zones: "zóny",
     inv_short: "M",
@@ -380,7 +394,7 @@ const I18N = {
     act_toggle: "Prepnúť",
     act_none: "Nič",
     ed_sections: "Sekcie karty",
-    ed_sections_info: "Zaškrtni sekcie, ktoré majú byť zbalené. Ťuknutie na hlavičku sekcie priamo v karte sa uloží aj sem (pri admin účte; inak si to pamätá len daný prehliadač).",
+    ed_sections_info: "Zaškrtni sekcie, ktoré majú byť zbalené. Ťuknutie na hlavičku sekcie priamo v karte si pamätá len daný prehliadač; tieto zaškrtnutia sú predvolené.",
     ed_collapsed: "zbalená",
     "show.forecast": "Predpoveď výroby",
     "show.self_sufficiency": "Sebestačnosť a vlastná spotreba",
@@ -514,6 +528,12 @@ const I18N = {
     ed_fast: "Rýchla",
     ed_decimals: "Desatinné miesta (kW)",
     ed_power_unit: "Jednotka výkonu",
+    ed_card_columns: "Rozloženie karty",
+    ed_cols_auto: "Automaticky (podľa šírky)",
+    ed_cols_1: "1 stĺpec",
+    ed_cols_2: "2 stĺpce",
+    ed_cols_3: "3 stĺpce",
+    ed_cols_info: "Automaticky: na mobile 1 stĺpec, od cca 760 px 2, od cca 1150 px 3. Pevná voľba: 2 od 600 px, 3 od 1000 px. Pevná voľba pri príliš úzkej karte prejde na menej stĺpcov.",
     ed_unit_auto: "Automaticky (W / kW)",
     ed_colors: "Farby",
 
@@ -768,6 +788,7 @@ const BRANDS = [
   ["goodwe", "GoodWe"],
   ["deye", "Deye / Sunsynk (Solarman)"],
   ["solaredge", "SolarEdge (Modbus Multi)"],
+  ["sunways", "Sunways (solax_modbus)"],
   ["generic", "Generic / Iné"],
 ];
 // key: [suffixes, opts]  – best effort, the button only fills empty fields
@@ -846,6 +867,26 @@ const BRAND_PRESETS = {
       grid_power_l1: [["ac_power_a"], { include: /_m1_|meter/ }], grid_power_l2: [["ac_power_b"], { include: /_m1_|meter/ }], grid_power_l3: [["ac_power_c"], { include: /_m1_|meter/ }],
       grid_voltage_l1: [["ac_voltage_an"], { include: /_m1_|meter/ }], grid_voltage_l2: [["ac_voltage_bn"], { include: /_m1_|meter/ }], grid_voltage_l3: [["ac_voltage_cn"], { include: /_m1_|meter/ }],
       battery_power: [["dc_power"], { include: /_b1_|battery/ }], battery_soc: [["state_of_energy"]], battery_temp: [["temp_average", "temperature"], { include: /_b1_|battery/ }],
+    },
+  },
+  // Sunways via solax_modbus (plugin_sunway). English names from the plugin, then names seen renamed in Slovak.
+  sunways: {
+    prefer: /sunway|solax/,
+    options: { invert_battery: true, invert_grid: true },
+    entities: {
+      solar_power: [["pv_input_total_power", "celkovy_vykon_fv_vstupu"]],
+      solar_today: [["total_pv_generation_today", "celkova_vyroba_z_fotovoltiky_dnes"]],
+      pv1_power: [["pv1_input_power", "vstupny_vykon_pv1"]], pv1_voltage: [["pv1_voltage"]], pv1_current: [["pv1_current"]],
+      pv2_power: [["pv2_input_power", "vstupny_vykon_pv2", "vstupny_vykon_pv2_2"]], pv2_voltage: [["pv2_voltage"]], pv2_current: [["pv2_current"]],
+      inverter_power: [["ac_power", "striedave_napajanie_vykon"], { exclude: /meter|merac|elektromer/ }],
+      inverter_status: [["inverter_running_status"]],
+      grid_power: [["total_power_on_meter", "celkovy_vykon_na_elektromere"]],
+      grid_power_l1: [["phase_a_power_on_meter"]], grid_power_l2: [["phase_b_power_on_meter"]], grid_power_l3: [["phase_c_power_on_meter"]],
+      grid_voltage_l1: [["grid_phase_a_voltage", "faza_1_napatia_na_meraci"]],
+      grid_voltage_l2: [["grid_phase_b_voltage", "faza_2_napatia_na_meraci"]],
+      grid_voltage_l3: [["grid_phase_c_voltage", "faza_3_napatia_na_meraci"]],
+      battery_power: [["battery_power", "napajanie_z_baterie"]], battery_soc: [["battery_soc", "bateria_soc"]],
+      battery_voltage: [["battery_voltage"]], battery_current: [["battery_current"]], battery_temp: [["bms_pack_temperature"]],
     },
   },
   generic: {
@@ -1233,8 +1274,16 @@ class SolaxFveCard extends HTMLElement {
   }
 
   setConfig(config) {
+    const prev = this._origConfig;
     this._origConfig = config || {};
     this._config = config || {};
+    // Only `collapsed` changed (we just saved it to the dashboard): keep the DOM,
+    // a full rebuild empties the chart for a moment and makes the page jump.
+    if (this._built && prev && stableStringify(stripCollapsed(prev)) === stableStringify(stripCollapsed(this._origConfig))) {
+      this._lsCache = undefined;
+      this._applySectionState();
+      return;
+    }
     this._built = false;
     this._lsCache = undefined;
     this._chartKey = null;
@@ -1659,6 +1708,7 @@ class SolaxFveCard extends HTMLElement {
   disconnectedCallback() {
     clearInterval(this._ticker);
     this._ticker = null;
+    if (this._infoShow) this._infoShow(false);
   }
 
   _startTicker() {
@@ -1716,6 +1766,55 @@ class SolaxFveCard extends HTMLElement {
         this._applyDiagramFold();
       };
     this._applyDiagramFold();
+    this._bindInfo();
+  }
+
+  _bindInfo() {
+    const btn = this.querySelector(".sf-info-btn");
+    const pop = this.querySelector(".sf-info-pop");
+    if (this._infoShow) this._infoShow(false);
+    if (!btn || !pop) return;
+    setText(this.querySelector(".sf-info-t"), t("info_title"));
+    setText(this.querySelector(".sf-info-kv"), t("info_version"));
+    setText(this.querySelector(".sf-info-ver"), CARD_VERSION);
+    setText(this.querySelector(".sf-info-kd"), t("info_dev"));
+    setText(this.querySelector(".sf-info-dev"), CARD_AUTHOR);
+    const show = (open) => {
+      pop.classList.toggle("hidden", !open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        this._infoAway = (e) => {
+          if (e.type === "keydown" ? e.key === "Escape" : !e.composedPath().includes(this.querySelector(".sf-info"))) show(false);
+        };
+        document.addEventListener("pointerdown", this._infoAway, true);
+        document.addEventListener("keydown", this._infoAway, true);
+      } else if (this._infoAway) {
+        document.removeEventListener("pointerdown", this._infoAway, true);
+        document.removeEventListener("keydown", this._infoAway, true);
+        this._infoAway = null;
+      }
+    };
+    this._infoShow = show;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      show(pop.classList.contains("hidden"));
+    };
+  }
+
+  _applySectionState() {
+    let opened = false;
+    this.querySelectorAll("details[data-sec]").forEach((d) => {
+      const open = !this._isCollapsed(d.dataset.sec);
+      if (d.open === open) return;
+      if (open) opened = true;
+      d.open = open;
+    });
+    this._applyDiagramFold();
+    if (opened && this._hass) {
+      this._chartKey = null;
+      this._fcKey = null;
+      this._updateContent();
+    }
   }
 
   _applyDiagramFold() {
@@ -1735,8 +1834,7 @@ class SolaxFveCard extends HTMLElement {
     const collapsed = Object.assign({}, this._config.collapsed || {}, { [key]: val });
     this._config = Object.assign({}, this._config, { collapsed });
     if (this._lsCache) this._lsCache = Object.assign({}, this._lsCache, { [key]: val });
-    clearTimeout(this._persistTimer);
-    this._persistTimer = setTimeout(() => this._persistSections(), 1200);
+    this._persistSections();
   }
 
   _saveLocal(collapsed) {
@@ -1748,43 +1846,13 @@ class SolaxFveCard extends HTMLElement {
     }
   }
 
-  /** Writes `collapsed` into the dashboard config (admin), otherwise remembers it in this browser. */
-  async _persistSections() {
-    const hass = this._hass;
-    const collapsed = Object.assign({}, this._config.collapsed || {});
-    const local = () => this._saveLocal(collapsed);
-    if (this.preview || this.editMode || !hass || !hass.callWS || !(hass.user && hass.user.is_admin) || !this._origConfig) return local();
-    try {
-      const seg = (window.location.pathname.split("/")[1] || "lovelace").trim();
-      const urlPath = seg === "lovelace" ? null : seg;
-      const conf = await hass.callWS({ type: "lovelace/config", url_path: urlPath });
-      const target = stableStringify(stripCollapsed(this._origConfig));
-      let hits = 0;
-      const walk = (node) => {
-        if (Array.isArray(node)) return node.map(walk);
-        if (node && typeof node === "object") {
-          if (node.type === this._origConfig.type && stableStringify(stripCollapsed(node)) === target) {
-            hits++;
-            return Object.assign({}, node, { collapsed });
-          }
-          const out = {};
-          Object.keys(node).forEach((k) => (out[k] = walk(node[k])));
-          return out;
-        }
-        return node;
-      };
-      const next = walk(conf);
-      if (!hits) return local();
-      await hass.callWS({ type: "lovelace/config/save", url_path: urlPath, config: next });
-      try {
-        window.localStorage.removeItem(this._lsKey());
-      } catch (e) {
-        /* ignore */
-      }
-      this._lsCache = null;
-    } catch (e) {
-      local();
-    }
+  /**
+   * Remembers a tapped section in this browser only. Writing it into the dashboard
+   * made Home Assistant redraw the whole view, which threw the page to the top.
+   * The editor's "collapsed" ticks stay the default for other browsers.
+   */
+  _persistSections() {
+    this._saveLocal(Object.assign({}, this._config.collapsed || {}));
   }
 
   _sec(key) {
@@ -2535,17 +2603,24 @@ class SolaxFveCard extends HTMLElement {
     if (!this._chartPicked) setText(read, t("ch_hint"));
   }
 
+  _layoutMode() {
+    const v = String(this._config.card_columns == null ? "auto" : this._config.card_columns);
+    return CARD_COLUMNS.includes(v) ? v : "auto";
+  }
+
   _buildSkeleton() {
     this.innerHTML = `
-      <ha-card>
+      <ha-card class="sf-card">
         <style>${this._styles()}</style>
-        <div class="sf-root">
+        <div class="sf-root sf-lay-${this._layoutMode()}">
+          <div class="sf-info"><button class="sf-info-btn" type="button" aria-haspopup="true" aria-expanded="false">?</button><div class="sf-info-pop hidden" role="dialog"><b class="sf-info-t"></b><div class="sf-info-row"><span class="sf-info-k sf-info-kv"></span><span class="sf-info-v sf-info-ver"></span></div><div class="sf-info-row"><span class="sf-info-k sf-info-kd"></span><span class="sf-info-v sf-info-dev"></span></div></div></div>
           <div class="sf-header">
             <div class="sf-title"><span class="sf-title-icon"></span><span class="sf-title-text"></span><button class="sf-diag-toggle" type="button"><span></span></button></div>
             <div class="sf-head-right"><span class="sf-stale-pill hidden"></span><div class="sf-links"></div></div>
           </div>
           <div class="sf-stale-banner hidden"><span class="sf-stale-ico">⚠</span><div><b class="sf-st-t"></b><span class="sf-st-l"></span><br><span class="sf-st-h"></span></div></div>
 
+          <div class="sf-col sf-col-a">
           <details class="sf-fold sf-sec sf-fc-sec hidden" data-sec="forecast">
             <summary class="sf-fold-summary">☀️ <span class="sf-fold-title">${t("sec_forecast")}</span> <span class="sf-fold-val"></span><span class="sf-fold-src"></span></summary>
             <div class="sf-fold-body"></div>
@@ -2555,6 +2630,8 @@ class SolaxFveCard extends HTMLElement {
           <div class="sf-diagram-wrap">
             <svg class="sf-svg" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
+          </div>
+          <div class="sf-col sf-col-b">
 
           <details class="sf-fold sf-sec hidden" data-sec="phase_load">
             <summary class="sf-fold-summary">${this._mini("bolt", 16)} <span class="sf-fold-title">${t("sec_phase_load")}</span> <span class="sf-fold-val"></span><span class="sf-fold-src"></span></summary>
@@ -2576,6 +2653,8 @@ class SolaxFveCard extends HTMLElement {
             <summary class="sf-phases-summary">${this._mini("bolt", 16)} ${t("phase_details")}</summary>
             <div class="sf-phases-body"></div>
           </details>
+          </div>
+          <div class="sf-col sf-col-c">
           <details class="sf-fold sf-sec hidden" data-sec="today">
             <summary class="sf-fold-summary">📊 <span class="sf-fold-title">${t("sec_today")}</span> <span class="sf-fold-val"></span></summary>
             <div class="sf-fold-body"><div class="sf-self hidden"></div><div class="sf-today-row"></div></div>
@@ -2584,6 +2663,7 @@ class SolaxFveCard extends HTMLElement {
             <summary class="sf-fold-summary">📈 <span class="sf-fold-title">${t("sec_chart")}</span> <span class="sf-fold-val"></span></summary>
             <div class="sf-fold-body"></div>
           </details>
+          </div>
         </div>
       </ha-card>
     `;
@@ -2708,6 +2788,7 @@ class SolaxFveCard extends HTMLElement {
       .sf-chip { flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .sf-chip { transition: background .15s ease, color .15s ease; font-weight: 600; }
       .sf-chip.active { font-weight: 800; }
+      @container (max-width: 330px) { .sf-modes .sf-chips { flex-wrap: wrap; } .sf-modes .sf-chip { flex: 1 1 calc(50% - 6px); } }
 
       .sf-bar-wrap { position: relative; height: 20px; border-radius: 999px; background: rgba(127,127,127,0.18); overflow: hidden; }
       .sf-bar-fill { position: absolute; inset: 0 auto 0 0; height: 100%; border-radius: 999px; transition: width .6s ease, background-size .6s ease; background-image: linear-gradient(90deg, #4caf7d 0%, #9ec44a 35%, #e0a020 65%, #e0577a 100%); background-repeat: no-repeat; background-position: left center; }
@@ -2741,6 +2822,44 @@ class SolaxFveCard extends HTMLElement {
       .sf-stat-label { font-size: 0.66rem; color: var(--secondary-text-color); }
       .sf-stat-value { font-size: 0.86rem; font-weight: 700; color: var(--primary-text-color); }
       .sf-head-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      .sf-root { position: relative; }
+      .sf-card { container: sfcard / inline-size; }
+      .sf-col { display: contents; }
+      /* columns: forced 2/3 from 600/1000 px, automatic 2/3 from 760/1150 px */
+      @container sfcard (min-width: 600px) {
+        .sf-root.sf-lay-2, .sf-root.sf-lay-3 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-areas: "head head" "banner banner" "a b" "a c"; grid-template-rows: auto auto auto 1fr; gap: 0 20px; align-items: start; }
+        .sf-root.sf-lay-2 > .sf-col, .sf-root.sf-lay-3 > .sf-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin-top: 16px; container-type: inline-size; }
+        .sf-root.sf-lay-2 > .sf-header, .sf-root.sf-lay-3 > .sf-header { grid-area: head; }
+        .sf-root.sf-lay-2 > .sf-stale-banner, .sf-root.sf-lay-3 > .sf-stale-banner { grid-area: banner; margin-top: 16px; }
+        .sf-root.sf-lay-2 > .sf-col-a, .sf-root.sf-lay-3 > .sf-col-a { grid-area: a; }
+        .sf-root.sf-lay-2 > .sf-col-b, .sf-root.sf-lay-3 > .sf-col-b { grid-area: b; }
+        .sf-root.sf-lay-2 > .sf-col-c, .sf-root.sf-lay-3 > .sf-col-c { grid-area: c; }
+      }
+      @container sfcard (min-width: 760px) {
+        .sf-root.sf-lay-auto { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-areas: "head head" "banner banner" "a b" "a c"; grid-template-rows: auto auto auto 1fr; gap: 0 20px; align-items: start; }
+        .sf-root.sf-lay-auto > .sf-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin-top: 16px; container-type: inline-size; }
+        .sf-root.sf-lay-auto > .sf-header { grid-area: head; }
+        .sf-root.sf-lay-auto > .sf-stale-banner { grid-area: banner; margin-top: 16px; }
+        .sf-root.sf-lay-auto > .sf-col-a { grid-area: a; }
+        .sf-root.sf-lay-auto > .sf-col-b { grid-area: b; }
+        .sf-root.sf-lay-auto > .sf-col-c { grid-area: c; }
+      }
+      @container sfcard (min-width: 1000px) {
+        .sf-root.sf-lay-3 { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "head head head" "banner banner banner" "a b c"; grid-template-rows: auto auto 1fr; }
+      }
+      @container sfcard (min-width: 1150px) {
+        .sf-root.sf-lay-auto { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "head head head" "banner banner banner" "a b c"; grid-template-rows: auto auto 1fr; }
+      }
+      .sf-header { padding-right: 34px; }
+      .sf-info { position: absolute; top: 14px; right: 12px; z-index: 6; }
+      .sf-info-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--divider-color); background: rgba(127,127,127,0.10); color: var(--secondary-text-color); font: inherit; font-size: .95rem; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; transition: background .15s ease, color .15s ease; }
+      .sf-info-btn:hover, .sf-info-btn[aria-expanded="true"] { background: rgba(127,127,127,0.22); color: var(--primary-text-color); }
+      .sf-info-pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 5; min-width: 190px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--divider-color); background: var(--card-background-color, var(--ha-card-background, #1c1c1e)); color: var(--primary-text-color); box-shadow: 0 8px 24px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 6px; text-align: left; }
+      .sf-info-pop.hidden { display: none; }
+      .sf-info-t { font-size: .95rem; font-weight: 800; margin-bottom: 2px; }
+      .sf-info-row { display: flex; justify-content: space-between; gap: 14px; font-size: .86rem; white-space: nowrap; }
+      .sf-info-k { color: var(--secondary-text-color); }
+      .sf-info-v { font-weight: 700; }
       .sf-title { cursor: pointer; user-select: none; }
       .sf-diag-toggle { width: 12px; height: 22px; border: 0; background: none; color: var(--secondary-text-color); cursor: pointer; display: grid; place-items: center; padding: 0; margin-left: -5px; opacity: .7; flex: none; }
       .sf-diag-toggle span { display: inline-block; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-135deg); margin-top: 4px; transition: transform .2s ease, margin .2s ease; }
@@ -5354,6 +5473,8 @@ class SolaxFveCardEditor extends HTMLElement {
     speedSelect.onchange = () => this._set("animation_speed", speedSelect.value);
     speedRow.appendChild(speedSelect);
     showSec.body.appendChild(speedRow);
+    this._selectRow(showSec.body, t("ed_card_columns"), "card_columns", "auto", CARD_COLUMNS.map((v) => [v, t("ed_cols_" + v)]));
+    this._note(showSec.body, t("ed_cols_info"), "#7c8796");
     this._selectRow(showSec.body, t("ed_power_unit"), "power_unit", "W", [
       ["W", "W"],
       ["kW", "kW"],

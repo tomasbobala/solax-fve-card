@@ -4,7 +4,7 @@
 
 # FVE Card
 
-**Animated energy‑flow card for Home Assistant – SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge …**
+**Animated energy‑flow card for Home Assistant – SolaX, Huawei, Fronius, GoodWe, Deye, SolarEdge, Sunways …**
 
 <sub>formerly *SolaX FVE Card* – the card type stays `custom:solax-fve-card`, nothing to change in your dashboards</sub>
 
@@ -58,7 +58,7 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 | ⚡ **Phase load** | Current per phase against your main breaker, warning and pylon badge when a phase is close to the limit. |
 | ⚠️ **Stale data** | Badge, banner and greyed‑out diagram when the inverter stops sending data. |
 | 🗂️ **Sections** | Every section can be collapsed; the state is saved into the card config. |
-| 🔌 **Brands & more** | Entity presets for SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge; several inverters; tap actions per node; Smart Heating accumulation badge. |
+| 🔌 **Brands & more** | Entity presets for SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge, Sunways; several inverters; tap actions per node; Smart Heating accumulation badge. |
 | 📦 **Zero dependencies** | One plain JavaScript file, no build step, no external requests. |
 
 ## Requirements
@@ -127,7 +127,7 @@ All options are optional unless marked otherwise. Everything below can be set in
 | `animation_speed` | string | `normal` | `slow`, `normal`, `fast` |
 | `colors` | map | – | See [Colors](#colors) |
 | `show` | map | – | See [Display switches](#display-switches) |
-| `brand` | string | detected | `solax`, `huawei`, `fronius`, `goodwe`, `deye`, `solaredge`, `generic` – see [Other inverter brands](#other-inverter-brands) |
+| `brand` | string | detected | `solax`, `huawei`, `fronius`, `goodwe`, `deye`, `solaredge`, `sunways`, `generic` – see [Other inverter brands](#other-inverter-brands) |
 | `collapsed` | map | – | Collapsed sections – see [Card sections](#card-sections) |
 | `stale_minutes` | number | `10` | Stale data warning after this many minutes |
 | `phase_limit_a` | number | `25` | Breaker per phase (A) – see [Phase load](#phase-load) |
@@ -185,6 +185,7 @@ Set under `entities:`. Power entities in kW are converted automatically.
 | `home_label`, `home_icon` | string | `Home`, `🏠` | Home node |
 | `home_mode` | string | `total` | `total` = whole consumption, `remainder` = minus the loads below |
 | `loads_layout` | string | `row` | `row` = one row (original), `rows` = circles in several rows, `tiles` = tiles in a grid |
+| `card_columns` | string | `auto` | Card layout: `auto` = 1 column on a phone, 2 from ~760 px, 3 from ~1150 px; `1`, `2`, `3` = fixed (falls back to fewer columns when the card is too narrow: 2 needs 600 px, 3 needs 1000 px) |
 | `loads_per_row` | number | `3` | Loads per row for `rows` and `tiles` |
 | `other_label`, `other_icon`, `other_color` | string | `Other`, `🔌`, `#9aa0a8` | The OTHER tile (home minus measured loads) |
 | `inverter_image` | string | – | Your own inverter picture, e.g. `/local/inverter.png` |
@@ -378,7 +379,7 @@ While a zone accumulates, the tile gets a ☀ badge and **☀ acc. 23→25°** (
 
 ### Other inverter brands
 
-`brand:` selects the entity preset used by the editor's **🔍 Find entities** button and by a new card (detected automatically): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk via Solarman), `solaredge` (SolarEdge Modbus Multi), `generic`. The button only fills empty fields and also sets the sign options the brand needs (e.g. `invert_grid` for Huawei). The presets are best effort – check the result and adjust single entities if your integration names them differently.
+`brand:` selects the entity preset used by the editor's **🔍 Find entities** button and by a new card (detected automatically): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk via Solarman), `solaredge` (SolarEdge Modbus Multi), `sunways` (Sunways via SolaX Modbus), `generic`. The button only fills empty fields and also sets the sign options the brand needs (e.g. `invert_grid` for Huawei). The presets are best effort – check the result and adjust single entities if your integration names them differently.
 
 ### Tap actions
 
@@ -541,7 +542,7 @@ Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[MIT](LICENSE) © 2026 Tomáš Bobala
+[MIT](LICENSE) © 2026 Tomáš Bobaľa
 
 ---
 
