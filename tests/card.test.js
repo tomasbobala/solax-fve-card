@@ -525,3 +525,128 @@ test("pv_split option is labelled as separate display of strings", () => {
   assert.ok(ed.textContent.includes("separate display of strings"));
   assert.ok(!ed.textContent.includes("two separate strings"));
 });
+
+test("saving only the collapsed sections does not rebuild the card (no scroll jump)", () => {
+  const w = boot();
+  const cfg = { type: "custom:solax-fve-card" };
+  const hass = makeHass("en");
+  const card = render(w, cfg, hass);
+  const root = card.firstElementChild;
+  const sec = card.querySelector('details[data-sec="today"]');
+  assert.ok(root && sec);
+  const wasOpen = sec.open;
+  // what Home Assistant does after lovelace/config/save
+  card.setConfig(Object.assign({}, cfg, { collapsed: { today: wasOpen } }));
+  card.hass = Object.assign({}, hass);
+  assert.equal(card.firstElementChild, root, "card was rebuilt");
+  assert.equal(card.querySelector('details[data-sec="today"]'), sec);
+  assert.equal(sec.open, !wasOpen);
+});
+
+test("a real config change still rebuilds the card", () => {
+  const w = boot();
+  const cfg = { type: "custom:solax-fve-card" };
+  const hass = makeHass("en");
+  const card = render(w, cfg, hass);
+  const root = card.firstElementChild;
+  card.setConfig(Object.assign({}, cfg, { language: "sk" }));
+  card.hass = Object.assign({}, hass);
+  assert.notEqual(card.firstElementChild, root);
+});
+
+test("? button opens an Info box with version and developer, Escape closes it", () => {
+  const w = boot();
+  const card = render(w, { type: "custom:solax-fve-card", language: "sk" }, makeHass("sk"));
+  const btn = card.querySelector(".sf-info-btn");
+  const pop = card.querySelector(".sf-info-pop");
+  assert.ok(btn && pop);
+  assert.equal(btn.textContent, "?");
+  assert.ok(pop.classList.contains("hidden"));
+  btn.click();
+  assert.ok(!pop.classList.contains("hidden"));
+  const version = card.querySelector(".sf-info-ver").textContent;
+  assert.match(version, /^\d+\.\d+\.\d+$/);
+  assert.match(pop.textContent, new RegExp("Info\\s*Verzia\\s*" + version.replace(/\./g, "\\.") + "\\s*Vývojár\\s*Tomáš Bobaľa"));
+  w.document.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape" }));
+  assert.ok(pop.classList.contains("hidden"));
+  btn.click();
+  btn.click();
+  assert.ok(pop.classList.contains("hidden"), "second tap closes it");
+});
+
+test("card_columns: content sits in three column groups and the root carries the layout mode", () => {
+  const w = boot();
+  const hass = makeHass("en");
+  const card = render(w, { type: "custom:solax-fve-card" }, hass);
+  const root = card.querySelector(".sf-root");
+  assert.ok(root.classList.contains("sf-lay-auto"));
+  assert.ok(card.querySelector("ha-card").classList.contains("sf-card"));
+  const col = (k) => card.querySelector(`[data-sec="${k}"]`).parentElement.className;
+  assert.match(col("forecast"), /sf-col-a/);
+  assert.ok(card.querySelector(".sf-col-a > .sf-diagram-wrap"));
+  ["phase_load", "wallbox", "wallbox2", "battery_settings", "phase_details"].forEach((k) => assert.match(col(k), /sf-col-b/, k));
+  ["today", "chart"].forEach((k) => assert.match(col(k), /sf-col-c/, k));
+  assert.ok(root.querySelector(":scope > .sf-header"), "header stays across all columns");
+  for (const [v, want] of [["1", "1"], [2, "2"], ["3", "3"], ["9", "auto"]]) {
+    const c = render(w, { type: "custom:solax-fve-card", card_columns: v }, hass);
+    assert.ok(c.querySelector(".sf-root").classList.contains("sf-lay-" + want), String(v));
+  }
+});
+
+test("editor offers the card layout choice", () => {
+  const w = boot();
+  const ed = w.document.createElement("solax-fve-card-editor");
+  ed.hass = makeHass("sk");
+  ed.setConfig({ type: "custom:solax-fve-card", language: "sk" });
+  w.document.body.appendChild(ed);
+  const sel = Array.from(ed.querySelectorAll("select")).find((s) => Array.from(s.options).some((o) => o.value === "3" && /3 stĺpce/.test(o.textContent)));
+  assert.ok(sel, "layout select exists");
+  assert.deepEqual(Array.from(sel.options).map((o) => o.value), ["auto", "1", "2", "3"]);
+  assert.equal(sel.value, "auto");
+});
+
+test("Sunways preset finds solax_modbus English names and sets both sign options", () => {
+  const w = boot();
+  const st = {
+    "sensor.solax_pv_input_total_power": s(5200),
+    "sensor.solax_pv1_input_power": s(3000),
+    "sensor.solax_pv2_input_power": s(2200),
+    "sensor.solax_total_pv_generation_today": s(18.2),
+    "sensor.solax_total_power_on_meter": s(-800),
+    "sensor.solax_phase_a_power_on_meter": s(-250),
+    "sensor.solax_grid_phase_a_voltage": s(231),
+    "sensor.solax_ac_power": s(4100),
+    "sensor.solax_inverter_running_status": s("On Grid"),
+    "sensor.solax_battery_power": s(-900),
+    "sensor.solax_battery_soc": s(55),
+    "sensor.solax_bms_pack_temperature": s(21),
+  };
+  const hass = { states: st, language: "sk", locale: { language: "sk" } };
+  const Card = w.customElements.get("solax-fve-card");
+  const cfg = Card.getStubConfig(hass);
+  assert.equal(cfg.brand, "sunways");
+  assert.equal(cfg.entities.solar_power, "sensor.solax_pv_input_total_power");
+  assert.equal(cfg.entities.pv2_power, "sensor.solax_pv2_input_power");
+  assert.equal(cfg.entities.grid_power, "sensor.solax_total_power_on_meter");
+  assert.equal(cfg.entities.grid_power_l1, "sensor.solax_phase_a_power_on_meter");
+  assert.equal(cfg.entities.inverter_power, "sensor.solax_ac_power");
+  assert.equal(cfg.entities.inverter_status, "sensor.solax_inverter_running_status");
+  assert.equal(cfg.entities.battery_temp, "sensor.solax_bms_pack_temperature");
+  assert.equal(cfg.invert_battery, true);
+  assert.equal(cfg.invert_grid, true);
+});
+
+test("Sunways preset also finds the Slovak entity names from issue #3", () => {
+  const w = boot();
+  const st = {};
+  ["celkovy_vykon_fv_vstupu", "vstupny_vykon_pv1", "vstupny_vykon_pv2_2", "celkova_vyroba_z_fotovoltiky_dnes", "napajanie_z_baterie", "bateria_soc", "celkovy_vykon_na_elektromere", "faza_1_napatia_na_meraci", "striedave_napajanie_vykon"].forEach((id, i) => (st["sensor." + id] = s(100 + i)));
+  const hass = { states: st, language: "sk", locale: { language: "sk" } };
+  const cfg = w.customElements.get("solax-fve-card").getStubConfig(hass);
+  assert.equal(cfg.brand, "sunways");
+  assert.equal(cfg.entities.solar_power, "sensor.celkovy_vykon_fv_vstupu");
+  assert.equal(cfg.entities.pv2_power, "sensor.vstupny_vykon_pv2_2");
+  assert.equal(cfg.entities.grid_power, "sensor.celkovy_vykon_na_elektromere");
+  assert.equal(cfg.entities.grid_voltage_l1, "sensor.faza_1_napatia_na_meraci");
+  assert.equal(cfg.entities.inverter_power, "sensor.striedave_napajanie_vykon");
+  assert.equal(cfg.entities.battery_soc, "sensor.bateria_soc");
+});

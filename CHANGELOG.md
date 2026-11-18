@@ -2,6 +2,49 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] – 2026-11-18
+
+### Added / Pridané
+
+- **Multi-column layout (1, 2 or 3 columns).** New option `card_columns` (editor: Display → Card layout).
+  `auto` (default) keeps one column on a phone, switches to 2 columns from about 760 px (energy flow on the
+  left, phase load / wallbox / battery on the right) and to 3 columns from about 1150 px (Today and the day
+  chart get their own column). `1`, `2`, `3` force the layout; when the card is too narrow (2 need 600 px,
+  3 need 1000 px) it falls back to fewer columns. Narrow columns stack the self-sufficiency rings and put the
+  wallbox mode buttons on two rows.
+  / **Rozloženie na 1, 2 alebo 3 stĺpce.** Nová voľba `card_columns` (editor: Čo zobraziť → Rozloženie
+  karty). `auto` (predvolené) nechá na mobile jeden stĺpec, od cca 760 px prejde na 2 stĺpce (tok energie
+  vľavo, zaťaženie fáz / wallbox / batéria vpravo) a od cca 1150 px na 3 stĺpce (Dnes a priebeh dňa majú
+  vlastný stĺpec). `1`, `2`, `3` rozloženie vynútia; pri príliš úzkej karte (2 potrebujú 600 px, 3 potrebujú
+  1000 px) prejde na menej stĺpcov. V úzkom stĺpci sa krúžky sebestačnosti poskladajú pod seba a tlačidlá
+  režimu wallboxu sa zalomia do dvoch riadkov.
+- **Sunways inverter preset** (Sunways via SolaX Modbus, `brand: sunways`). The editor's 🔍 Find entities
+  button fills solar, strings, inverter, meter (total and per phase), grid voltages and battery, and sets
+  `invert_battery` and `invert_grid`. It finds the English solax_modbus names and common Slovak renames (#3).
+  / **Predvoľba pre menič Sunways** (Sunways cez SolaX Modbus, `brand: sunways`). Tlačidlo 🔍 Vyhľadať entity
+  vyplní solár, stringy, menič, elektromer (spolu aj po fázach), napätia siete a batériu a nastaví
+  `invert_battery` a `invert_grid`. Nájde anglické názvy zo solax_modbus aj bežné slovenské premenovania (#3).
+- **Info button.** A small **?** in the top-right corner opens an Info box with the card version and the
+  developer. Tap again, tap outside or press Escape to close it.
+  / **Tlačidlo Info.** Malý **?** v pravom hornom rohu otvorí okienko Info s verziou karty a menom vývojára.
+  Zavrie sa ďalším ťuknutím, ťuknutím mimo neho alebo klávesom Escape.
+
+### Fixed / Opravené
+
+- **The page no longer jumps to the top when you expand or collapse a section.** For an admin user the card
+  saved the tapped state into the dashboard config, so Home Assistant redrew the whole view. The tapped state
+  is now remembered in that browser only; the "collapsed" ticks in the editor stay the default for other
+  browsers and devices. A config change that only touches `collapsed` no longer rebuilds the card either.
+  / **Stránka už pri rozbalení alebo zbalení sekcie neskočí na vrch.** Admin používateľovi karta ukladala stav
+  po ťuknutí do konfigurácie dashboardu, takže Home Assistant prekreslil celý pohľad. Stav po ťuknutí si teraz
+  pamätá len daný prehliadač; zaškrtnutia „zbalená" v editore ostávajú predvolené pre ostatné prehliadače
+  a zariadenia. Zmena konfigurácie, ktorá sa týka len `collapsed`, už kartu ani neprestavia.
+
+### Changed / Zmenené
+
+- Developer name in the Info box, LICENSE and README: **Tomáš Bobaľa**.
+  / Meno vývojára v okienku Info, v LICENSE a v README: **Tomáš Bobaľa**.
+
 ## [1.1.1] – 2026-11-15
 
 ### Fixed / Opravené

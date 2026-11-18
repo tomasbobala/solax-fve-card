@@ -84,24 +84,23 @@ test("sections follow `collapsed` and the defaults", () => {
   assert.match(txt(card.querySelector('[data-sec="phase_load"] .sf-fold-val')), /L\d 2\.2 A/);
 });
 
-test("toggling a section saves `collapsed` into the dashboard config (admin)", async () => {
+test("admin: tapping a section never writes the dashboard (no page jump)", async () => {
   const w = boot("http://localhost/dashboard-home/0");
   const ws = [];
   const hass = makeHass({}, { user: { is_admin: true } });
-  const cfg = stub(w, hass);
-  const dash = { views: [{ title: "x", sections: [{ cards: [{ type: "markdown" }, JSON.parse(JSON.stringify(cfg))] }] }] };
   hass.callWS = async (msg) => {
     ws.push(msg);
-    if (msg.type === "lovelace/config") return JSON.parse(JSON.stringify(dash));
     return null;
   };
+  const cfg = stub(w, hass);
   const card = render(w, cfg, hass);
-  await card._persistSections.call(Object.assign(card, { _config: Object.assign({}, card._config, { collapsed: { chart: true } }) }));
-  const save = ws.find((m) => m.type === "lovelace/config/save");
-  assert.ok(save, "config saved");
-  assert.equal(save.url_path, "dashboard-home");
-  assert.deepEqual(JSON.parse(JSON.stringify(save.config.views[0].sections[0].cards[1].collapsed)), { chart: true });
-  assert.equal(save.config.views[0].sections[0].cards[0].type, "markdown");
+  const d = card.querySelector('[data-sec="phase_load"]');
+  d.open = !d.open;
+  d.dispatchEvent(new w.Event("toggle"));
+  await new Promise((r) => setTimeout(r, 1600));
+  assert.equal(ws.filter((m) => String(m.type).startsWith("lovelace/")).length, 0);
+  const card2 = render(w, cfg, makeHass());
+  assert.equal(card2.querySelector('[data-sec="phase_load"]').open, d.open, "remembered in the browser");
 });
 
 test("non-admin: section state is remembered in the browser", async () => {
@@ -110,7 +109,7 @@ test("non-admin: section state is remembered in the browser", async () => {
   const cfg = stub(w, hass);
   const card = render(w, cfg, hass);
   card._config = Object.assign({}, card._config, { collapsed: { today: true } });
-  await card._persistSections();
+  card._persistSections();
   const card2 = render(w, cfg, makeHass());
   assert.equal(card2.querySelector('[data-sec="today"]').open, false);
 });
