@@ -57,7 +57,9 @@ FV stringy · menič · batéria s ovládaním SOC · sieť a tarifa · záťaž
 | 📈 **Priebeh dňa** | Výroba, predpoveď, spotreba domu a SOC batérie za dnešok alebo včerajšok, krúžky **sebestačnosti** a **vlastnej spotreby**. |
 | ⚡ **Zaťaženie fáz** | Prúd každej fázy oproti hlavnému ističu, varovanie a odznak pri stožiari, keď je fáza blízko limitu. |
 | ⚠️ **Staré dáta** | Odznak, pruh a zošednutý diagram, keď menič prestane posielať údaje. |
-| 🗂️ **Sekcie** | Každá sekcia sa dá zbaliť; stav sa uloží do konfigurácie karty. |
+| 🗂️ **Sekcie** | Každá sekcia sa dá zbaliť; prehliadač si to zapamätá, predvolené stavy sa nastavia v editore. |
+| 🧱 **Rozloženie** | Na mobile jeden stĺpec, na PC **2 alebo 3 stĺpce** – automaticky podľa šírky alebo pevne. |
+| ℹ️ **Info** | Tlačidlo **?** v pravom hornom rohu ukáže verziu karty – hneď vidíš, či máš načítanú najnovšiu. |
 | 🔌 **Značky a ďalšie** | Predvoľby entít pre SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge, Sunways; viac meničov; akcie pri ťuknutí; odznak akumulácie zo Smart Heating. |
 | 📦 **Bez závislostí** | Jeden čistý JavaScript súbor, žiadny build, žiadne externé požiadavky. |
 
@@ -87,7 +89,7 @@ HACS zaregistruje resource automaticky.
 1. Stiahnite `solax-fve-card.js` z [posledného vydania](https://github.com/tomasbobala/solax-fve-card/releases/latest).
 2. Skopírujte ho do `<config>/www/solax-fve-card.js`.
 3. **Nastavenia → Dashboardy → ⋮ → Zdroje (Resources) → Pridať zdroj**
-   - URL: `/local/solax-fve-card.js?v=1.0.0`
+   - URL: `/local/solax-fve-card.js?v=1.3.0`
    - Typ: **JavaScript modul**
 4. Obnovte prehliadač. Po každej aktualizácii zvýšte číslo `?v=`, aby prehliadač načítal nový súbor.
 
@@ -332,7 +334,7 @@ Pruh pod hlavičkou ukáže *vyrobené z ~predpovede kWh dnes*, predpoveď na za
 
 Predpoveď, tok energie, zaťaženie fáz, wallbox, nastavenie batérie, detaily fáz, dnešok a priebeh dňa sa dajú zbaliť. Ťukni na hlavičku sekcie – pri diagrame toku energie na názov karty (ostane viditeľný úzky riadok s hlavnými hodnotami).
 
-Stav sa uloží do konfigurácie karty (`collapsed:`), takže je rovnaký na všetkých zariadeniach. Potrebuješ **admin** účet; ostatným používateľom si to pamätá len daný prehliadač. Predvolené stavy sa dajú nastaviť v editore v sekcii *Sekcie karty*:
+Čo zbalíš ťuknutím, si zapamätá **daný prehliadač** (každé zariadenie zvlášť). Do konfigurácie dashboardu sa nič nezapisuje, preto stránka pri rozbalení ani zbalení neposkočí. Predvolené stavy pre všetky zariadenia nastavíš v editore v sekcii *Sekcie karty* (`collapsed:`):
 
 ```yaml
 collapsed:
@@ -342,6 +344,23 @@ collapsed:
 ```
 
 Kľúče: `diagram`, `forecast`, `phase_load`, `wallbox`, `wallbox2`, `battery_settings`, `phase_details`, `today`, `chart`. Nastavenie batérie a detaily fáz sú na začiatku zbalené.
+
+### Rozloženie na viac stĺpcov
+
+Na širokej obrazovke vie karta rozložiť obsah do stĺpcov. Nastavuje sa v editore v sekcii *Čo zobraziť → Rozloženie karty* alebo cez `card_columns`:
+
+| Hodnota | Správanie |
+|---|---|
+| `auto` (predvolené) | na mobile 1 stĺpec, od cca 760 px 2 stĺpce, od cca 1150 px 3 stĺpce |
+| `1` | vždy jeden stĺpec (ako pred verziou 1.3.0) |
+| `2` | vľavo predpoveď, tok energie a záťaže; vpravo zaťaženie fáz, wallbox, batéria, dnešok a priebeh dňa |
+| `3` | ako `2`, ale dnešok a priebeh dňa majú vlastný tretí stĺpec |
+
+Pevná voľba prejde na menej stĺpcov, keď je karta príliš úzka (2 stĺpce potrebujú 600 px, 3 stĺpce 1000 px), takže na mobile sa karta nerozbije. V zobrazení *Sekcie* zaberá karta celú šírku sekcie – ak chceš viac stĺpcov, rozšír sekciu (napr. na 2–4 stĺpce dashboardu).
+
+```yaml
+card_columns: auto
+```
 
 ### Upozornenie na staré dáta
 
@@ -381,6 +400,31 @@ Kým zóna akumuluje, dlaždica dostane odznak ☀ a text **☀ akum. 23→25°*
 ### Iné značky meničov
 
 `brand:` určuje sadu entít pre tlačidlo **🔍 Vyhľadať entity** v editore a pre novú kartu (zistí sa automaticky): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk cez Solarman), `solaredge` (SolarEdge Modbus Multi), `sunways` (Sunways cez SolaX Modbus), `generic`. Tlačidlo vyplní len prázdne polia a nastaví aj znamienka, ktoré značka potrebuje (napr. `invert_grid` pri Huawei). Predvoľby sú „najlepší odhad“ – výsledok skontroluj a jednotlivé entity uprav, ak ich tvoja integrácia volá inak.
+
+**Sunways** (integrácia SolaX Modbus, typ meniča Sunways): predvoľba vyplní solár, oba stringy, menič, elektromer (spolu aj po fázach), napätia siete a batériu a zapne `invert_battery` aj `invert_grid`. Nájde anglické názvy entít aj bežné slovenské premenovania (`celkovy_vykon_fv_vstupu`, `bateria_soc` …). Príklad (prefix `solax` je predvolený názov zariadenia v SolaX Modbus):
+
+```yaml
+type: custom:solax-fve-card
+brand: sunways
+invert_battery: true
+invert_grid: true
+entities:
+  solar_power: sensor.solax_pv_input_total_power
+  solar_today: sensor.solax_total_pv_generation_today
+  pv1_power: sensor.solax_pv1_input_power
+  pv2_power: sensor.solax_pv2_input_power
+  inverter_power: sensor.solax_ac_power
+  inverter_status: sensor.solax_inverter_running_status
+  grid_power: sensor.solax_total_power_on_meter
+  grid_power_l1: sensor.solax_phase_a_power_on_meter
+  grid_power_l2: sensor.solax_phase_b_power_on_meter
+  grid_power_l3: sensor.solax_phase_c_power_on_meter
+  battery_power: sensor.solax_battery_power
+  battery_soc: sensor.solax_battery_soc
+  battery_temp: sensor.solax_bms_pack_temperature
+```
+
+Sunways posiela energiu z elektromera len ako celkové počítadlá od inštalácie (*Total Grid Injection / Purchasing Energy on Meter*). Do polí *Zo siete dnes* / *Do siete dnes* preto patria denné senzory – vytvoríš ich pomocníkom **Merač spotreby** (Utility Meter) s cyklom *denne*.
 
 ### Ťuknutie na prvky
 
@@ -521,7 +565,10 @@ Karta hľadá `<prefix>_control_command` vedľa entity režimu nabíjania. Ak va
 <details>
 <summary><b>Po aktualizácii karta vyzerá po starom</b></summary>
 
-Pri ručnej inštalácii zvýšte číslo `?v=` v zdroji. Pri HACS obnovte prehliadač / cache aplikácie.
+Ťuknite na **?** v pravom hornom rohu karty – ukáže, ktorá verzia je naozaj načítaná. Ak je stará, prehliadač drží súbor v cache:
+
+- V **Nastavenia → Dashboardy → ⋮ → Zdroje** zmeňte číslo na konci adresy karty, napr. `…/solax-fve-card.js?v=1.3.0` (pri ručnej inštalácii vždy po aktualizácii). Položka *Zdroje* sa zobrazí v **Rozšírenom režime** profilu.
+- Potom úplne obnovte stránku (Ctrl/Cmd + Shift + R). V aplikácii na telefóne: **Companion App → Debugging → Reset frontend cache**.
 </details>
 
 ## Vývoj

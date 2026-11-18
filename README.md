@@ -57,7 +57,9 @@ PV strings · inverter · battery with SOC control · grid & tariff · loads · 
 | 📈 **Day profile** | Production, forecast, home consumption and battery SOC for today or yesterday, with **self‑sufficiency** and **self‑consumption** rings. |
 | ⚡ **Phase load** | Current per phase against your main breaker, warning and pylon badge when a phase is close to the limit. |
 | ⚠️ **Stale data** | Badge, banner and greyed‑out diagram when the inverter stops sending data. |
-| 🗂️ **Sections** | Every section can be collapsed; the state is saved into the card config. |
+| 🗂️ **Sections** | Every section can be collapsed; the browser remembers it, default states are set in the editor. |
+| 🧱 **Layout** | One column on a phone, **2 or 3 columns** on a PC – automatic by width or fixed. |
+| ℹ️ **Info** | A **?** button in the top-right corner shows the card version – you see at once whether the latest one is loaded. |
 | 🔌 **Brands & more** | Entity presets for SolaX, Huawei, Fronius, GoodWe, Deye/Sunsynk, SolarEdge, Sunways; several inverters; tap actions per node; Smart Heating accumulation badge. |
 | 📦 **Zero dependencies** | One plain JavaScript file, no build step, no external requests. |
 
@@ -87,7 +89,7 @@ HACS registers the resource automatically.
 1. Download `solax-fve-card.js` from the [latest release](https://github.com/tomasbobala/solax-fve-card/releases/latest).
 2. Copy it to `<config>/www/solax-fve-card.js`.
 3. **Settings → Dashboards → ⋮ → Resources → Add resource**
-   - URL: `/local/solax-fve-card.js?v=1.0.0`
+   - URL: `/local/solax-fve-card.js?v=1.3.0`
    - Type: **JavaScript module**
 4. Reload the browser. After every update, increase the `?v=` number so browsers load the new file.
 
@@ -331,7 +333,7 @@ The strip under the header shows *produced of ~forecast kWh today*, tomorrow's f
 
 Forecast, energy flow, phase load, wallbox, battery settings, phase details, today and day profile can each be collapsed. Tap the section header – or the card title for the energy‑flow diagram (a compact row with the main values stays visible).
 
-The state is saved into the card configuration (`collapsed:`), so it is the same on every device. This needs an **admin** user; for other users it is remembered in that browser only. Default states can be set in the editor under *Card sections*:
+What you collapse by tapping is remembered by **that browser** (each device on its own). Nothing is written into the dashboard config, so the page does not jump when you expand or collapse a section. Default states for all devices are set in the editor under *Card sections* (`collapsed:`):
 
 ```yaml
 collapsed:
@@ -341,6 +343,23 @@ collapsed:
 ```
 
 Keys: `diagram`, `forecast`, `phase_load`, `wallbox`, `wallbox2`, `battery_settings`, `phase_details`, `today`, `chart`. Battery settings and phase details start collapsed.
+
+### Multi-column layout
+
+On a wide screen the card can spread its content into columns. Set it in the editor under *Display → Card layout* or with `card_columns`:
+
+| Value | Behaviour |
+|---|---|
+| `auto` (default) | 1 column on a phone, 2 columns from about 760 px, 3 columns from about 1150 px |
+| `1` | always one column (as before 1.3.0) |
+| `2` | left: forecast, energy flow and loads; right: phase load, wallbox, battery, today and day profile |
+| `3` | like `2`, but today and the day profile get their own third column |
+
+A fixed choice falls back to fewer columns when the card is too narrow (2 columns need 600 px, 3 columns 1000 px), so the card never breaks on a phone. In a *Sections* view the card takes the full width of its section – for more columns make the section wider (e.g. 2–4 dashboard columns).
+
+```yaml
+card_columns: auto
+```
 
 ### Stale data warning
 
@@ -380,6 +399,31 @@ While a zone accumulates, the tile gets a ☀ badge and **☀ acc. 23→25°** (
 ### Other inverter brands
 
 `brand:` selects the entity preset used by the editor's **🔍 Find entities** button and by a new card (detected automatically): `solax`, `huawei` (Huawei Solar), `fronius`, `goodwe`, `deye` (Deye / Sunsynk via Solarman), `solaredge` (SolarEdge Modbus Multi), `sunways` (Sunways via SolaX Modbus), `generic`. The button only fills empty fields and also sets the sign options the brand needs (e.g. `invert_grid` for Huawei). The presets are best effort – check the result and adjust single entities if your integration names them differently.
+
+**Sunways** (SolaX Modbus integration, inverter type Sunways): the preset fills solar, both strings, inverter, meter (total and per phase), grid voltages and battery, and switches on `invert_battery` and `invert_grid`. It finds the English entity names and common Slovak renames (`celkovy_vykon_fv_vstupu`, `bateria_soc` …). Example (`solax` is the default device name in SolaX Modbus):
+
+```yaml
+type: custom:solax-fve-card
+brand: sunways
+invert_battery: true
+invert_grid: true
+entities:
+  solar_power: sensor.solax_pv_input_total_power
+  solar_today: sensor.solax_total_pv_generation_today
+  pv1_power: sensor.solax_pv1_input_power
+  pv2_power: sensor.solax_pv2_input_power
+  inverter_power: sensor.solax_ac_power
+  inverter_status: sensor.solax_inverter_running_status
+  grid_power: sensor.solax_total_power_on_meter
+  grid_power_l1: sensor.solax_phase_a_power_on_meter
+  grid_power_l2: sensor.solax_phase_b_power_on_meter
+  grid_power_l3: sensor.solax_phase_c_power_on_meter
+  battery_power: sensor.solax_battery_power
+  battery_soc: sensor.solax_battery_soc
+  battery_temp: sensor.solax_bms_pack_temperature
+```
+
+Sunways reports meter energy only as totals since installation (*Total Grid Injection / Purchasing Energy on Meter*). For *Imported today* / *Exported today* use daily sensors – create them with a **Utility Meter** helper with a *daily* cycle.
 
 ### Tap actions
 
@@ -520,7 +564,10 @@ The card looks for `<prefix>_control_command` next to your charging‑mode selec
 <details>
 <summary><b>After an update the card still looks old</b></summary>
 
-For manual installs, raise the `?v=` number of the resource. For HACS, reload the browser / app cache.
+Tap **?** in the top-right corner of the card – it shows the version that is really loaded. If it is old, the browser keeps the file in its cache:
+
+- In **Settings → Dashboards → ⋮ → Resources** change the number at the end of the card URL, e.g. `…/solax-fve-card.js?v=1.3.0` (for manual installs after every update). *Resources* is shown in the profile's **Advanced mode**.
+- Then reload the page fully (Ctrl/Cmd + Shift + R). In the phone app: **Companion App → Debugging → Reset frontend cache**.
 </details>
 
 ## Development
